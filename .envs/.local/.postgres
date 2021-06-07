@@ -1,0 +1,7 @@
+# PostgreSQL
+# ------------------------------------------------------------------------------
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
+POSTGRES_DB=chatbot_commerce
+POSTGRES_USER=XIjBSJxMRRouVNXkIGbTiuijaGxlTssa
+POSTGRES_PASSWORD=z2uG1ogM2RG2PMIK0lLwlM4FD8iQsOal5ympKVJj10fO7pyuBOMHeA61bRoAEBfO
