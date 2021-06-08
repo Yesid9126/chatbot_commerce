@@ -14,6 +14,10 @@ django==3.1.12  # pyup: < 3.2  # https://www.djangoproject.com/
 django-environ==0.4.5  # https://github.com/joke2k/django-environ
 django-model-utils==4.1.1  # https://github.com/jazzband/django-model-utils
 django-redis==4.12.1  # https://github.com/jazzband/django-redis
+
 # Django REST Framework
 djangorestframework==3.12.4  # https://github.com/encode/django-rest-framework
 django-cors-headers==3.7.0 # https://github.com/adamchainz/django-cors-headers
+
+# JWT
+pyjwt==2.1.0

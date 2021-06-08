@@ -70,7 +70,7 @@ THIRD_PARTY_APPS = [
 ]
 
 LOCAL_APPS = [
-    "chatbot_commerce.users.apps.UsersConfig",
+    "chatbot_commerce.products.apps.ProductsConfig",
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -177,7 +177,6 @@ TEMPLATES = [
                 "django.template.context_processors.static",
                 "django.template.context_processors.tz",
                 "django.contrib.messages.context_processors.messages",
-                "chatbot_commerce.utils.context_processors.settings_context",
             ],
         },
     }

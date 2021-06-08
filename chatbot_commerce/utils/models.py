@@ -4,10 +4,10 @@
 from django.db import models
 
 
-class Products(models.Model):
-    """Webhook base model.
+class ChetbootModel(models.Model):
+    """Chatboot commerce base model.
 
-    Webhook acts as an abstract base class from which every
+    Chatboot commerce acts as an abstract base class from which every
     other model in the project will inherit. This class provides
     every table with the following attributes:
         + created (DateTime): Store the datetime the object was created.

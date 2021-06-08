@@ -17,7 +17,7 @@ urlpatterns = [
 # API URLS
 urlpatterns += [
     # API base url
-    path("api/", include("config.api_router")),
+    # path('', include(('chatbot_commerce.products.urls', 'products'), namespace='products')),
     # DRF auth token
     path("auth-token/", obtain_auth_token),
 ]
