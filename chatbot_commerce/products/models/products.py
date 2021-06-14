@@ -114,7 +114,6 @@ class Product(ChatbootModel):
     list_store_id = models.CharField(
         'List store',
         choices=SUBCATEGORY_CHOICES,
-        default=SUBCATEGORY_CHOICES[0][3],
         max_length=255
     )
 
@@ -126,12 +125,6 @@ class Product(ChatbootModel):
     lomadee_campaing_code = models.CharField(
         max_length=255,
         null=True
-    )
-
-    stores = models.ForeignKey(
-        StoresVtex,
-        on_delete=models.CASCADE,
-        verbose_name='stores'
     )
 
 
