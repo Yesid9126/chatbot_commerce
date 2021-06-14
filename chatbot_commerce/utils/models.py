@@ -4,7 +4,7 @@
 from django.db import models
 
 
-class ChetbootModel(models.Model):
+class ChatbootModel(models.Model):
     """Chatboot commerce base model.
 
     Chatboot commerce acts as an abstract base class from which every

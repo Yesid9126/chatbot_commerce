@@ -5,12 +5,13 @@ from django.db import models
 from django.contrib.postgres.fields import JSONField
 
 # utilities
-from chatbot_commerce.utils.models import ChetbootModel
+from chatbot_commerce.utils.models import ChatbootModel
+from chatbot_commerce.products.models.stores import StoresVtex
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 
-class Product(ChetbootModel):
+class Product(ChatbootModel):
     """Main product model."""
 
 
@@ -26,7 +27,7 @@ class Product(ChetbootModel):
         (OTROS, OTROS),
     ]
     id = models.AutoField(
-        'Product id'
+        'Product id',
         primary_key=True,
     )
 
@@ -125,6 +126,12 @@ class Product(ChetbootModel):
     lomadee_campaing_code = models.CharField(
         max_length=255,
         null=True
+    )
+
+    stores = models.ForeignKey(
+        StoresVtex,
+        on_delete=models.CASCADE,
+        verbose_name='stores'
     )
 
 
