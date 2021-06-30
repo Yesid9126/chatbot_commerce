@@ -29,4 +29,8 @@ class Skus(ChatbootModel):
 
     def __str__(self):
         """Return product name|id."""
-        return f'sku:{self.sku}'
+        return f'sku:{self.sku_id}'
+
+    class Meta:
+        verbose_name = "Sku"
+        verbose_name_plural = "Sku's"

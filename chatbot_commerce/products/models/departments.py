@@ -14,6 +14,13 @@ class SotreDepartment(ChatbootModel):
         max_length=50
     )
 
+    url_department = models.CharField(
+        'Url',
+        max_length=5000,
+        null=True,
+        blank=True
+    )
+
     categories = models.ForeignKey(
         'CategoriesStore', on_delete=models.CASCADE,
         null=True,
@@ -24,6 +31,14 @@ class SotreDepartment(ChatbootModel):
         'Title',
         max_length=500,
     )
+    
+    def __str__(self):
+        """Return Department name."""
+        return f'name:{self.department}'
+
+    class Meta:
+        verbose_name = "Department"
+        verbose_name_plural = "Departments"
 
 class CategoriesStore(ChatbootModel):
     """Departaments categories"""
@@ -32,3 +47,11 @@ class CategoriesStore(ChatbootModel):
         'Department category',
         max_length=50
     )
+
+    def __str__(self):
+        """Return category name."""
+        return f'name:{self.category}'
+
+    class Meta:
+        verbose_name = "Category"
+        verbose_name_plural = "Categories"

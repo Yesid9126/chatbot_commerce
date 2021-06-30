@@ -87,9 +87,12 @@ class ProductsApiVtex(ChatbootModel):
         default=False
     )
 
-
     def __str__(self):
         """Return product name|id."""
         return f'name:{self.name}'
+    
+    class Meta:
+        verbose_name = "Product"
+        verbose_name_plural = "Products"
 
     
