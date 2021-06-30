@@ -71,6 +71,7 @@ THIRD_PARTY_APPS = [
 
 LOCAL_APPS = [
     "chatbot_commerce.products.apps.ProductsConfig",
+    "chatbot_commerce.stores.apps.StoresConfig",
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps

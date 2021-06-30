@@ -1,2 +1,3 @@
 from .products import *
-from .stores import *
+from .departments import *
+from .skus import *

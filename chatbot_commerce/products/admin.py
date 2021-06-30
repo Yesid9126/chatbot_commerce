@@ -1,20 +1,14 @@
+"""Products models admin."""
+
 # Django
 from django.contrib import admin
-from django.contrib.auth import admin as auth_admin
-from django.contrib.auth import get_user_model
-from django.utils.translation import gettext_lazy as _
-
 # Models
-from chatbot_commerce.products.models import Product,StoresVtex
+from chatbot_commerce.products.models import *
 
-
-@admin.register(Product)
+@admin.register(ProductsApiVtex)
 class ProductsAdmin(admin.ModelAdmin):
-    pass
+    """Product model admin."""
 
-
-@admin.register(StoresVtex)
-class StoresAdmin(admin.ModelAdmin):
-    pass
+    list_display = ['name','product_id', 'sku']
 
 
