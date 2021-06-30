@@ -2,11 +2,12 @@
 
 # Django
 from django.db import models
+from django.db.models import JSONField
 
 # utilities
 from chatbot_commerce.utils.models import ChatbootModel
 
-class SotreDepartment(ChatbootModel):
+class StoreDepartment(ChatbootModel):
     """Store departmentss"""
 
     department = models.CharField(
@@ -23,6 +24,7 @@ class SotreDepartment(ChatbootModel):
 
     categories = models.ForeignKey(
         'CategoriesStore', on_delete=models.CASCADE,
+        related_name='categories',
         null=True,
         blank=True
     )
@@ -31,6 +33,8 @@ class SotreDepartment(ChatbootModel):
         'Title',
         max_length=500,
     )
+
+    department_json = JSONField('Complete department data', null=True, blank=True)
     
     def __str__(self):
         """Return Department name."""
@@ -47,6 +51,16 @@ class CategoriesStore(ChatbootModel):
         'Department category',
         max_length=50
     )
+
+    products = models.ForeignKey(
+        'products.ProductsApiVtex',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='products'
+    )
+
+    categories_json = JSONField('Complete categories data', null=True, blank=True)
 
     def __str__(self):
         """Return category name."""

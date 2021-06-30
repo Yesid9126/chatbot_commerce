@@ -2,6 +2,7 @@
 
 # Django
 from django.db import models
+from django.db.models import JSONField
 
 # utilities
 from chatbot_commerce.utils.models import ChatbootModel
@@ -19,16 +20,24 @@ class Skus(ChatbootModel):
         max_length=50
     )
 
-    refID = models.PositiveIntegerField()
+    refID = models.PositiveIntegerField(
+        default=0,
+        blank=True
+    )
 
     is_kit = models.BooleanField(
         default=False
     )
 
-    comercial_condition_id = models.PositiveIntegerField()
+    comercial_condition_id = models.PositiveIntegerField(
+        default=0,
+        blank=True
+    )
+
+    sku_json = JSONField('Complete sku data', null=True, blank=True)
 
     def __str__(self):
-        """Return product name|id."""
+        """Return sku id."""
         return f'sku:{self.sku_id}'
 
     class Meta:

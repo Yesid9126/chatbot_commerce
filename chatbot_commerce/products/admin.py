@@ -3,7 +3,7 @@
 # Django
 from django.contrib import admin
 # Models
-from chatbot_commerce.products.models import *
+from chatbot_commerce.products.models import ProductsApiVtex, StoreDepartment, Skus
 
 @admin.register(ProductsApiVtex)
 class ProductsAdmin(admin.ModelAdmin):
@@ -13,7 +13,7 @@ class ProductsAdmin(admin.ModelAdmin):
     search_fields = ['name', 'product_id', 'sku' ]
 
 
-@admin.register(SotreDepartment)
+@admin.register(StoreDepartment)
 class DepartmentsAdmin(admin.ModelAdmin):
     """Departments model admin."""
 

@@ -2,13 +2,11 @@
 
 # Django
 from django.db import models
-from django.contrib.postgres.fields import JSONField
-from django.core.exceptions import ValidationError
+from django.db.models import JSONField
 
 # utilities
 from chatbot_commerce.utils.models import ChatbootModel
-from django.db.models.signals import post_save
-from django.dispatch import receiver
+
 
     
 class ProductsApiVtex(ChatbootModel):
@@ -86,6 +84,8 @@ class ProductsApiVtex(ChatbootModel):
         'Without stock',
         default=False
     )
+
+    product_data = JSONField('Complete product data', null=True, blank=True)
 
     def __str__(self):
         """Return product name|id."""
