@@ -14,15 +14,15 @@ class StoresVtex(ChatbootModel):
         max_length=255,
     )
 
-    url = models.URLField(
+    url_enviroment = models.URLField(
         max_length=500
     )
 
-    app_key = models.CharField(
+    appi_key = models.CharField(
         max_length=500
     )
 
-    token = models.CharField(
+    api_token = models.CharField(
         max_length=500
     )
 

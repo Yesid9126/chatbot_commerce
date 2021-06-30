@@ -10,7 +10,13 @@ from chatbot_commerce.utils.models import ChatbootModel
 class StoreDepartment(ChatbootModel):
     """Store departmentss"""
 
-    department = models.CharField(
+    department_id = models.CharField(
+        max_length=6,
+        null=True,
+        blank = True
+    )
+
+    department_name = models.CharField(
         'Store department',
         max_length=50
     )
@@ -47,7 +53,13 @@ class StoreDepartment(ChatbootModel):
 class CategoriesStore(ChatbootModel):
     """Departaments categories"""
 
-    category = models.CharField(
+    category_id = models.CharField(
+        max_length=6,
+        null=True,
+        blank = True
+    )
+
+    category_name = models.CharField(
         'Department category',
         max_length=50
     )

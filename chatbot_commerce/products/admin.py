@@ -17,8 +17,8 @@ class ProductsAdmin(admin.ModelAdmin):
 class DepartmentsAdmin(admin.ModelAdmin):
     """Departments model admin."""
 
-    list_display = ['department', 'title']
-    search_fields = ['department', 'title', 'categories']
+    list_display = ['department_name', 'title']
+    search_fields = ['department_name', 'title', 'categories']
 
 
 @admin.register(Skus)

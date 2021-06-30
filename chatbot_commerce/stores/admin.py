@@ -9,5 +9,5 @@ from chatbot_commerce.stores.models import StoresVtex
 class StoresAdmin(admin.ModelAdmin):
     """Product model admin."""
 
-    list_display = ['name', 'url']
-    search_fields = ['name', 'url',]
+    list_display = ['name', 'url_enviroment']
+    search_fields = ['name', 'url_enviroment',]
