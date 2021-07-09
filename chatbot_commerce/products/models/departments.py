@@ -44,7 +44,7 @@ class StoreDepartment(ChatbootModel):
     
     def __str__(self):
         """Return Department name."""
-        return f'name:{self.department}'
+        return f'name:{self.department_name}'
 
     class Meta:
         verbose_name = "Department"
@@ -76,7 +76,7 @@ class CategoriesStore(ChatbootModel):
 
     def __str__(self):
         """Return category name."""
-        return f'name:{self.category}'
+        return self.category_name
 
     class Meta:
         verbose_name = "Category"

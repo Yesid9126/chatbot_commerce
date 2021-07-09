@@ -34,17 +34,9 @@ class StoresVtex(ChatbootModel):
         blank=True
     )
 
-    categories = models.ForeignKey(
-        to='products.CategoriesStore',
-        on_delete=models.CASCADE,
-        related_name='categories_store',
-        null=True,
-        blank=True
-    )
-
     def __str__(self):
         """Return store name."""
-        return f'sku:{self.sku_id}'
+        return f'Store:{self.name}'
 
     class Meta:
         verbose_name = "Store"
