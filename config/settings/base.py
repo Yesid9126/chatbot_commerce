@@ -290,10 +290,10 @@ CORS_URLS_REGEX = r"^/api/.*$"
 # Your stuff...
 # ------------------------------------------------------------------------------
 
-
 # Vtex
-API_KEY = env("X-VTEX-API-AppKey")
+X_VTEX_API_AppKey = env("X-VTEX-API-AppKey")
 STORE_NAME = env("STORE_NAME")
-API_PASSWORD = env("X-VTEX-API-AppToken")
+X_VTEX_API_AppToken = env("X-VTEX-API-AppToken")
 
-URL_VTEX_API = f'https://{STORE_NAME}.vtexcommercestable.com.br/api/catalog_system/pvt/products/'
+
+URL_VTEX_STORES = f'https://pilatos.vtexcommercestable.com.br/api/catalog_system/pvt/'
