@@ -65,7 +65,7 @@ class CategoriesStore(ChatbootModel):
     )
 
     products = models.ForeignKey(
-        'products.ProductsApiVtex',
+        to='products.ProductsApiVtex',
         on_delete=models.CASCADE,
         null=True,
         blank=True,

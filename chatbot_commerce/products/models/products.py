@@ -23,16 +23,11 @@ class ProductsApiVtex(ChatbootModel):
         max_length=500
     )
 
-    sku = models.CharField(
-        'Product sku',
-        unique=True,
-        max_length=500
-    )
-
-
     link_id = models.CharField(
         'link id',
-        max_length=500
+        max_length=500,
+        null=True,
+        blank=True
     )
 
     reference_id = models.CharField(
@@ -47,37 +42,40 @@ class ProductsApiVtex(ChatbootModel):
     description = models.TextField(
         'Description',
         max_length=500,
+        null=True,
+        blank=True
     )
 
     description_short = models.CharField(
-        max_length=255
+        max_length=255,
+        null=True,
+        blank=True
     )
-
-    release_date = models.DateField()
 
     keywords = models.CharField(
         'Keywords',
-        max_length=100
+        max_length=100,
+        null=True,
+        blank=True
     )
 
     title = models.CharField(
         'Title',
-        max_length=255
+        max_length=255,
+        null=True,
+        blank=True
     )
 
     is_active = models.BooleanField(
         'Is active',
-        default=255
-    )
-
-    tax_code = models.CharField(
-        'Tax code',
-        max_length=255
+        default=True
     )
 
     meta_tag_description = models.CharField(
         'Tag description',
-        max_length=255
+        max_length=255,
+        null=True,
+        blank=True
     )
 
     show_without_stock = models.BooleanField(
@@ -85,6 +83,13 @@ class ProductsApiVtex(ChatbootModel):
         default=False
     )
 
+    skus = models.ForeignKey(
+        to='products.Skus',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='products_sku'
+    )
     product_data = JSONField('Complete product data', null=True, blank=True)
 
     def __str__(self):

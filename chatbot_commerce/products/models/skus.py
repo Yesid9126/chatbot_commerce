@@ -15,9 +15,20 @@ class Skus(ChatbootModel):
         max_length=50
     )
 
+    product_id = models.CharField(
+        'Sku',
+        max_length=50,
+        null=True,
+        blank=True
+    )
+
+    is_active = models.BooleanField(
+        default=False,
+    )
+
     specification = models.CharField(
         'Specification sku',
-        max_length=50
+        max_length=50,
     )
 
     refID = models.PositiveIntegerField(
@@ -34,11 +45,15 @@ class Skus(ChatbootModel):
         blank=True
     )
 
-    sku_json = JSONField('Complete sku data', null=True, blank=True)
+    sku_json = JSONField(
+        'Complete sku data',
+        null=True,
+        blank=True
+    )
 
     def __str__(self):
         """Return sku id."""
-        return f'sku:{self.sku_id}'
+        return f'sku:{self.specification}'
 
     class Meta:
         verbose_name = "Sku"
