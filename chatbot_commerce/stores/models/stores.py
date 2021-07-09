@@ -26,6 +26,22 @@ class StoresVtex(ChatbootModel):
         max_length=500
     )
 
+    departments = models.ForeignKey(
+        to='products.StoreDepartment',
+        on_delete=models.CASCADE,
+        related_name='departments_store',
+        null=True,
+        blank=True
+    )
+
+    categories = models.ForeignKey(
+        to='products.CategoriesStore',
+        on_delete=models.CASCADE,
+        related_name='categories_store',
+        null=True,
+        blank=True
+    )
+
     def __str__(self):
         """Return store name."""
         return f'sku:{self.sku_id}'
@@ -42,26 +58,3 @@ class StoresVtex(ChatbootModel):
         }
         return headers
 
-    @property
-    def urls(self):
-        core_url = f"https://{self.name}.{self.url_enviroment}.com.br/api"
-        core_uri_1 = f"{core_url}/catalog/pvt" 
-        core_uri_2 = f"{core_url}/catalog_system/pvt"
-        urls = {
-            "product": {
-                "productID": {
-                    "onlyProduct" : f"{core_uri_1}/product",
-                    "product&context": f"{core_uri_2}/products/ProductGet",
-                    "product&tradePolicy": f"{core_uri_2}/products/productget"
-                },
-                "productRefId": {
-                    "onlyProduct": f"{core_uri_2}/products/productgetbyrefid",
-                }
-            },
-            "category": {
-                "categoryID": {
-                    "onlyCategory": f"{core_uri_1}/category"
-                }
-            }
-        }
-        return urls
