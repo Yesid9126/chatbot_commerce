@@ -28,9 +28,10 @@ class StoreDepartment(ChatbootModel):
         blank=True
     )
 
-    categories = models.ForeignKey(
-        'CategoriesStore', on_delete=models.CASCADE,
-        related_name='categories',
+    store = models.ForeignKey(
+        to='stores.StoresVtex',
+        on_delete=models.CASCADE,
+        related_name='departments_store',
         null=True,
         blank=True
     )
@@ -64,12 +65,12 @@ class CategoriesStore(ChatbootModel):
         max_length=50
     )
 
-    products = models.ForeignKey(
-        to='products.ProductsApiVtex',
+    departments = models.ForeignKey(
+        to='StoreDepartment',
         on_delete=models.CASCADE,
+        related_name='categories',
         null=True,
-        blank=True,
-        related_name='products'
+        blank=True
     )
 
     categories_json = JSONField('Complete categories data', null=True, blank=True)

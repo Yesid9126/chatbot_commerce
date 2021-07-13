@@ -18,7 +18,7 @@ class VtexStores:
         """Get resource method."""
         # querystring = urllib.parse.urlencode(kwargs)
         # url = "{}/{}?{}".format(settings.URL_VTEX_STORES, uri, querystring)
-        url = f'https://pilatos.vtexcommercestable.com.br/api/catalog_system/pvt/sku/stockkeepingunitids?page=1&pagesize=25'
+        url = f'https://pilatos.vtexcommercestable.com.br/api/catalog_system/pvt/sku/stockkeepingunitids?page=1&pagesize=100'
         headers = {
             'X_VTEX_API_AppKey': settings.X_VTEX_API_AppKey,
             'X_VTEX_API_AppToken': settings.X_VTEX_API_AppToken,

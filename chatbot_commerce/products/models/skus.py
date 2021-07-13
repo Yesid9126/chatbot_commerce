@@ -45,6 +45,14 @@ class Skus(ChatbootModel):
         blank=True
     )
 
+    products = models.ForeignKey(
+        to='products.ProductsApiVtex',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='products_sku'
+    )
+
     sku_json = JSONField(
         'Complete sku data',
         null=True,

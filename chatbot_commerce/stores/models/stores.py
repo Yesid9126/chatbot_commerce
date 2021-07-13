@@ -26,14 +26,6 @@ class StoresVtex(ChatbootModel):
         max_length=500
     )
 
-    departments = models.ForeignKey(
-        to='products.StoreDepartment',
-        on_delete=models.CASCADE,
-        related_name='departments_store',
-        null=True,
-        blank=True
-    )
-
     def __str__(self):
         """Return store name."""
         return f'Store:{self.name}'
