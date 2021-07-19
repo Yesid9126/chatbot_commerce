@@ -11,12 +11,12 @@ class Skus(ChatbootModel):
     """Store departmentss"""
 
     sku_id = models.CharField(
-        'Sku',
+        'Sku ID',
         max_length=50
     )
 
     product_id = models.CharField(
-        'Sku',
+        'Product ID',
         max_length=50,
         null=True,
         blank=True

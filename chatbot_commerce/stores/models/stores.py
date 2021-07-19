@@ -42,3 +42,4 @@ class StoresVtex(ChatbootModel):
         }
         return headers
 
+

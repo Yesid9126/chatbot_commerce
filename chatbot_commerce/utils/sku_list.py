@@ -4,47 +4,47 @@
 from rest_framework import status
 
 # Models
-from chatbot_commerce.products.models import Skus
+from chatbot_commerce.products.models import Skus, ProductsApiVtex
 
 # Apis
 from chatbot_commerce.utils.apis.vtex import VtexStores
 
 
-def get_sku_vtex_store():
+def get_sku_vtex_store(request, **kwargs):
     """Get all sku's available in shop."""
     vtex = VtexStores()
     skus = vtex.total_skus()
-    skus_ids = []
+    products_ids = []
     if skus:
-        for sku in skus:
-            id_product = product.get('id')
-            shopify_ids.append(str(id_product))
-            variants = product.get('variants')
-            # Check single or multiple variants
-            for variant in variants:
-                if id_product == variant.get('product_id'):
-                    # Create product
-                    try:
-                        product, created = Product.objects.update_or_create(
-                            id_shopify=id_product,
-                            defaults={
-                                'sku': variant.get('sku'),
-                                'name': product.get('title'),
-                                'stock': variant.get('inventory_quantity'),
-                                'product_data': product,
-                            })
-                    except Exception as e:
-                        logger.error(f'Cant retrieve product from shopify due: {e}')
-                    if not created:
-                        product.status = Product.RETRIEVED_FROM_SHOPIFY
-                        product.save(update_fields=['status', 'modified'])
-                else:
-                    # TODO: Product with multiples variants
-                    pass
-        # Delete products not in store
-        all_products = Product.objects.all()
-        non_existence_ids = all_products.exclude(id_shopify__in=shopify_ids)
-        non_existence_ids.delete()
-        return f'{len(shopify_ids)} products retrieved from shopify'
-    else:
-        logger.error(f'Error in import products by shopify {stock}')
+        for sku_unit in skus:
+            sku = sku_unit
+            product_id = vtex.unit_sku(sku=sku)
+            product_id = product_id.get('ProductId')
+            if product_id not in products_ids:
+                products_ids.append(product_id)
+    # for products in products_ids:
+    #     products = vtex.product_unit(product_id=products)
+    #     if products:
+    #         try:
+    #             products, created = ProductsApiVtex.objects.update_or_create(
+    #                     product_id=products.get('Id'),
+    #                     defaults={
+    #                         'product_id': product_id.get('ProductId'),
+    #                         'is_active': product_id.get('IsActive'),
+    #                         'specification': product_id.get('Name'),
+    #                         'sku_json': product_id,
+    #                     })
+            
+            # try:
+            #     product_id, created = Skus.objects.update_or_create(
+            #                 sku_id=product_id.get('Id'),
+            #                 defaults={
+            #                     'product_id': product_id.get('ProductId'),
+            #                     'is_active': product_id.get('IsActive'),
+            #                     'specification': product_id.get('Name'),
+            #                     'sku_json': product_id,
+            #                 })
+            # except ConnectionError:
+            #     continue
+            
+                

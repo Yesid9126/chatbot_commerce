@@ -291,9 +291,11 @@ CORS_URLS_REGEX = r"^/api/.*$"
 # ------------------------------------------------------------------------------
 
 # Vtex
-X_VTEX_API_AppKey = env("X-VTEX-API-AppKey")
 STORE_NAME = env("STORE_NAME")
-X_VTEX_API_AppToken = env("X-VTEX-API-AppToken")
+ENVIROMENT_VTEX = env("ENVIROMENT_VTEX")
+CATALOG = env("CATALOG")
+CATALOG_SYSTEM =env("CATALOG_SYSTEM")
 
-
-URL_VTEX_STORES = f'https://pilatos.vtexcommercestable.com.br/api/catalog_system/pvt/'
+URL_SKU = f'https://{STORE_NAME}.{ENVIROMENT_VTEX}/{CATALOG}'
+URL_PRODUCT = f'https://{STORE_NAME}.{ENVIROMENT_VTEX}/{CATALOG}'
+URL_PRODUCTS_SKU = f'https://{STORE_NAME}.{ENVIROMENT_VTEX}/{CATALOG_SYSTEM}'
