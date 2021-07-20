@@ -12,10 +12,10 @@ from chatbot_commerce.utils.models import ChatbootModel
 class ProductsApiVtex(ChatbootModel):
     """Main product model."""
 
-    product_id = models.SlugField(
+    product_id = models.CharField(
         'Vtex product Id',
         unique=True,
-        max_length=255
+        max_length=30
     )
 
     name = models.CharField(
@@ -47,7 +47,7 @@ class ProductsApiVtex(ChatbootModel):
     )
 
     description_short = models.CharField(
-        max_length=255,
+        max_length=500,
         null=True,
         blank=True
     )
@@ -61,7 +61,7 @@ class ProductsApiVtex(ChatbootModel):
 
     title = models.CharField(
         'Title',
-        max_length=255,
+        max_length=500,
         null=True,
         blank=True
     )
@@ -73,7 +73,7 @@ class ProductsApiVtex(ChatbootModel):
 
     meta_tag_description = models.CharField(
         'Tag description',
-        max_length=255,
+        max_length=500,
         null=True,
         blank=True
     )

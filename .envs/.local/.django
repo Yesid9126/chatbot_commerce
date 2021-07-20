@@ -16,6 +16,6 @@ CELERY_FLOWER_PASSWORD=Ir8KnpoT450y7ppmZbqXPKgB4MLMNxJ4Wq6Lhl3yd9YA3XnhMtMxKdIOM
 # VTEX
 STORE_NAME=pilatos
 ENVIROMENT_VTEX=vtexcommercestable.com.br/api
-CATALOG=catalog/pvt/
+CATALOG=catalog/pvt
 CATALOG_SYSTEM=catalog_system/pvt/sku
 

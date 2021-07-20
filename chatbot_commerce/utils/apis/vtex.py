@@ -25,24 +25,23 @@ class VtexStores:
     def _get_unit_sku(self, uri, **kwargs):
         """Get sku specification."""
         store = StoresVtex.objects.filter(name='pilatos').get()
-        url = "{}/{}".format(settings.URL_SKU, uri)
+        url = "{}{}".format(settings.URL_SKU, uri)
         id_sku = requests.get(url, headers=store.headers, timeout=1000)
         return id_sku
 
     def _get_unit_product(self, product_id, **kwargs):
         """Get product unit."""
         store = StoresVtex.objects.filter(name='pilatos').get()
-        url = "{}/{}".format(settings.URL_PRODUCT, product_id)
+        url = "{}{}".format(settings.URL_PRODUCT, product_id)
         id_product = requests.get(url, headers=store.headers, timeout=1000)
-        import ipdb ; ipdb.set_trace()
         return id_product
 
     def _get_product_skus(self, product_id, **kwargs):
         """Get product unit."""
         store = StoresVtex.objects.filter(name='pilatos').get()
         url = "{}/{}".format(settings.URL_PRODUCTS_SKU, product_id)
-        id_sku = requests.get(url, headers=store.headers, timeout=1000)
-        return id_sku
+        products_skus = requests.get(url, headers=store.headers, timeout=1000)
+        return products_skus
 
     # def _get_json_resource(self, uri, **kwargs):
     #     try:

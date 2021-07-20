@@ -12,12 +12,12 @@ class Skus(ChatbootModel):
 
     sku_id = models.CharField(
         'Sku ID',
-        max_length=50
+        max_length=10
     )
 
     product_id = models.CharField(
         'Product ID',
-        max_length=50,
+        max_length=10,
         null=True,
         blank=True
     )
@@ -28,11 +28,11 @@ class Skus(ChatbootModel):
 
     specification = models.CharField(
         'Specification sku',
-        max_length=50,
+        max_length=255,
     )
 
-    refID = models.PositiveIntegerField(
-        default=0,
+    refID = models.CharField(
+        max_length=100,
         blank=True
     )
 
@@ -40,8 +40,8 @@ class Skus(ChatbootModel):
         default=False
     )
 
-    comercial_condition_id = models.PositiveIntegerField(
-        default=0,
+    comercial_condition_id = models.CharField(
+        max_length=100,
         blank=True
     )
 
