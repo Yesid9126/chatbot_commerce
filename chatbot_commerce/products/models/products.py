@@ -14,13 +14,14 @@ class ProductsApiVtex(ChatbootModel):
 
     product_id = models.CharField(
         'Vtex product Id',
-        unique=True,
-        max_length=30
+        max_length=30,
     )
 
     name = models.CharField(
         'Product name',
-        max_length=500
+        max_length=500,
+        null=True,
+        blank=True
     )
 
     link_id = models.CharField(

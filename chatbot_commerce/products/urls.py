@@ -7,10 +7,10 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 # Views
-from .views import products as products_view
+from .views import products as products_views
 
 router = DefaultRouter()
-router.register(r'products', products_view.ProductsViewSet, basename='products')
+router.register(r'pilatos/products', products_views.ProductsViewset, basename='products')
 
 
 urlpatterns = [

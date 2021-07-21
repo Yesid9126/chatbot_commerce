@@ -18,7 +18,7 @@ class VtexStores:
         """Get all sku's."""
         store = StoresVtex.objects.filter(name='pilatos').get()
         store_name = store.name
-        url = f'https://{store_name}.vtexcommercestable.com.br/api/catalog_system/pvt/sku/stockkeepingunitids?page=1&pagesize=25'
+        url = f'https://{store_name}.vtexcommercestable.com.br/api/catalog_system/pvt/sku/stockkeepingunitids?page=1&pagesize=100'
         list_id_skus = requests.get(url, headers=store.headers, timeout=1000)
         return list_id_skus
 

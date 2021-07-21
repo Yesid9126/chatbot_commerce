@@ -46,7 +46,7 @@ class DepartmentsAdmin(admin.ModelAdmin):
 class ProductsAdmin(admin.ModelAdmin):
     """Product model admin."""
 
-    list_display = ['name', 'product_id']
+    list_display = ['id', 'name', 'product_id']
     search_fields = ['name', 'product_id']
     inlines = [ProductsSkusInline]
     

@@ -7,17 +7,14 @@ from django.views.generic import TemplateView
 from rest_framework.authtoken.views import obtain_auth_token
 
 urlpatterns = [
-    # Django Admin, use 
+    # Django Admin
     path(settings.ADMIN_URL, admin.site.urls),
-    # Clothes urls
-    # path("",include("store.clothes.urls", namespace= "clothes"))
-
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # API URLS
 urlpatterns += [
-    # API base url
-    # path('', include(('chatbot_commerce.products.urls', 'products'), namespace='products')),
+    # Products urls
+    path('', include(('chatbot_commerce.products.urls', 'products'), namespace='products')),
     # DRF auth token
     path("auth-token/", obtain_auth_token),
 ]
@@ -47,11 +44,3 @@ if settings.DEBUG:
         import debug_toolbar
 
         urlpatterns = [path("__debug__/", include(debug_toolbar.urls))] + urlpatterns
-
-# API URLS
-urlpatterns += [
-    # API base url
-    path("api/", include("config.api_router")),
-    # DRF auth token
-    path("auth-token/", obtain_auth_token),
-]
