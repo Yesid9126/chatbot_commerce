@@ -32,4 +32,3 @@ class ChatbootModel(models.Model):
 
         get_latest_by = 'created'
         ordering = ['-created', '-modified']
-

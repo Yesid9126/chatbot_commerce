@@ -12,15 +12,14 @@ from chatbot_commerce.products.serializers import ProductsModelSerializer
 from chatbot_commerce.products.models import ProductsApiVtex
 
 
-
 class ProductsViewset(viewsets.ModelViewSet):
     """Products viewset."""
 
     serializer_class = ProductsModelSerializer
     lookup_field = 'product_id'
+
     @action(detail=True, methods=['get', 'post'])
     def get_queryset(self):
         """Restrict list to products active."""
         queryset = ProductsApiVtex.objects.filter(is_active=True)
         return queryset
-    

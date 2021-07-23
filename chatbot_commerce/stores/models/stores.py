@@ -7,6 +7,7 @@ from django.db import models
 from chatbot_commerce.utils.models import ChatbootModel
 # from chatbot_commerce.products.models.products import Product
 
+
 class StoresVtex(ChatbootModel):
     """Stores model."""
 
@@ -33,7 +34,7 @@ class StoresVtex(ChatbootModel):
     class Meta:
         verbose_name = "Store"
         verbose_name_plural = "Stores"
-    
+
     @property
     def headers(self):
         headers = {
@@ -41,5 +42,3 @@ class StoresVtex(ChatbootModel):
             "X-VTEX-API-AppToken": f"{self.api_token}"
         }
         return headers
-
-

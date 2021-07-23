@@ -57,7 +57,3 @@ def get_sku_vtex_store():
                         'sku_json': products_skus
                     }
                 )
-                
-        
-
-

@@ -49,7 +49,7 @@ class ProductsAdmin(admin.ModelAdmin):
     list_display = ['id', 'name', 'product_id']
     search_fields = ['name', 'product_id']
     inlines = [ProductsSkusInline]
-    
+
 
 @admin.register(Skus)
 class SkusAdmin(admin.ModelAdmin):
@@ -57,4 +57,3 @@ class SkusAdmin(admin.ModelAdmin):
 
     list_display = ['sku_id', 'specification', 'product_id']
     search_fields = ['sku_id', 'specification', 'product_id']
-

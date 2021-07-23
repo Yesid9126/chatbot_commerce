@@ -7,6 +7,7 @@ from django.db.models import JSONField
 # utilities
 from chatbot_commerce.utils.models import ChatbootModel
 
+
 class Skus(ChatbootModel):
     """Store departmentss"""
 

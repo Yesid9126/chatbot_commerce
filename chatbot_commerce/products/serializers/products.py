@@ -19,10 +19,13 @@ class SkuModelSerializer(serializers.ModelSerializer):
         fields = (
             'sku_id', 'product_id', 'specification'
         )
+
+
 class ProductsModelSerializer(serializers.ModelSerializer):
     """Product model serializer."""
 
     products_sku = SkuModelSerializer(many=True)
+
     class Meta:
         """Meta class."""
 

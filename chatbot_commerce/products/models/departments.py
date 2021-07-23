@@ -7,13 +7,14 @@ from django.db.models import JSONField
 # utilities
 from chatbot_commerce.utils.models import ChatbootModel
 
+
 class StoreDepartment(ChatbootModel):
     """Store departmentss"""
 
     department_id = models.CharField(
         max_length=6,
         null=True,
-        blank = True
+        blank=True
     )
 
     department_name = models.CharField(
@@ -42,7 +43,7 @@ class StoreDepartment(ChatbootModel):
     )
 
     department_json = JSONField('Complete department data', null=True, blank=True)
-    
+
     def __str__(self):
         """Return Department name."""
         return f'name:{self.department_name}'
@@ -51,13 +52,14 @@ class StoreDepartment(ChatbootModel):
         verbose_name = "Department"
         verbose_name_plural = "Departments"
 
+
 class CategoriesStore(ChatbootModel):
     """Departaments categories"""
 
     category_id = models.CharField(
         max_length=6,
         null=True,
-        blank = True
+        blank=True
     )
 
     category_name = models.CharField(

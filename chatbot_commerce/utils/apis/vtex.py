@@ -78,14 +78,13 @@ class VtexStores:
         return self._get_all_skus().json()
 
     def unit_sku(self, sku):
-        uri =f'stockkeepingunit/{sku}'
+        uri = f'stockkeepingunit/{sku}'
         return self._get_unit_sku(uri).json()
 
     def product_unit(self, product_id):
-        uri =f'product/{product_id}'
+        uri = f'product/{product_id}'
         return self._get_unit_product(uri).json()
 
     def products_skus(self, product_id):
         uri = f'stockkeepingunitByProductId/{product_id}'
         return self._get_product_skus(uri).json()
-

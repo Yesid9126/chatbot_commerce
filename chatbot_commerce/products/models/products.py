@@ -8,7 +8,6 @@ from django.db.models import JSONField
 from chatbot_commerce.utils.models import ChatbootModel
 
 
-    
 class ProductsApiVtex(ChatbootModel):
     """Main product model."""
 
@@ -97,9 +96,7 @@ class ProductsApiVtex(ChatbootModel):
     def __str__(self):
         """Return product name|id."""
         return f'name:{self.name}'
-    
+
     class Meta:
         verbose_name = "Product"
         verbose_name_plural = "Products"
-
-    
