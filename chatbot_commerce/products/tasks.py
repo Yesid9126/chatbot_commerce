@@ -5,6 +5,7 @@ from django.conf import settings
 
 # Django Rest Framework
 from rest_framework import status
+from rest_framework import response
 
 # Celery
 from config import celery_app
@@ -16,10 +17,10 @@ from celery.schedules import crontab
 from chatbot_commerce.utils.sku_list import get_sku_vtex_store
 
 
-@task()
+@task(expires=259200, soft_time_limit=259200, time_limit=259200)
 def store_sku_list():
     """List of all sku's"""
     result = []
     response = get_sku_vtex_store()
     result.append(response)
-    return result(status=status.HTTP_200_OK)
+    return response(status=status.HTTP_200_OK)

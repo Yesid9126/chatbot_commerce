@@ -23,7 +23,6 @@ drf-yasg
 django-jsoneditor
 djangorestframework-api-key
 openpyxl
-pandas
 xmljson
 
 # JWT
