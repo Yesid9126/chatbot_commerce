@@ -14,7 +14,7 @@ from celery.utils.log import get_task_logger
 from celery.schedules import crontab
 
 # Utils
-from chatbot_commerce.utils.product_skus import get_sku_vtex_store
+from chatbot_commerce.utils.products import get_sku_vtex_store
 
 
 @task(expires=259200, soft_time_limit=259200, time_limit=259200)

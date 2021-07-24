@@ -1,4 +1,4 @@
-"""Store sku list"""
+"""list of products with their skus."""
 
 # Django Rest Framework
 from rest_framework import status
@@ -57,3 +57,4 @@ def get_sku_vtex_store():
                         'sku_json': products_skus
                     }
                 )
+        # departments = vtex
