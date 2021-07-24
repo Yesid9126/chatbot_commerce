@@ -43,6 +43,13 @@ class VtexStores:
         products_skus = requests.get(url, headers=store.headers, timeout=1000)
         return products_skus
 
+    def _get_departments_categories(self):
+        """Get department and categories."""
+        store = StoresVtex.objects.filter(name='pilatos').get()
+        url = "{}/{}".format(settings.URL_PRODUCTS_SKU)
+        departments = requests.get(url, headers=store.headers, timeout=1000)
+        return departments
+
     # def _get_json_resource(self, uri, **kwargs):
     #     try:
     #         response_json = {}
@@ -88,3 +95,5 @@ class VtexStores:
     def products_skus(self, product_id):
         uri = f'stockkeepingunitByProductId/{product_id}'
         return self._get_product_skus(uri).json()
+    
+    def departments_categories(self, )
