@@ -18,9 +18,14 @@ from chatbot_commerce.utils.products import get_sku_vtex_store
 
 
 @task(expires=259200, soft_time_limit=259200, time_limit=259200)
-def store_sku_list():
-    """List of all sku's"""
+def store_products():
+    """List of all products and sku's"""
     result = []
     response = get_sku_vtex_store()
     result.append(response)
-    return response(status=status.HTTP_200_OK)
+    return result(status=status.HTTP_200_OK)
+
+# @task(expires=259200, soft_time_limit=259200, time_limit=259200)
+# def store_departments():
+#     """List of departments and categories for store"""
+#     response = _get_departments_categories()
