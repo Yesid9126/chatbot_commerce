@@ -15,6 +15,7 @@ from celery.schedules import crontab
 
 # Utils
 from chatbot_commerce.utils.products import get_sku_vtex_store
+from chatbot_commerce.utils.departments_categories import get_departments
 
 
 @task(expires=259200, soft_time_limit=259200, time_limit=259200)
@@ -25,7 +26,10 @@ def store_products():
     result.append(response)
     return result(status=status.HTTP_200_OK)
 
-# @task(expires=259200, soft_time_limit=259200, time_limit=259200)
-# def store_departments():
-#     """List of departments and categories for store"""
-#     response = _get_departments_categories()
+@task(expires=259200, soft_time_limit=259200, time_limit=259200)
+def store_departments():
+    """List of departments and categories for store"""
+    result = []
+    response = get_departments()
+    result.append(response)
+    return result(status=status.HTTP_200_OK)

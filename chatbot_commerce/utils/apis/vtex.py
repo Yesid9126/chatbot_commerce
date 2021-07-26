@@ -43,13 +43,12 @@ class VtexStores:
         products_skus = requests.get(url, headers=store.headers, timeout=1000)
         return products_skus
 
-    # def _get_departments_categories(self):
-    #     """Get department and categories."""
-    #     store = StoresVtex.objects.filter(name='pilatos').get()
-    #     url = "{}/{}".format(settings.URL_DEPARTMENT_CATEGORIES)
-    #     departments = requests.get(url, headers=store.headers, timeout=1000)
-    #     import ipdb ; ipdb.set_trace()
-    #     return departments
+    def _get_departments_categories(self):
+        """Get department and categories."""
+        store = StoresVtex.objects.filter(name='pilatos').get()
+        url = "{}".format(settings.URL_DEPARTMENT_CATEGORIES,)
+        departments = requests.get(url, headers=store.headers, timeout=1000)
+        return departments
 
     # def _get_json_resource(self, uri, **kwargs):
     #     try:
@@ -97,5 +96,5 @@ class VtexStores:
         uri = f'stockkeepingunitByProductId/{product_id}'
         return self._get_product_skus(uri).json()
     
-    # def departments_categories(self):
-    #     return self._get_departments_categories.json()
+    def departments_categories(self):
+        return self._get_departments_categories().json()

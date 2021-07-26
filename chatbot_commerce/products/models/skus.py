@@ -6,6 +6,7 @@ from django.db.models import JSONField
 
 # utilities
 from chatbot_commerce.utils.models import ChatbootModel
+from chatbot_commerce.stores.models import StoresVtex
 
 
 class Skus(ChatbootModel):
@@ -67,3 +68,28 @@ class Skus(ChatbootModel):
     class Meta:
         verbose_name = "Sku"
         verbose_name_plural = "Sku's"
+
+class Price(ChatbootModel):
+    store = models.ForeignKey(StoresVtex, on_delete=models.CASCADE)
+    sku = models.ForeignKey(Skus, on_delete=models.CASCADE, related_name='price')
+    listPrice = models.BigIntegerField('List price', null=True, blank=True)
+    costPrice = models.BigIntegerField('Cost price', null=True, blank=True)
+    markup = models.BigIntegerField('Mark up', null=True, blank=True)
+    basePrice = models.BigIntegerField('Base price', null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'Price'
+        verbose_name_plural = "Price's"
+
+
+class FixedPrices(ChatbootModel):
+    store = models.ForeignKey(StoresVtex, on_delete=models.CASCADE)
+    price = models.ForeignKey(Price, on_delete=models.CASCADE, related_name='fixedPrices')
+    tradePolicyId = models.CharField('Trade porlice ID', max_length=50)
+    value = models.BigIntegerField('Value', null=True, blank=True)
+    listPrice = models.BigIntegerField('List price', null=True, blank=True)
+    minQuantity = models.IntegerField('Minimun quantity', null=True, blank=True)
+
+    class Meta:
+        verbose_name = "FixedPrice"
+        verbose_name_plural = "Fixed price's"

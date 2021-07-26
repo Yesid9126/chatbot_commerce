@@ -12,21 +12,26 @@ class StoreDepartment(ChatbootModel):
     """Store departmentss"""
 
     department_id = models.CharField(
+        'Department id',
         max_length=6,
         null=True,
         blank=True
     )
 
     department_name = models.CharField(
-        'Store department',
+        'Department name',
         max_length=50
     )
 
     url_department = models.CharField(
-        'Url',
+        'Url department',
         max_length=5000,
         null=True,
         blank=True
+    )
+
+    has_children = models.BooleanField(
+        default=False,
     )
 
     store = models.ForeignKey(
@@ -40,6 +45,13 @@ class StoreDepartment(ChatbootModel):
     title = models.CharField(
         'Title',
         max_length=500,
+    )
+
+    tag_description = models.CharField(
+        'Description',
+        max_length=500,
+        blank=True,
+        null=True
     )
 
     department_json = JSONField('Complete department data', null=True, blank=True)
@@ -65,6 +77,10 @@ class CategoriesStore(ChatbootModel):
     category_name = models.CharField(
         'Department category',
         max_length=50
+    )
+
+    has_children = models.BooleanField(
+        default=False,
     )
 
     departments = models.ForeignKey(

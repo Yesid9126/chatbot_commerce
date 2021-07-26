@@ -11,7 +11,7 @@ from chatbot_commerce.utils.apis.vtex import VtexStores
 
 
 def get_sku_vtex_store():
-    """Get all sku's available in shop."""
+    """Creation of products available in the store."""
     vtex = VtexStores()
     skus = vtex.total_skus()
     products_ids = []
