@@ -1,8 +1,5 @@
 """list of products with their skus."""
 
-# Django Rest Framework
-from rest_framework import status
-
 # Models
 from chatbot_commerce.products.models import Skus, ProductsApiVtex
 

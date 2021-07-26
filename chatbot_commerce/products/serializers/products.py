@@ -2,7 +2,6 @@
 
 # Django rest framework
 from chatbot_commerce.products.models.skus import Skus
-from django.db.models import fields
 from rest_framework import serializers
 
 # Model

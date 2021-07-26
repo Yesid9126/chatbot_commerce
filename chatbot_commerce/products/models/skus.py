@@ -69,6 +69,7 @@ class Skus(ChatbootModel):
         verbose_name = "Sku"
         verbose_name_plural = "Sku's"
 
+
 class Price(ChatbootModel):
     store = models.ForeignKey(StoresVtex, on_delete=models.CASCADE)
     sku = models.ForeignKey(Skus, on_delete=models.CASCADE, related_name='price')

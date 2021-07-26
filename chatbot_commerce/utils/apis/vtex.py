@@ -8,7 +8,6 @@ from chatbot_commerce.stores.models import StoresVtex
 
 # Utilities
 import requests
-import json
 
 
 class VtexStores:
@@ -95,6 +94,6 @@ class VtexStores:
     def products_skus(self, product_id):
         uri = f'stockkeepingunitByProductId/{product_id}'
         return self._get_product_skus(uri).json()
-    
+
     def departments_categories(self):
         return self._get_departments_categories().json()
