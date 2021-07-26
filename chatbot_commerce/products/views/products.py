@@ -3,7 +3,7 @@
 # Django Rest Framewor
 from django.http import Http404
 from rest_framework import viewsets
-from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
+from rest_framework.status import HTTP_200_OK
 from rest_framework.response import Response
 from rest_framework.decorators import action
 
@@ -41,7 +41,3 @@ class ProductsViewset(viewsets.ModelViewSet):
         data = self.serializer_class(obj).data
         status = HTTP_200_OK
         return Response(data=data, status=status)
-    
-
-
-    
