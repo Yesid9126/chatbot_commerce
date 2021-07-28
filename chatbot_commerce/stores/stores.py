@@ -12,16 +12,22 @@ class StoresVtex(ChatbootModel):
     """Stores model."""
 
     name = models.CharField(
+        'Store Name',
         max_length=255,
     )
 
-    url = models.URLField()
+    url_enviroment = models.CharField(
+        'Store Name',
+        max_length=255,
+    )
 
-    app_key = models.CharField(
+    api_key = models.CharField(
+        'Appi key store',
         max_length=500
     )
 
-    token = models.CharField(
+    api_token = models.CharField(
+        'Appi token store',
         max_length=500
     )
 
@@ -30,3 +36,11 @@ class StoresVtex(ChatbootModel):
         on_delete=models.CASCADE,
         related_name='products'
     )
+
+    @property
+    def headers(self):
+        headers = {
+            "X-VTEX-API-AppKey": f"{self.api_key_value}",
+            "X-VTEX-API-AppToken": f"{self.api_token_value}"
+        }
+        return headers
