@@ -13,7 +13,7 @@ class ProductsApiVtex(ChatbootModel):
 
     product_id = models.CharField(
         'Vtex product Id',
-        max_length=30,
+        max_length=50,
     )
 
     name = models.CharField(
@@ -21,6 +21,28 @@ class ProductsApiVtex(ChatbootModel):
         max_length=500,
         null=True,
         blank=True
+    )
+
+    department_id = models.CharField(
+        'Department id',
+        max_length=50,
+        null=True,
+        blank=True
+    )
+
+    category_id = models.CharField(
+        'Category id',
+        max_length=50,
+        null=True,
+        blank=True
+    )
+
+    brand_id = models.CharField(
+        'Brand id',
+        max_length=50,
+        null=True,
+        blank=True
+
     )
 
     link_id = models.CharField(
@@ -32,7 +54,9 @@ class ProductsApiVtex(ChatbootModel):
 
     reference_id = models.CharField(
         'Reference id',
-        max_length=500
+        max_length=500,
+        null=True,
+        blank=True
     )
 
     is_visible = models.BooleanField(
@@ -83,7 +107,7 @@ class ProductsApiVtex(ChatbootModel):
         default=False
     )
 
-    category = models.ForeignKey(
+    categories = models.ForeignKey(
         to='products.CategoriesStore',
         on_delete=models.CASCADE,
         null=True,

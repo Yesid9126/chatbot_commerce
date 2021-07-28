@@ -55,5 +55,5 @@ class ProductsAdmin(admin.ModelAdmin):
 class SkusAdmin(admin.ModelAdmin):
     """Sku's model admin."""
 
-    list_display = ['sku_id', 'specification', 'product_id']
-    search_fields = ['sku_id', 'specification', 'product_id']
+    list_display = ['sku_id', 'sku_name', 'product_id']
+    search_fields = ['sku_id', 'sku_name', 'product_id']

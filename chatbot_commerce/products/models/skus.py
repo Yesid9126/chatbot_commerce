@@ -24,27 +24,79 @@ class Skus(ChatbootModel):
         blank=True
     )
 
+    sku_name = models.CharField(
+        'name sku',
+        max_length=255,
+        null=True,
+        blank=True
+    )
+
     is_active = models.BooleanField(
+        'Active sku',
         default=False,
     )
 
-    specification = models.CharField(
-        'Specification sku',
-        max_length=255,
+    ref_id = models.CharField(
+        'Reference id',
+        max_length=100,
+        null=True,
+        blank=True
     )
 
-    refID = models.CharField(
-        max_length=100,
+    packaged_height = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True
+    )
+
+    packaged_length = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True
+    )
+
+    packaged_width = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True
+    )
+
+    packaged_weight = models.CharField(
+        'Packaged weight Kg',
+        max_length=50,
+        null=True,
         blank=True
     )
 
     is_kit = models.BooleanField(
+        'sku is kit',
         default=False
     )
 
     comercial_condition_id = models.CharField(
         max_length=100,
+        null=True,
         blank=True
+    )
+
+    manufacter_code = models.CharField(
+        max_length=100,
+        null=True,
+        blank=True
+    )
+
+    reference_stock_id = models.BooleanField(
+        default=False,
+        null=True,
+        blank=True
+    )
+
+    is_inventoried = models.BooleanField(
+        default=False
+    )
+
+    is_transported = models.BooleanField(
+        default=False
     )
 
     products = models.ForeignKey(
@@ -63,7 +115,7 @@ class Skus(ChatbootModel):
 
     def __str__(self):
         """Return sku id."""
-        return f'sku:{self.specification}'
+        return f'sku:{self.sku_name}'
 
     class Meta:
         verbose_name = "Sku"

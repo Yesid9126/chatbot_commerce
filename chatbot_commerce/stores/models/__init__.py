@@ -1,1 +1,1 @@
-from .stores import *
+from .stores import * # noqa

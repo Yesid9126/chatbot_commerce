@@ -1,3 +1,3 @@
-from .products import *
-from .departments import *
-from .skus import *
+from .products import * # noqa
+from .departments import * # noqa
+from .skus import * # noqa
