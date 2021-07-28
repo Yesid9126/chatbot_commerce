@@ -3,7 +3,7 @@
 # Django
 from django.contrib import admin
 # Models
-from chatbot_commerce.products.models import ProductsApiVtex, StoreDepartment, Skus, CategoriesStore
+from chatbot_commerce.products.models import ProductsApiVtex, StoreDepartment, Skus, CategoriesStore, Image, Price, FixedPrices
 
 
 class StoreCategoriesInline(admin.TabularInline):
@@ -57,3 +57,29 @@ class SkusAdmin(admin.ModelAdmin):
 
     list_display = ['sku_id', 'sku_name', 'product_id']
     search_fields = ['sku_id', 'sku_name', 'product_id']
+
+
+@admin.register(Image)
+class ImagesAdmin(admin.ModelAdmin):
+    list_display = ['image_url']
+
+
+class InlineFixedPrice(admin.TabularInline):
+    model = FixedPrices
+    extra = 0
+    fields = ['store', 'value', 'tradePolicyId']
+
+
+@admin.register(Price)
+class PriceAdmin(admin.ModelAdmin):
+    """Price model admin."""
+
+    list_display = ['store', 'sku']
+    inlines = [InlineFixedPrice]
+
+
+@admin.register(FixedPrices)
+class FixedPriceAdmin(admin.ModelAdmin):
+    """Price model admin."""
+
+    list_display = ['store', 'price', 'tradePolicyId']

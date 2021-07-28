@@ -1,10 +1,11 @@
 """list of products with their skus."""
 
 # Models
-from chatbot_commerce.products.models import Skus, ProductsApiVtex
+from chatbot_commerce.products.models import Skus, ProductsApiVtex, Price, FixedPrices, Image
+from chatbot_commerce.stores.models import StoresVtex
 
 # Apis
-from chatbot_commerce.utils.apis.vtex import VtexStores
+from chatbot_commerce.utils.apis.vtex import VtexStores, VtexPriceSku
 
 
 def get_products_vtex_store():
@@ -47,13 +48,13 @@ def get_products_vtex_store():
     for product in products_ids:
         skus_product = vtex.products_skus(product_id=product)
         for skus in skus_product:
-            products = ProductsApiVtex.objects.filter(product_id=product).get()
+            products = ProductsApiVtex.objects.filter(product_id=product).first()
             try:
-                product_skus, created = Skus.objects.update_or_create(
+                oelo, created = Skus.objects.update_or_create(
                     sku_id=skus.get('Id'),
                     defaults={
                         'product_id': skus.get('ProductId'),
-                        'sku_name': skus.get('Name').upper(),
+                        'sku_name': skus.get('Name'),
                         'is_active': skus.get('IsActive'),
                         'ref_id': skus.get('RefId'),
                         'packaged_height': skus.get('Height'),
@@ -77,4 +78,107 @@ def get_products_vtex_store():
     all_products = ProductsApiVtex.objects.all()
     non_existence_ids = all_products.exclude(product_id__in=products_ids)
     non_existence_ids.delete()
-    return f'{len(products_ids)} products retrieved from vtex'
+    # Prices & Images
+    vtexprice = VtexPriceSku()
+    store = StoresVtex.objects.filter(name='pilatos').get()
+    all_skus_dics = Skus.objects.all().values_list('sku_json', flat=True)
+    for sku_dic in all_skus_dics:
+        sku = Skus.objects.filter(sku_id=sku_dic.get('Id'), product_id=sku_dic.get('ProductId')).first()
+        # Create price for sku
+        price_dic = vtexprice.price_sku(sku_id=sku_dic.get('Id'))
+        if 'listPrice' not in price_dic:
+            price = Price.objects.filter(sku=sku, store=store).first()
+            if price:
+                price.delete()
+            continue
+        price_instance, created = Price.objects.update_or_create(
+            sku=sku,
+            store=store,
+            defaults={
+                "listPrice": price_dic['listPrice'],
+                "costPrice": price_dic['costPrice'],
+                "markup": price_dic['markup'],
+                "basePrice": price_dic['basePrice']
+            }
+        )
+        for fixedprice_dic in price_dic['fixedPrices']:
+            fixedprice_instace, created = FixedPrices.objects.update_or_create(
+                price=price_instance,
+                store=store,
+                tradePolicyId=fixedprice_dic["tradePolicyId"],
+                defaults={
+                    "value": fixedprice_dic["value"],
+                    "listPrice": fixedprice_dic["listPrice"],
+                    "minQuantity": fixedprice_dic["minQuantity"]
+                }
+            )
+        # Create image for sku
+        images_array = vtex.image_sku(sku_id=sku_dic.get('Id'))
+        images = Image.objects.filter(Sku=sku, store=store, SkuId=sku_dic.get('Id'))
+        if len(images_array) != images.count():
+            images.delete()
+        for image_dic in images_array:
+            if 'ArchiveId' not in image_dic:
+                if images:
+                    images.delete()
+                break
+            num = image_dic['ArchiveId']
+            name = image_dic['Name']
+            image_dic['image_url'] = f'https://{store.name}.vteximg.com.br/arquivos/ids/{num}/{name}.jpg'
+            updated, created = Image.objects.update_or_create(
+                Id=image_dic.get('Id'),
+                Sku=sku,
+                SkuId=sku_dic.get('Id'),
+                store=store,
+                defaults=image_dic
+            )
+
+
+# def get_skus_vtex_stores(request, **kwargs):
+#     """Get skus for product."""
+#     vtex = VtexStores()
+#     products = ProductsApiVtex.objects,all()
+#     for sku in products:
+#         import ipdb ; ipdb.set_trace()
+#         product_id = products.get('product_id')
+#         import ipdb ; ipdb.set_trace()
+    # skus = vtex.total_skus()
+    # if skus:
+    #     for sku_unit in skus:
+    #         sku = sku_unit
+    #         sku = vtex.unit_sku(sku=sku)
+    #         product = ProductsApiVtex.objects.filter(product_id=sku.get('ProductId')).get()
+    #         try:
+    #             products_sku, created = Skus.objects.update_or_create(
+    #                 sku_id=sku.get('Id'),
+    #                 defaults={
+    #                     'product_id': sku.get('ProductId'),
+    #                     'sku_name': sku.get('Name'),
+    #                     'is_active': sku.get('IsActive'),
+    #                     'activate_if_possible': sku.get('ActivateIfPossible'),
+    #                     'refID': sku.get('RefId'),
+    #                     'packaged_height': sku.get('PackagedHeight'),
+    #                     'packaged_length': sku.get('PackagedLength'),
+    #                     'packaged_width': sku.get('PackagedWidth'),
+    #                     'packaged_weight': sku.get('PackagedWeightKg'),
+    #                     'is_kit': sku.get('IsKit'),
+    #                     'comercial_condition_id': sku.get('CommercialConditionId'),
+    #                     'unit_multiplier': sku.get('UnitMultiplier'),
+    #                     'kit_items_sell_apart': sku.get('KitItensSellApart'),
+    #                     'products': product,
+    #                     'sku_json': sku
+    #                 }
+    #             )
+    #         except Exception as e:
+    #             # if not created:
+    #                 print('Error al crear')
+    #             #     # product.status = Product.RETRIEVED_FROM_SHOPIFY
+    #             #     # product.save(update_fields=['status', 'modified'])
+    #             # else:
+    #             #     # TODO: Product with multiples variants
+    #             #     pass
+    # # Delete products not in store
+    # all_products = ProductsApiVtex.objects.all()
+    # non_existence_ids = all_products.exclude(product_id__in=products_ids)
+    # non_existence_ids.delete()
+    # return products_ids
