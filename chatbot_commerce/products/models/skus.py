@@ -34,6 +34,8 @@ class Skus(ChatbootModel):
     is_active = models.BooleanField(
         'Active sku',
         default=False,
+        null=True,
+        blank=True
     )
 
     ref_id = models.CharField(
@@ -70,7 +72,9 @@ class Skus(ChatbootModel):
 
     is_kit = models.BooleanField(
         'sku is kit',
-        default=False
+        default=False,
+        null=True,
+        blank=True
     )
 
     comercial_condition_id = models.CharField(
@@ -92,11 +96,15 @@ class Skus(ChatbootModel):
     )
 
     is_inventoried = models.BooleanField(
-        default=False
+        default=False,
+        null=True,
+        blank=True
     )
 
     is_transported = models.BooleanField(
-        default=False
+        default=False,
+        null=True,
+        blank=True
     )
 
     products = models.ForeignKey(
