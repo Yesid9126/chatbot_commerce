@@ -49,11 +49,11 @@ def get_products_vtex_store():
         for skus in skus_product:
             products = ProductsApiVtex.objects.filter(product_id=product).get()
             try:
-                oelo, created = Skus.objects.update_or_create(
+                product_skus, created = Skus.objects.update_or_create(
                     sku_id=skus.get('Id'),
                     defaults={
                         'product_id': skus.get('ProductId'),
-                        'sku_name': skus.get('Name'),
+                        'sku_name': skus.get('Name').upper(),
                         'is_active': skus.get('IsActive'),
                         'ref_id': skus.get('RefId'),
                         'packaged_height': skus.get('Height'),
@@ -77,53 +77,4 @@ def get_products_vtex_store():
     all_products = ProductsApiVtex.objects.all()
     non_existence_ids = all_products.exclude(product_id__in=products_ids)
     non_existence_ids.delete()
-
-
-# def get_skus_vtex_stores(request, **kwargs):
-#     """Get skus for product."""
-#     vtex = VtexStores()
-#     products = ProductsApiVtex.objects,all()
-#     for sku in products:
-#         import ipdb ; ipdb.set_trace()
-#         product_id = products.get('product_id')
-#         import ipdb ; ipdb.set_trace()
-    # skus = vtex.total_skus()
-    # if skus:
-    #     for sku_unit in skus:
-    #         sku = sku_unit
-    #         sku = vtex.unit_sku(sku=sku)
-    #         product = ProductsApiVtex.objects.filter(product_id=sku.get('ProductId')).get()
-    #         try:
-    #             products_sku, created = Skus.objects.update_or_create(
-    #                 sku_id=sku.get('Id'),
-    #                 defaults={
-    #                     'product_id': sku.get('ProductId'),
-    #                     'sku_name': sku.get('Name'),
-    #                     'is_active': sku.get('IsActive'),
-    #                     'activate_if_possible': sku.get('ActivateIfPossible'),
-    #                     'refID': sku.get('RefId'),
-    #                     'packaged_height': sku.get('PackagedHeight'),
-    #                     'packaged_length': sku.get('PackagedLength'),
-    #                     'packaged_width': sku.get('PackagedWidth'),
-    #                     'packaged_weight': sku.get('PackagedWeightKg'),
-    #                     'is_kit': sku.get('IsKit'),
-    #                     'comercial_condition_id': sku.get('CommercialConditionId'),
-    #                     'unit_multiplier': sku.get('UnitMultiplier'),
-    #                     'kit_items_sell_apart': sku.get('KitItensSellApart'),
-    #                     'products': product,
-    #                     'sku_json': sku
-    #                 }
-    #             )
-    #         except Exception as e:
-    #             # if not created:
-    #                 print('Error al crear')
-    #             #     # product.status = Product.RETRIEVED_FROM_SHOPIFY
-    #             #     # product.save(update_fields=['status', 'modified'])
-    #             # else:
-    #             #     # TODO: Product with multiples variants
-    #             #     pass
-    # # Delete products not in store
-    # all_products = ProductsApiVtex.objects.all()
-    # non_existence_ids = all_products.exclude(product_id__in=products_ids)
-    # non_existence_ids.delete()
-    # return products_ids
+    return f'{len(products_ids)} products retrieved from vtex'
