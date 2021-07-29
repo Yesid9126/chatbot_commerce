@@ -5,7 +5,6 @@ from django.http import Http404
 from rest_framework import viewsets
 from rest_framework.status import HTTP_200_OK
 from rest_framework.response import Response
-from rest_framework.decorators import action
 
 # Serializers
 from chatbot_commerce.products.serializers import ProductsModelSerializer
@@ -34,7 +33,6 @@ class ProductsViewset(viewsets.ModelViewSet):
             status = HTTP_200_OK
         return Response(data=data, status=status)
 
-    @action(methods=['post'], detail=True)
     def post(self, *args, **kwargs):
         """Restrict list to products active."""
         obj = self.get_object()
