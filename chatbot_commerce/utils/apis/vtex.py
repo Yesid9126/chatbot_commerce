@@ -84,7 +84,7 @@ class VtexStores:
         )
 
     def departments_categories(self):
-        uri = f'catalog_system/pub/category/tree/10'
+        uri = 'catalog_system/pub/category/tree/10'
         method = 'get'
         return self._get_json_resource(
             uri,
