@@ -83,5 +83,61 @@ class VtexStores:
             method=method
         )
 
+    def image_sku(self, sku_id):
+        uri = f'catalog/pvt/stockkeepingunit/{sku_id}/file'
+        method = 'get'
+        return self._get_json_resource(
+            uri,
+            method=method
+        )
+
     def departments_categories(self):
         return self._get_departments_categories().json()
+
+
+class VtexPriceSku:
+
+    def _get_resource(self, uri, **kwargs):
+        store = StoresVtex.objects.filter(name='pilatos').get()
+        url = '{}/{}'.format(settings.URL_PRICESKU_VTEX, uri)
+        r = requests.get(url, headers=store.headers, timeout=1000)
+        return r
+
+    def _get_json_resource(self, uri, **kwargs):
+        try:
+            response_json = {}
+            method = kwargs.pop('method')
+            if method == 'get':
+                response = self._get_resource(uri, **kwargs)
+            else:
+                pass
+            if response.status_code in [requests.codes.ok]:
+                try:
+                    response_json = response.json()
+                except ValueError as e:
+                    response_json = {
+                        "status_code": response.status_code,
+                        "message": e
+                    }
+                    return response_json
+        except requests.ConnectionError as i:
+            response_json = {
+                "status_code": 504,
+                "message": f"TIMEOUT: {str(i)}"
+            }
+        except requests.exceptions.RequestException as e:
+            status_code = getattr(e.response, "status_code", 406)
+            reason = getattr(e.response, "resaon", str(e))
+            response_json = {
+                "status_code": status_code,
+                "message": reason
+            }
+        return response_json
+
+    def price_sku(self, sku_id):
+        uri = f'pricing/prices/{sku_id}'
+        method = 'get'
+        return self._get_json_resource(
+            uri,
+            method=method
+        )

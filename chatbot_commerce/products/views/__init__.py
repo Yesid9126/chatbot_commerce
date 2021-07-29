@@ -1,1 +1,1 @@
-from .products import * # noqa
+from .products import *  # noqa
