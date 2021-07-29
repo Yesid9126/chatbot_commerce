@@ -2,7 +2,7 @@
 
 # Django
 from django.db import models
-from django.db.models import JSONField, fields
+from django.db.models import JSONField
 
 # utilities
 from chatbot_commerce.utils.models import ChatbootModel
@@ -38,7 +38,6 @@ class Department(ChatbootModel):
         blank=True
     )
 
-
     title = models.CharField(
         'Title',
         max_length=500,
@@ -56,10 +55,8 @@ class Department(ChatbootModel):
     subcategories = models.ManyToManyField(
         'products.Category',
         through='products.Subcategory',
-        through_fields = ('department', 'category')
+        through_fields=('department', 'category')
     )
-
-
 
     department_json = JSONField('Complete department data', null=True, blank=True)
 
@@ -99,6 +96,7 @@ class Subcategory(models.Model):
         null=True,
         blank=True
     )
+
     class Meta:
         verbose_name = "Subcategory"
         verbose_name_plural = "Subcategories"
