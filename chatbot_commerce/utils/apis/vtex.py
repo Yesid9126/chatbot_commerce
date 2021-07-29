@@ -92,7 +92,12 @@ class VtexStores:
         )
 
     def departments_categories(self):
-        return self._get_departments_categories().json()
+        uri = 'catalog_system/pub/category/tree/10'
+        method = 'get'
+        return self._get_json_resource(
+            uri,
+            method=method
+        )
 
 
 class VtexPriceSku:

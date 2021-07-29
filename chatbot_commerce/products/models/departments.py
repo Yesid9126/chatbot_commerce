@@ -8,7 +8,7 @@ from django.db.models import JSONField
 from chatbot_commerce.utils.models import ChatbootModel
 
 
-class StoreDepartment(ChatbootModel):
+class Department(ChatbootModel):
     """Store departmentss"""
 
     department_id = models.CharField(
@@ -20,7 +20,9 @@ class StoreDepartment(ChatbootModel):
 
     department_name = models.CharField(
         'Department name',
-        max_length=50
+        max_length=50,
+        null=True,
+        blank=True
     )
 
     url_department = models.CharField(
@@ -32,12 +34,6 @@ class StoreDepartment(ChatbootModel):
 
     has_children = models.BooleanField(
         default=False,
-    )
-
-    store = models.ForeignKey(
-        to='stores.StoresVtex',
-        on_delete=models.CASCADE,
-        related_name='departments_store',
         null=True,
         blank=True
     )
@@ -45,6 +41,8 @@ class StoreDepartment(ChatbootModel):
     title = models.CharField(
         'Title',
         max_length=500,
+        null=True,
+        blank=True
     )
 
     tag_description = models.CharField(
@@ -52,6 +50,12 @@ class StoreDepartment(ChatbootModel):
         max_length=500,
         blank=True,
         null=True
+    )
+
+    subcategories = models.ManyToManyField(
+        'products.Category',
+        through='products.Subcategory',
+        through_fields=('department', 'category')
     )
 
     department_json = JSONField('Complete department data', null=True, blank=True)
@@ -65,7 +69,40 @@ class StoreDepartment(ChatbootModel):
         verbose_name_plural = "Departments"
 
 
-class CategoriesStore(ChatbootModel):
+class Subcategory(models.Model):
+    """Category subcategory."""
+
+    subcategory_name = models.CharField(
+        'Subcategory name',
+        max_length=255,
+        null=True,
+        blank=True
+    )
+
+    department = models.ForeignKey(
+        to=Department,
+        on_delete=models.CASCADE,
+        related_name='childs'
+    )
+
+    category = models.ForeignKey(
+        to='products.Category',
+        on_delete=models.CASCADE,
+        related_name='childs'
+    )
+
+    category_tree = models.JSONField(
+        'Children for categories',
+        null=True,
+        blank=True
+    )
+
+    class Meta:
+        verbose_name = "Subcategory"
+        verbose_name_plural = "Subcategories"
+
+
+class Category(ChatbootModel):
     """Departaments categories"""
 
     category_id = models.CharField(
@@ -76,15 +113,19 @@ class CategoriesStore(ChatbootModel):
 
     category_name = models.CharField(
         'Department category',
-        max_length=50
+        max_length=50,
+        null=True,
+        blank=True
     )
 
     has_children = models.BooleanField(
         default=False,
+        null=True,
+        blank=True
     )
 
     departments = models.ForeignKey(
-        to='StoreDepartment',
+        to='Department',
         on_delete=models.CASCADE,
         related_name='categories',
         null=True,
