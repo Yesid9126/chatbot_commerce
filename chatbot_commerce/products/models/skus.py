@@ -6,7 +6,6 @@ from django.db.models import JSONField
 
 # utilities
 from chatbot_commerce.utils.models import ChatbootModel
-from chatbot_commerce.stores.models import StoresVtex
 
 
 class Skus(ChatbootModel):
