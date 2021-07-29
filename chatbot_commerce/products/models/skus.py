@@ -7,6 +7,7 @@ from django.db.models import JSONField
 # utilities
 from chatbot_commerce.utils.models import ChatbootModel
 from chatbot_commerce.stores.models import StoresVtex
+from django.utils.translation import gettext as _
 
 
 class Skus(ChatbootModel):
@@ -128,6 +129,24 @@ class Skus(ChatbootModel):
     class Meta:
         verbose_name = "Sku"
         verbose_name_plural = "Sku's"
+
+
+class Image(ChatbootModel):
+    """"""
+    store = models.ForeignKey("stores.StoresVtex", on_delete=models.CASCADE, related_name='store_images')
+    Id = models.BigIntegerField(_("ID"), null=True, blank=True)
+    ArchiveId = models.BigIntegerField(_("Archive ID"), null=True, blank=True)
+    Sku = models.ForeignKey("products.Skus", on_delete=models.CASCADE, related_name='sku_images')
+    SkuId = models.BigIntegerField(_("Sku ID"), null=True, blank=True)
+    Name = models.CharField(_("Name"), max_length=500)
+    IsMain = models.BooleanField(_("Main image"), null=True)
+    Label = models.CharField(_("Label"), max_length=50, null=True, blank=True)
+    image_url = models.URLField(_("Image url"), max_length=2000, null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'Image'
+        verbose_name_plural = "Image's"
+        ordering = ['SkuId', 'Id']
 
 
 class Price(ChatbootModel):
