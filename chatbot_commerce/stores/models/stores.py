@@ -5,7 +5,6 @@ from django.db import models
 
 # utilities
 from chatbot_commerce.utils.models import ChatbootModel
-# from chatbot_commerce.products.models.products import Product
 
 
 class StoresVtex(ChatbootModel):

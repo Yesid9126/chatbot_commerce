@@ -8,7 +8,6 @@ from celery.decorators import task
 
 # Utils
 from chatbot_commerce.utils.products import get_products_vtex_store
-# from chatbot_commerce.utils.departments_categories import get_departments
 
 
 @task(expires=259200, soft_time_limit=259200, time_limit=259200)

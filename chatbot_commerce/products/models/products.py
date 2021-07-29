@@ -107,14 +107,6 @@ class ProductsApiVtex(ChatbootModel):
         default=False
     )
 
-    categories = models.ForeignKey(
-        to='products.CategoriesStore',
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name='categories'
-    )
-
     product_data = JSONField('Complete product data', null=True, blank=True)
 
     def __str__(self):

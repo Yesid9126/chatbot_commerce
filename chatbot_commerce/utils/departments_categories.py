@@ -1,7 +1,7 @@
 """Creation of departments and categories."""
 
 # Models
-from chatbot_commerce.products.models import StoreDepartment, CategoriesStore
+from chatbot_commerce.products.models import Department, Category
 
 # Apis
 from chatbot_commerce.utils.apis.vtex import VtexStores
@@ -13,7 +13,7 @@ def get_departments(request, **kwargs):
     departments = vtex.departments_categories()
     for department in departments:
         children = department['children']
-        departament, created = StoreDepartment.objects.update_or_create(
+        departament, created = Department.objects.update_or_create(
             department_id=department.get('id'),
             defaults={
                 'department_name': department.get('name'),
@@ -25,7 +25,7 @@ def get_departments(request, **kwargs):
             }
         )
         for category in children:
-            categories, created = CategoriesStore.objects.update_or_create(
+            categories, created = Category.objects.update_or_create(
                 category_id=category.get('id'),
                 defaults={
                     'category_name': category.get('name'),
