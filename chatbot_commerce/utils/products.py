@@ -60,7 +60,7 @@ def get_products_vtex_store():
         for skus in skus_product:
             products = ProductsApiVtex.objects.filter(product_id=product).first()
             try:
-                product, created = Skus.objects.update_or_create(
+                instance, created = Skus.objects.update_or_create(
                     sku_id=skus.get('Id'),
                     defaults={
                         'product_id': skus.get('ProductId'),
