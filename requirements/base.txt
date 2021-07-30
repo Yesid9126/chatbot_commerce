@@ -27,3 +27,6 @@ xmljson
 
 # JWT
 pyjwt==2.1.0
+
+# Swagger
+drf-yasg

@@ -5,6 +5,9 @@ from django.http import Http404
 from rest_framework import viewsets
 from rest_framework.status import HTTP_200_OK
 from rest_framework.response import Response
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+
 
 # Serializers
 from chatbot_commerce.products.serializers import ProductsModelSerializer
@@ -24,6 +27,12 @@ class ProductsViewset(viewsets.ModelViewSet):
         """Restrict list to products active."""
         self.queryset = ProductsApiVtex.objects.filter(is_active=True)
         return self.queryset
+
+    @swagger_auto_schema(
+        responses={
+            HTTP_200_OK: "Created"
+        }
+    )
 
     def create(self, request, *args, **kwargs):
         try:
