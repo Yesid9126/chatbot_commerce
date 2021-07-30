@@ -1,7 +1,7 @@
 """Products serializers."""
 
 # Django rest framework
-from chatbot_commerce.products.models.skus import Skus, Image
+from chatbot_commerce.products.models.skus import Price, Skus, Image
 from rest_framework import serializers
 
 # Model
@@ -20,9 +20,19 @@ class ImageSkuModelSerializer(serializers.ModelSerializer):
         )
 
 
+class PriceModelSerializer(serializers.ModelSerializer):
+    """Price model serializer"""
+
+    class Meta:
+        """Meta class"""
+        model = Price
+        fields = ['costPrice']
+
+
 class SkuModelSerializer(serializers.ModelSerializer):
     """Sku model serializer"""
 
+    price = PriceModelSerializer(many=True)
     sku_images = ImageSkuModelSerializer(many=True)
 
     class Meta:
@@ -30,7 +40,7 @@ class SkuModelSerializer(serializers.ModelSerializer):
 
         model = Skus
         fields = (
-            'sku_id', 'product_id', 'sku_name', 'sku_images'
+            'sku_id', 'product_id', 'sku_name', 'sku_images', 'price'
         )
 
 
