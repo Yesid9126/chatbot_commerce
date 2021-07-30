@@ -44,6 +44,6 @@ class ProductsModelSerializer(serializers.ModelSerializer):
 
         model = ProductsApiVtex
         fields = (
-            'product_id', 'name', 'keywords', 'products_sku'
+            'product_id', 'name', 'department_name', 'category_name', 'keywords', 'products_sku'
         )
         depth = 1
