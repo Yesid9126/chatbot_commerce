@@ -19,6 +19,7 @@ class ImageSkuModelSerializer(serializers.ModelSerializer):
             'image_url',
         )
 
+
 class PriceModelSerializer(serializers.ModelSerializer):
     """Price model serializer"""
 
