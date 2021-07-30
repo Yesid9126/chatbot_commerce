@@ -20,6 +20,7 @@ def store_products():
     response = status.HTTP_200_OK
     return response
 
+
 @task(expires=259200, soft_time_limit=259200, time_limit=259200)
 def departments_categories():
     """Create all products."""
