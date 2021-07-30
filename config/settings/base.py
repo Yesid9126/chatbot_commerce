@@ -2,7 +2,7 @@
 Base settings to build other settings files upon.
 """
 from pathlib import Path
-
+from django.urls import reverse_lazy
 import environ
 
 ROOT_DIR = Path(__file__).resolve(strict=True).parent.parent.parent
@@ -67,6 +67,7 @@ THIRD_PARTY_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     "corsheaders",
+    'drf_yasg',
 ]
 
 LOCAL_APPS = [
@@ -297,3 +298,15 @@ PRICESKU_VTEX = env("PRICESKU_VTEX")
 
 URL_VTEX = f'https://{STORE_NAME}.{ENVIROMENT_VTEX}'
 URL_PRICESKU_VTEX = f'https://{PRICESKU_VTEX}/{STORE_NAME}'
+
+
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'basic': {
+            'type': 'basic'
+        }},
+    'USE_SESSION_AUTH': True,
+    'PERSIST_AUTH': True,
+    'LOGOUT_URL': reverse_lazy('admin:logout'),
+    'LOGIN_URL': reverse_lazy('admin:login')
+}
