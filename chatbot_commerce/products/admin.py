@@ -6,22 +6,10 @@ from django.contrib import admin
 from chatbot_commerce.products.models import ProductsApiVtex, Department, Skus, Category, Subcategory, Image, Price, FixedPrices
 
 
-# class CategoriesInline(admin.TabularInline):
-#     model = Categories
-#     extra = 0
-#     fields = ['category_name']
-
-
-# class ProductsCategoriesInline(admin.TabularInline):
-#     model = ProductsApiVtex
-#     extra = 0
-#     fields = ['name']
-
-
-# class ProductsSkusInline(admin.TabularInline):
-#     model = Skus
-#     extra = 0
-#     fields = ['sku_id', 'product_id']
+class ProductsSkusInline(admin.TabularInline):
+    model = Skus
+    extra = 0
+    fields = ['sku_name', 'sku_id', 'product_id']
 
 
 @admin.register(Subcategory)
@@ -38,7 +26,12 @@ class CategoriesAdmin(admin.ModelAdmin):
 
     list_display = ['category_id', 'category_name']
     search_fields = ['category_id', 'category_name']
-    # inlines = [ProductsCategoriesInline]
+
+
+class CategoriessInline(admin.TabularInline):
+    model = Category
+    extra = 0
+    fields = ['category_name', 'category_id']
 
 
 @admin.register(Department)
@@ -47,7 +40,7 @@ class DepartmentsAdmin(admin.ModelAdmin):
 
     list_display = ['department_name', 'title']
     search_fields = ['department_name', 'title', 'categories']
-    # inlines = [CategoriesInline]
+    inlines = [CategoriessInline]
 
 
 @admin.register(ProductsApiVtex)
@@ -56,7 +49,7 @@ class ProductsAdmin(admin.ModelAdmin):
 
     list_display = ['id', 'name', 'product_id']
     search_fields = ['name', 'product_id']
-    # inlines = [ProductsSkusInline]
+    inlines = [ProductsSkusInline]
 
 
 @admin.register(Skus)

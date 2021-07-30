@@ -37,6 +37,20 @@ class ProductsApiVtex(ChatbootModel):
         blank=True
     )
 
+    department_name = models.CharField(
+        'Department name',
+        max_length=255,
+        null=True,
+        blank=True
+    )
+
+    category_name = models.CharField(
+        'Category name',
+        max_length=255,
+        null=True,
+        blank=True
+    )
+
     brand_id = models.CharField(
         'Brand id',
         max_length=50,

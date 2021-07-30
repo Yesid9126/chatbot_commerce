@@ -1,6 +1,7 @@
 """list of products with their skus."""
 
 # Models
+from chatbot_commerce.products.models.departments import Category, Department
 from chatbot_commerce.products.models import Skus, ProductsApiVtex, Price, FixedPrices, Image
 from chatbot_commerce.stores.models import StoresVtex
 
@@ -22,13 +23,22 @@ def get_products_vtex_store():
                 products_ids.append(product_id)
     for product in products_ids:
         products = vtex.product_unit(product_id=product)
+        department = Department.objects.filter(department_id=products.get('DepartmentId')).get()
+        category = Category.objects.filter(category_id=products.get('CategoryId'))
+        if category:
+            category = category.get()
+            category_name = category.category_name
+        else:
+            category_name = ""
         try:
             products, created = ProductsApiVtex.objects.update_or_create(
                 product_id=products.get('Id'),
                 defaults={
                     'name': products.get('Name'),
                     'department_id': products.get('DepartmentId'),
-                    'category_id': products.get('CategoryId'),
+                    'category_id': products.get('CatgoryId'),
+                    'department_name': department.department_name,
+                    'category_name': category_name,
                     'brand_id': products.get('BrandId'),
                     'link_id': products.get('LinkId'),
                     'reference_id': products.get('RefId'),
@@ -50,7 +60,7 @@ def get_products_vtex_store():
         for skus in skus_product:
             products = ProductsApiVtex.objects.filter(product_id=product).first()
             try:
-                oelo, created = Skus.objects.update_or_create(
+                product, created = Skus.objects.update_or_create(
                     sku_id=skus.get('Id'),
                     defaults={
                         'product_id': skus.get('ProductId'),
@@ -132,53 +142,4 @@ def get_products_vtex_store():
                 store=store,
                 defaults=image_dic
             )
-
-
-# def get_skus_vtex_stores(request, **kwargs):
-#     """Get skus for product."""
-#     vtex = VtexStores()
-#     products = ProductsApiVtex.objects,all()
-#     for sku in products:
-#         import ipdb ; ipdb.set_trace()
-#         product_id = products.get('product_id')
-#         import ipdb ; ipdb.set_trace()
-    # skus = vtex.total_skus()
-    # if skus:
-    #     for sku_unit in skus:
-    #         sku = sku_unit
-    #         sku = vtex.unit_sku(sku=sku)
-    #         product = ProductsApiVtex.objects.filter(product_id=sku.get('ProductId')).get()
-    #         try:
-    #             products_sku, created = Skus.objects.update_or_create(
-    #                 sku_id=sku.get('Id'),
-    #                 defaults={
-    #                     'product_id': sku.get('ProductId'),
-    #                     'sku_name': sku.get('Name'),
-    #                     'is_active': sku.get('IsActive'),
-    #                     'activate_if_possible': sku.get('ActivateIfPossible'),
-    #                     'refID': sku.get('RefId'),
-    #                     'packaged_height': sku.get('PackagedHeight'),
-    #                     'packaged_length': sku.get('PackagedLength'),
-    #                     'packaged_width': sku.get('PackagedWidth'),
-    #                     'packaged_weight': sku.get('PackagedWeightKg'),
-    #                     'is_kit': sku.get('IsKit'),
-    #                     'comercial_condition_id': sku.get('CommercialConditionId'),
-    #                     'unit_multiplier': sku.get('UnitMultiplier'),
-    #                     'kit_items_sell_apart': sku.get('KitItensSellApart'),
-    #                     'products': product,
-    #                     'sku_json': sku
-    #                 }
-    #             )
-    #         except Exception as e:
-    #             # if not created:
-    #                 print('Error al crear')
-    #             #     # product.status = Product.RETRIEVED_FROM_SHOPIFY
-    #             #     # product.save(update_fields=['status', 'modified'])
-    #             # else:
-    #             #     # TODO: Product with multiples variants
-    #             #     pass
-    # # Delete products not in store
-    # all_products = ProductsApiVtex.objects.all()
-    # non_existence_ids = all_products.exclude(product_id__in=products_ids)
-    # non_existence_ids.delete()
-    # return products_ids
+    return print('0k')

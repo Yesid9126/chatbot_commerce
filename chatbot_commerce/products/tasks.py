@@ -8,6 +8,7 @@ from celery.decorators import task
 
 # Utils
 from chatbot_commerce.utils.products import get_products_vtex_store
+from chatbot_commerce.utils.departments_categories import get_departments
 
 
 @task(expires=259200, soft_time_limit=259200, time_limit=259200)
@@ -15,6 +16,15 @@ def store_products():
     """Create all products."""
     result = []
     response = get_products_vtex_store()
+    result.append(response)
+    response = status.HTTP_200_OK
+    return response
+
+@task(expires=259200, soft_time_limit=259200, time_limit=259200)
+def departments_categories():
+    """Create all products."""
+    result = []
+    response = get_departments()
     result.append(response)
     response = status.HTTP_200_OK
     return response
