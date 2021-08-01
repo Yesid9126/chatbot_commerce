@@ -68,7 +68,7 @@ class ImagesAdmin(admin.ModelAdmin):
 class InlineFixedPrice(admin.TabularInline):
     model = FixedPrices
     extra = 0
-    fields = ['store', 'value', 'tradePolicyId']
+    fields = ['store', 'value', 'trade_policy_id']
 
 
 @admin.register(Price)
@@ -83,4 +83,4 @@ class PriceAdmin(admin.ModelAdmin):
 class FixedPriceAdmin(admin.ModelAdmin):
     """Price model admin."""
 
-    list_display = ['store', 'price', 'tradePolicyId']
+    list_display = ['store', 'price', 'trade_policy_id']

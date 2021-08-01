@@ -2,7 +2,8 @@
 
 # Django
 from django.db import models
-from django.db.models import JSONField
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
 
 # utilities
 from chatbot_commerce.utils.models import ChatbootModel
@@ -116,7 +117,7 @@ class Skus(ChatbootModel):
         related_name='products_sku'
     )
 
-    sku_json = JSONField(
+    sku_json = models.JSONField(
         'Complete sku data',
         null=True,
         blank=True
@@ -132,44 +133,76 @@ class Skus(ChatbootModel):
 
 
 class Image(ChatbootModel):
-    """"""
-    store = models.ForeignKey("stores.StoresVtex", on_delete=models.CASCADE, related_name='store_images')
-    Id = models.BigIntegerField(_("ID"), null=True, blank=True)
-    ArchiveId = models.BigIntegerField(_("Archive ID"), null=True, blank=True)
-    Sku = models.ForeignKey("products.Skus", on_delete=models.CASCADE, related_name='sku_images')
-    SkuId = models.BigIntegerField(_("Sku ID"), null=True, blank=True)
-    Name = models.CharField(_("Name"), max_length=500)
-    IsMain = models.BooleanField(_("Main image"), null=True)
-    Label = models.CharField(_("Label"), max_length=50, null=True, blank=True)
+    """Image model"""
+
+    image_id = models.BigIntegerField(_("ID"), null=True, blank=True)
+    archive_id = models.BigIntegerField(_("Archive ID"), null=True, blank=True)
+    sku = models.ForeignKey("products.Skus", on_delete=models.CASCADE, related_name='sku_images')
+    name = models.CharField(_("Name"), max_length=500)
+    is_main = models.BooleanField(_("Main image"), null=True)
+    label = models.CharField(_("Label"), max_length=50, null=True, blank=True)
     image_url = models.URLField(_("Image url"), max_length=2000, null=True, blank=True)
 
     class Meta:
+        """Meta class"""
+
         verbose_name = 'Image'
         verbose_name_plural = "Image's"
-        ordering = ['SkuId', 'Id']
+        ordering = ['store', 'sku_id', 'image_id']
+
+
+@receiver(pre_save, sender=Image)
+def create_image_url(sender, instance, *args, **kwargs):
+    store_name = 'pilatos'
+    instance.image_url = f'https://{store_name}.vteximg.com.br/arquivos/ids/{instance.archive_id}/{instance.name}.jpg'
 
 
 class Price(ChatbootModel):
+    """Price model"""
+
     store = models.ForeignKey(StoresVtex, on_delete=models.CASCADE)
     sku = models.ForeignKey(Skus, on_delete=models.CASCADE, related_name='price')
-    listPrice = models.BigIntegerField('List price', null=True, blank=True)
-    costPrice = models.BigIntegerField('Cost price', null=True, blank=True)
-    markup = models.BigIntegerField('Mark up', null=True, blank=True)
-    basePrice = models.BigIntegerField('Base price', null=True, blank=True)
+    list_price = models.BigIntegerField(_('List price'), null=True, blank=True)
+    cost_price = models.BigIntegerField(_('Cost price'), null=True, blank=True)
+    markup = models.BigIntegerField(_('Mark up'), null=True, blank=True)
+    base_price = models.BigIntegerField(_('Base price'), null=True, blank=True)
 
     class Meta:
+        """Meta class"""
+
         verbose_name = 'Price'
         verbose_name_plural = "Price's"
+        ordering = ['store', 'sku', 'cost_price']
 
 
-class FixedPrices(ChatbootModel):
+class FixedPrice(ChatbootModel):
+    """Fixed price model"""
+
     store = models.ForeignKey(StoresVtex, on_delete=models.CASCADE)
-    price = models.ForeignKey(Price, on_delete=models.CASCADE, related_name='fixedPrices')
-    tradePolicyId = models.CharField('Trade porlice ID', max_length=50)
-    value = models.BigIntegerField('Value', null=True, blank=True)
-    listPrice = models.BigIntegerField('List price', null=True, blank=True)
-    minQuantity = models.IntegerField('Minimun quantity', null=True, blank=True)
+    price = models.ForeignKey(Price, on_delete=models.CASCADE, related_name='fixed_prices')
+    trade_policy_id = models.CharField(_('Trade porlice ID'), max_length=50)
+    value = models.BigIntegerField(_('Value'), null=True, blank=True)
+    list_price = models.BigIntegerField(_('List price'), null=True, blank=True)
+    min_quantity = models.IntegerField(_('Minimun quantity'), null=True, blank=True)
 
     class Meta:
-        verbose_name = "FixedPrice"
+        """Meta class"""
+
+        verbose_name = "Fixed price"
         verbose_name_plural = "Fixed price's"
+        ordering = ['store', 'price', 'trade_policy_id']
+
+
+class DateRange(ChatbootModel):
+    """Date range model"""
+
+    fixed_price = models.ForeignKey(FixedPrice, on_delete=models.CASCADE, related_name="date_range's")
+    date_time_from = models.DateTimeField(_("From date time"), auto_now=False, auto_now_add=False)
+    date_time_to = models.DateTimeField(_("To date time"), auto_now=False, auto_now_add=False)
+
+    class Meta:
+        """Meta class"""
+
+        verbose_name = "Date range"
+        verbose_name_plural = "Date range's"
+        ordering = ['fixed_price', 'datetime_from']
