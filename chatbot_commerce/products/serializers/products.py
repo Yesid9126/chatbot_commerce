@@ -1,7 +1,7 @@
 """Products serializers."""
 
 # Django rest framework
-from chatbot_commerce.products.models.skus import FixedPrice, Price, Skus, Image
+from chatbot_commerce.products.models.skus import FixedPrice, Price, Skus, Image, DateRange
 from rest_framework import serializers
 
 # Model
@@ -20,13 +20,26 @@ class ImageSkuModelSerializer(serializers.ModelSerializer):
         )
 
 
+class DateRangeModelSerializer(serializers.ModelSerializer):
+    """Date range model serializer"""
+
+    class Meta:
+        """Meta class"""
+        model = DateRange
+        fields = (
+            'date_time_from', 'date_time_to'
+        )
+
+
 class FixedPriceModelSerializer(serializers.ModelSerializer):
     """FixedPrice model serializer"""
+
+    date_ranges = DateRangeModelSerializer(many=True)
 
     class Meta:
         """Meta class"""
         model = FixedPrice
-        fields = ['trade_policy_id', 'value', 'min_quantity']
+        fields = ['trade_policy_id', 'value', 'min_quantity', 'date_ranges']
 
 
 class PriceModelSerializer(serializers.ModelSerializer):
@@ -67,4 +80,3 @@ class ProductsModelSerializer(serializers.ModelSerializer):
         fields = (
             'product_id', 'name', 'department_name', 'category_name', 'keywords', 'products_sku'
         )
-        depth = 1

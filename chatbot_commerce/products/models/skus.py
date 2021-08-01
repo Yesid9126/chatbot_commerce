@@ -7,7 +7,6 @@ from django.dispatch import receiver
 
 # utilities
 from chatbot_commerce.utils.models import ChatbootModel
-from chatbot_commerce.stores.models import StoresVtex
 from django.utils.translation import gettext as _
 
 

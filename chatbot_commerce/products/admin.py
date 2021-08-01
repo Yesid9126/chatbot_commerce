@@ -3,7 +3,16 @@
 # Django
 from django.contrib import admin
 # Models
-from chatbot_commerce.products.models import ProductsApiVtex, Department, Skus, Category, Subcategory, Image, Price, FixedPrice
+from chatbot_commerce.products.models import (
+    ProductsApiVtex, Department,
+    Skus,
+    Category,
+    Subcategory,
+    Image,
+    Price,
+    FixedPrice,
+    DateRange
+)
 
 
 class ProductsSkusInline(admin.TabularInline):
@@ -51,6 +60,7 @@ class ProductsAdmin(admin.ModelAdmin):
     search_fields = ['name', 'product_id']
     inlines = [ProductsSkusInline]
 
+
 @admin.register(Image)
 class ImagesAdmin(admin.ModelAdmin):
     list_display = ['sku', 'image_url']
@@ -61,10 +71,12 @@ class InlineImageAdmin(admin.TabularInline):
     estra = 0
     fields = ['archive_id', 'name', 'image_url']
 
+
 class InlinePriceAdmin(admin.TabularInline):
     model = Price
     estra = 0
     fields = ['base_price', 'price']
+
 
 @admin.register(Skus)
 class SkusAdmin(admin.ModelAdmin):
@@ -74,11 +86,27 @@ class SkusAdmin(admin.ModelAdmin):
     search_fields = ['sku_id', 'sku_name', 'product_id']
     inlines = [InlineImageAdmin, InlinePriceAdmin]
 
+
+@admin.register(DateRange)
+class DateRangeAdmin(admin.ModelAdmin):
+    """Sku's model admin."""
+
+    list_display = ['fixed_price', 'date_time_from', 'date_time_to']
+
+
+class InlineDateRangeAdmin(admin.TabularInline):
+    model = DateRange
+    extra = 0
+    fields = ['date_time_from', 'date_time_to']
+
+
 @admin.register(FixedPrice)
 class FixedPriceAdmin(admin.ModelAdmin):
     """Price model admin."""
 
     list_display = ['price', 'trade_policy_id', 'value']
+    inlines = [InlineDateRangeAdmin]
+
 
 class InlineFixedPriceAdmin(admin.TabularInline):
     model = FixedPrice

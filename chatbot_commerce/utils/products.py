@@ -150,7 +150,7 @@ def get_products_vtex_store():
                 image_id=image_dic.get('Id'),
                 sku=sku,
                 defaults={
-                    'is__main': image_dic,
+                    'is_main': image_dic.get('IsMain'),
                     'name': name,
                     'label': image_dic.get('Label'),
                     'archive_id': archive_id
