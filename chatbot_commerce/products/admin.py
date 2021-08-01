@@ -3,7 +3,7 @@
 # Django
 from django.contrib import admin
 # Models
-from chatbot_commerce.products.models import ProductsApiVtex, Department, Skus, Category, Subcategory, Image, Price, FixedPrices
+from chatbot_commerce.products.models import ProductsApiVtex, Department, Skus, Category, Subcategory, Image, Price, FixedPrice
 
 
 class ProductsSkusInline(admin.TabularInline):
@@ -51,6 +51,20 @@ class ProductsAdmin(admin.ModelAdmin):
     search_fields = ['name', 'product_id']
     inlines = [ProductsSkusInline]
 
+@admin.register(Image)
+class ImagesAdmin(admin.ModelAdmin):
+    list_display = ['sku', 'image_url']
+
+
+class InlineImageAdmin(admin.TabularInline):
+    model = Image
+    estra = 0
+    fields = ['archive_id', 'name', 'image_url']
+
+class InlinePriceAdmin(admin.TabularInline):
+    model = Price
+    estra = 0
+    fields = ['base_price', 'price']
 
 @admin.register(Skus)
 class SkusAdmin(admin.ModelAdmin):
@@ -58,29 +72,23 @@ class SkusAdmin(admin.ModelAdmin):
 
     list_display = ['sku_id', 'sku_name', 'product_id']
     search_fields = ['sku_id', 'sku_name', 'product_id']
+    inlines = [InlineImageAdmin, InlinePriceAdmin]
 
+@admin.register(FixedPrice)
+class FixedPriceAdmin(admin.ModelAdmin):
+    """Price model admin."""
 
-@admin.register(Image)
-class ImagesAdmin(admin.ModelAdmin):
-    list_display = ['image_url']
+    list_display = ['price', 'trade_policy_id', 'value']
 
-
-class InlineFixedPrice(admin.TabularInline):
-    model = FixedPrices
+class InlineFixedPriceAdmin(admin.TabularInline):
+    model = FixedPrice
     extra = 0
-    fields = ['store', 'value', 'trade_policy_id']
+    fields = ['value', 'trade_policy_id']
 
 
 @admin.register(Price)
 class PriceAdmin(admin.ModelAdmin):
     """Price model admin."""
 
-    list_display = ['store', 'sku']
-    inlines = [InlineFixedPrice]
-
-
-@admin.register(FixedPrices)
-class FixedPriceAdmin(admin.ModelAdmin):
-    """Price model admin."""
-
-    list_display = ['store', 'price', 'trade_policy_id']
+    list_display = ['sku', 'base_price']
+    inlines = [InlineFixedPriceAdmin]

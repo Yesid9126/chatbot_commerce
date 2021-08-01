@@ -148,7 +148,7 @@ class Image(ChatbootModel):
 
         verbose_name = 'Image'
         verbose_name_plural = "Image's"
-        ordering = ['store', 'sku_id', 'image_id']
+        ordering = ['sku_id', 'image_id']
 
 
 @receiver(pre_save, sender=Image)
@@ -160,7 +160,6 @@ def create_image_url(sender, instance, *args, **kwargs):
 class Price(ChatbootModel):
     """Price model"""
 
-    store = models.ForeignKey(StoresVtex, on_delete=models.CASCADE)
     sku = models.ForeignKey(Skus, on_delete=models.CASCADE, related_name='price')
     list_price = models.BigIntegerField(_('List price'), null=True, blank=True)
     cost_price = models.BigIntegerField(_('Cost price'), null=True, blank=True)
@@ -172,13 +171,12 @@ class Price(ChatbootModel):
 
         verbose_name = 'Price'
         verbose_name_plural = "Price's"
-        ordering = ['store', 'sku', 'cost_price']
+        ordering = ['sku', 'cost_price']
 
 
 class FixedPrice(ChatbootModel):
     """Fixed price model"""
 
-    store = models.ForeignKey(StoresVtex, on_delete=models.CASCADE)
     price = models.ForeignKey(Price, on_delete=models.CASCADE, related_name='fixed_prices')
     trade_policy_id = models.CharField(_('Trade porlice ID'), max_length=50)
     value = models.BigIntegerField(_('Value'), null=True, blank=True)
@@ -190,13 +188,13 @@ class FixedPrice(ChatbootModel):
 
         verbose_name = "Fixed price"
         verbose_name_plural = "Fixed price's"
-        ordering = ['store', 'price', 'trade_policy_id']
+        ordering = ['price', 'trade_policy_id']
 
 
 class DateRange(ChatbootModel):
     """Date range model"""
 
-    fixed_price = models.ForeignKey(FixedPrice, on_delete=models.CASCADE, related_name="date_range's")
+    fixed_price = models.ForeignKey(FixedPrice, on_delete=models.CASCADE, related_name="date_ranges")
     date_time_from = models.DateTimeField(_("From date time"), auto_now=False, auto_now_add=False)
     date_time_to = models.DateTimeField(_("To date time"), auto_now=False, auto_now_add=False)
 
@@ -205,4 +203,4 @@ class DateRange(ChatbootModel):
 
         verbose_name = "Date range"
         verbose_name_plural = "Date range's"
-        ordering = ['fixed_price', 'datetime_from']
+        ordering = ['fixed_price', 'date_time_from']

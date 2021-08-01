@@ -1,7 +1,7 @@
 """Products serializers."""
 
 # Django rest framework
-from chatbot_commerce.products.models.skus import FixedPrices, Price, Skus, Image
+from chatbot_commerce.products.models.skus import FixedPrice, Price, Skus, Image
 from rest_framework import serializers
 
 # Model
@@ -25,7 +25,7 @@ class FixedPriceModelSerializer(serializers.ModelSerializer):
 
     class Meta:
         """Meta class"""
-        model = FixedPrices
+        model = FixedPrice
         fields = ['trade_policy_id', 'value', 'min_quantity']
 
 

@@ -2,7 +2,7 @@
 
 # Models
 from chatbot_commerce.products.models.departments import Category, Department
-from chatbot_commerce.products.models import Skus, ProductsApiVtex, Price, FixedPrices, Image, DateRange
+from chatbot_commerce.products.models import Skus, ProductsApiVtex, Price, FixedPrice, Image, DateRange
 
 # Apis
 from chatbot_commerce.utils.apis.vtex import VtexStores, VtexPriceSku
@@ -112,7 +112,7 @@ def get_products_vtex_store():
             }
         )
         for fixedprice_dic in price_dic['fixedPrices']:
-            fixedprice_instace, created = FixedPrices.objects.update_or_create(
+            fixedprice_instace, created = FixedPrice.objects.update_or_create(
                 price=price_instance,
                 trade_policy_id=fixedprice_dic["tradePolicyId"],
                 defaults={
