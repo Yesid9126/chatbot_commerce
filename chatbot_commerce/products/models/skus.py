@@ -18,13 +18,6 @@ class Skus(ChatbootModel):
         max_length=10
     )
 
-    product_id = models.CharField(
-        'Product ID',
-        max_length=10,
-        null=True,
-        blank=True
-    )
-
     sku_name = models.CharField(
         'name sku',
         max_length=255,
@@ -108,12 +101,12 @@ class Skus(ChatbootModel):
         blank=True
     )
 
-    products = models.ForeignKey(
-        to='products.ProductsApiVtex',
+    product = models.ForeignKey(
+        to='products.Product',
         on_delete=models.CASCADE,
         null=True,
         blank=True,
-        related_name='products_sku'
+        related_name='skus'
     )
 
     sku_json = models.JSONField(

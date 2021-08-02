@@ -1,11 +1,11 @@
-"""Products serializers."""
+"""Product serializers."""
 
 # Django rest framework
 from chatbot_commerce.products.models.skus import FixedPrice, Price, Skus, Image, DateRange
 from rest_framework import serializers
 
 # Model
-from chatbot_commerce.products.models import ProductsApiVtex
+from chatbot_commerce.products.models import Product
 
 
 class ImageSkuModelSerializer(serializers.ModelSerializer):
@@ -68,15 +68,15 @@ class SkuModelSerializer(serializers.ModelSerializer):
         )
 
 
-class ProductsModelSerializer(serializers.ModelSerializer):
+class ProductModelSerializer(serializers.ModelSerializer):
     """Product model serializer."""
 
-    products_sku = SkuModelSerializer(many=True)
+    Product_sku = SkuModelSerializer(many=True)
 
     class Meta:
         """Meta class."""
 
-        model = ProductsApiVtex
+        model = Product
         fields = (
-            'product_id', 'name', 'department_name', 'category_name', 'keywords', 'products_sku'
+            'product_id', 'name', 'department_name', 'category_name', 'keywords', 'Product_sku'
         )

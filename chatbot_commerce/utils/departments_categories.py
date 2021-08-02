@@ -13,7 +13,7 @@ def get_departments():
     departments = vtex.departments_categories()
     for department in departments:
         children = department['children']
-        departament, created = Department.objects.update_or_create(
+        departament, _ = Department.objects.update_or_create(
             department_id=department.get('id'),
             defaults={
                 'department_name': department.get('name'),
@@ -25,7 +25,7 @@ def get_departments():
             }
         )
         for category in children:
-            categories, created = Category.objects.update_or_create(
+            categories, _ = Category.objects.update_or_create(
                 category_id=category.get('id'),
                 defaults={
                     'category_name': category.get('name'),

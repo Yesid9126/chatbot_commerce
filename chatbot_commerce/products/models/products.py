@@ -1,14 +1,15 @@
-"""Products model."""
+"""Product model."""
 
 # Django
 from django.db import models
 from django.db.models import JSONField
+from django.db.models.deletion import SET, SET_NULL
 
 # utilities
 from chatbot_commerce.utils.models import ChatbootModel
 
 
-class ProductsApiVtex(ChatbootModel):
+class Product(ChatbootModel):
     """Main product model."""
 
     product_id = models.CharField(
@@ -23,33 +24,14 @@ class ProductsApiVtex(ChatbootModel):
         blank=True
     )
 
-    department_id = models.CharField(
-        'Department id',
-        max_length=50,
+    deparment = models.ForeignKey(
+        to='products.Department',
+        on_delete=models.SET_NULL,
         null=True,
-        blank=True
+        blank=True,
+        related_name='Product'
     )
 
-    category_id = models.CharField(
-        'Category id',
-        max_length=50,
-        null=True,
-        blank=True
-    )
-
-    department_name = models.CharField(
-        'Department name',
-        max_length=255,
-        null=True,
-        blank=True
-    )
-
-    category_name = models.CharField(
-        'Category name',
-        max_length=255,
-        null=True,
-        blank=True
-    )
 
     brand_id = models.CharField(
         'Brand id',
@@ -129,4 +111,4 @@ class ProductsApiVtex(ChatbootModel):
 
     class Meta:
         verbose_name = "Product"
-        verbose_name_plural = "Products"
+        verbose_name_plural = "Product"

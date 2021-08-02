@@ -1,13 +1,21 @@
-# from django.conf import settings
-# from django.db.models import base
-# from django.urls import path
-# from rest_framework.routers import DefaultRouter, SimpleRouter
+"""Api router general."""
 
-# from chatbot_commerce.utils.sku_list import get_sku_vtex_store
+from django.conf import settings
+from rest_framework.routers import DefaultRouter, SimpleRouter
 
+# Views
+from chatbot_commerce.products.views import ProductViewset
 
-# urlpatterns = [
-#     path("product/<str:store>/", get_sku_vtex_store, name='tienda_detail_api_view'),
-#     # path("vtex/<str:tienda>/<str:consulta>/", store_requests_vtex_api_view, name="tienda_api"),
-#     # path("vtex/<str:tienda>/<str:consulta>/<int:pk>/", store_requests_vtex_api_view, name="tienda_api"),
-# ]
+if settings.DEBUG:
+    router = DefaultRouter()
+else:
+    router = SimpleRouter()
+
+router.register(
+    r'stores/(?P<store_slug_name>[-a-zA-Z0-0_]+)/Product',
+    ProductViewset,
+    basename='Product'
+)
+
+app_name = "api"
+urlpatterns = router.urls

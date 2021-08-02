@@ -1,24 +1,29 @@
 """Stores model."""
 
+# Raw
+from slugify import slugify
+
 # Django
 from django.db import models
+from django.db.models.fields import SlugField
 
 # utilities
 from chatbot_commerce.utils.models import ChatbootModel
 
 
-class StoresVtex(ChatbootModel):
+class Store(ChatbootModel):
     """Stores model."""
 
     name = models.CharField(
-        max_length=255,
+        max_length=255
     )
+    slug_name = models.SlugField(max_length=50, unique=True, null=True, blank=True)
 
     url_enviroment = models.CharField(
         max_length=500
     )
 
-    appi_key = models.CharField(
+    api_key = models.CharField(
         max_length=500
     )
 
@@ -37,7 +42,11 @@ class StoresVtex(ChatbootModel):
     @property
     def headers(self):
         headers = {
-            "X-VTEX-API-AppKey": f"{self.appi_key}",
+            "X-VTEX-API-AppKey": f"{self.api_key}",
             "X-VTEX-API-AppToken": f"{self.api_token}"
         }
         return headers
+
+    def save(self, *args, **kwargs):
+        self.slug_name = slugify(self.name, separator="_")
+        return super().save(*args, **kwargs)

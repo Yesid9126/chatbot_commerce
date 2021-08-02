@@ -22,15 +22,9 @@ urlpatterns = [
     path(settings.ADMIN_URL, admin.site.urls),
     url(r'^(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     path('swagger', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path("api/", include("config.api_router"))
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
-# API URLS
-urlpatterns += [
-    # Products urls
-    path('', include(('chatbot_commerce.products.urls', 'products'), namespace='products')),
-    # DRF auth token
-    path("auth-token/", obtain_auth_token),
-]
 
 if settings.DEBUG:
     # This allows the error pages to be debugged during development, just visit

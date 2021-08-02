@@ -1,63 +1,63 @@
-"""list of products with their skus."""
+"""list of Product with their skus."""
 
 # Models
 from chatbot_commerce.products.models.departments import Category, Department
-from chatbot_commerce.products.models import Skus, ProductsApiVtex, Price, FixedPrice, Image, DateRange
+from chatbot_commerce.products.models import Skus, Product, Price, FixedPrice, Image, DateRange
 
 # Apis
 from chatbot_commerce.utils.apis.vtex import VtexStores, VtexPriceSku
 
 
-def get_products_vtex_store():
-    """Creation of products available in the store."""
+def get_Product_vtex_store():
+    """Creation of Product available in the store."""
     vtex = VtexStores()
     skus = vtex.total_skus()
-    products_ids = []
+    Product_ids = []
     if skus:
         for sku_unit in skus:
             sku = sku_unit
             product_id = vtex.unit_sku(sku=sku)
             product_id = product_id.get('ProductId')
-            if product_id not in products_ids:
-                products_ids.append(product_id)
-    for product in products_ids:
-        products = vtex.product_unit(product_id=product)
-        department = Department.objects.filter(department_id=products.get('DepartmentId')).get()
-        category = Category.objects.filter(category_id=products.get('CategoryId'))
+            if product_id not in Product_ids:
+                Product_ids.append(product_id)
+    for product in Product_ids:
+        Product = vtex.product_unit(product_id=product)
+        department = Department.objects.filter(department_id=Product.get('DepartmentId')).get()
+        category = Category.objects.filter(category_id=Product.get('CategoryId'))
         if category:
             category = category.get()
             category_name = category.category_name
         else:
             category_name = ""
         try:
-            product_instance, created = ProductsApiVtex.objects.update_or_create(
-                product_id=products.get('Id'),
+            product_instance, created = Product.objects.update_or_create(
+                product_id=Product.get('Id'),
                 defaults={
-                    'name': products.get('Name'),
-                    'department_id': products.get('DepartmentId'),
-                    'category_id': products.get('CatgoryId'),
+                    'name': Product.get('Name'),
+                    'department_id': Product.get('DepartmentId'),
+                    'category_id': Product.get('CatgoryId'),
                     'department_name': department.department_name,
                     'category_name': category_name,
-                    'brand_id': products.get('BrandId'),
-                    'link_id': products.get('LinkId'),
-                    'reference_id': products.get('RefId'),
-                    'is_visible': products.get('IsVisible'),
-                    'description': products.get('Description'),
-                    'description_short': products.get('DescriptionShort'),
-                    'keywords': products.get('KeyWords'),
-                    'title': products.get('Title'),
-                    'is_active': products.get('IsActive'),
-                    'meta_tag_description': products.get('MetaTagDescription'),
-                    'show_without_stock': products.get('ShowWithoutStock'),
-                    'product_data': products,
+                    'brand_id': Product.get('BrandId'),
+                    'link_id': Product.get('LinkId'),
+                    'reference_id': Product.get('RefId'),
+                    'is_visible': Product.get('IsVisible'),
+                    'description': Product.get('Description'),
+                    'description_short': Product.get('DescriptionShort'),
+                    'keywords': Product.get('KeyWords'),
+                    'title': Product.get('Title'),
+                    'is_active': Product.get('IsActive'),
+                    'meta_tag_description': Product.get('MetaTagDescription'),
+                    'show_without_stock': Product.get('ShowWithoutStock'),
+                    'product_data': Product,
                 })
         except Exception as e:
             error = e
     # Create skus for product
-    for product in products_ids:
-        skus_product = vtex.products_skus(product_id=product)
+    for product in Product_ids:
+        skus_product = vtex.Product_skus(product_id=product)
         for skus in skus_product:
-            products = ProductsApiVtex.objects.filter(product_id=product).first()
+            Product = Product.objects.filter(product_id=product).first()
             try:
                 sku_instance, created = Skus.objects.update_or_create(
                     sku_id=skus.get('Id'),
@@ -76,21 +76,21 @@ def get_products_vtex_store():
                         'reference_stock_id': skus.get('ReferenceStockKeepingUnitId'),
                         'is_inventoried': skus.get('IsInventoried'),
                         'is_transported': skus.get('IsTransported'),
-                        'products': products,
+                        'Product': Product,
                         'sku_json': skus
                     }
                 )
             except Exception as e:
                 error = e
                 print(error)
-    # Delete products not in store
-    all_products = ProductsApiVtex.objects.all()
-    non_existence_ids = all_products.exclude(product_id__in=products_ids)
+    # Delete Product not in store
+    all_Product = Product.objects.all()
+    non_existence_ids = all_Product.exclude(product_id__in=Product_ids)
     non_existence_ids.delete()
     # Prices & Images
     vtexprice = VtexPriceSku()
     all_skus_dics = Skus.objects.filter(
-        products__in=ProductsApiVtex.objects.all()
+        Product__in=Product.objects.all()
     )\
         .values_list('sku_json', flat=True)
     for sku_dic in all_skus_dics:

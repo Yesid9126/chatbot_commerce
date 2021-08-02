@@ -23,7 +23,7 @@ if READ_DOT_ENV_FILE:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
 # though not all of them may be available with every OS.
 # In Windows, this must be set to your system time zone.
-TIME_ZONE = "UTC"
+TIME_ZONE = "America/Bogota"
 # https://docs.djangoproject.com/en/dev/ref/settings/#language-code
 LANGUAGE_CODE = "en-us"
 # https://docs.djangoproject.com/en/dev/ref/settings/#site-id
@@ -67,12 +67,15 @@ THIRD_PARTY_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     "corsheaders",
+    'django_filters',
     'drf_yasg',
+    "rest_framework_api_key",
 ]
 
 LOCAL_APPS = [
-    "chatbot_commerce.products.apps.ProductsConfig",
+    "chatbot_commerce.products.apps.ProductConfig",
     "chatbot_commerce.stores.apps.StoresConfig",
+
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -266,10 +269,10 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 # http://docs.celeryproject.org/en/latest/userguide/configuration.html#task-time-limit
 # TODO: set to whatever value is adequate in your circumstances
-CELERY_TASK_TIME_LIMIT = 5 * 60
+CELERY_TASK_TIME_LIMIT = 5 * 60 * 3600
 # http://docs.celeryproject.org/en/latest/userguide/configuration.html#task-soft-time-limit
 # TODO: set to whatever value is adequate in your circumstances
-CELERY_TASK_SOFT_TIME_LIMIT = 60
+CELERY_TASK_SOFT_TIME_LIMIT = 5 * 60 * 3600
 # http://docs.celeryproject.org/en/latest/userguide/configuration.html#beat-scheduler
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 
@@ -278,18 +281,18 @@ CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 # -------------------------------------------------------------------------------
 # django-rest-framework - https://www.django-rest-framework.org/api-guide/settings/
 REST_FRAMEWORK = {
-    'EXCEPTION_HANDLER': 'chatbot_commerce.products.utils.exceptionhandler.custom_exception_handler',
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
     ),
-    "DEFAULT_AUTHENTICATION_CLASSES": (
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
         "rest_framework.authentication.SessionAuthentication",
     ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 50
 }
-# django-cors-headers - https://github.com/adamchainz/django-cors-headers#setup
-# CORS_URLS_REGEX = r"^/api/.*$"
-# Your stuff...
-# ------------------------------------------------------------------------------
+CORS_ALLOW_ALL_ORIGINS = True
+APPEND_SLASH = True
 
 # Vtex
 STORE_NAME = env("STORE_NAME")
@@ -301,12 +304,7 @@ URL_PRICESKU_VTEX = f'https://{PRICESKU_VTEX}/{STORE_NAME}'
 
 
 SWAGGER_SETTINGS = {
-    'SECURITY_DEFINITIONS': {
-        'basic': {
-            'type': 'basic'
-        }},
     'USE_SESSION_AUTH': True,
-    'PERSIST_AUTH': True,
     'LOGOUT_URL': reverse_lazy('admin:logout'),
-    'LOGIN_URL': reverse_lazy('admin:login')
+    'LOGIN_URL': reverse_lazy('admin:login'),
 }

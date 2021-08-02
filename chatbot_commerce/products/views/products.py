@@ -1,64 +1,45 @@
-"""Products and skus views."""
+"""Product and skus views."""
 
-# Django Rest Framewor
-from django.http import Http404
-from rest_framework import viewsets
-from rest_framework.status import HTTP_200_OK
-from rest_framework.response import Response
-from rest_framework.pagination import PageNumberPagination
-from drf_yasg.utils import swagger_auto_schema
-
-# Django
-from django.db.models.query_utils import DeferredAttribute
+# Django Rest Framework
+from rest_framework.generics import get_object_or_404
+from rest_framework import viewsets, mixins
 
 # Serializers
-from chatbot_commerce.products.serializers import ProductsModelSerializer
+from chatbot_commerce.products.serializers import ProductModelSerializer
+from rest_framework_api_key.permissions import HasAPIKey
+from rest_framework.permissions import IsAdminUser
+
+# Filters
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter, OrderingFilter
 
 # Models
-from chatbot_commerce.products.models import ProductsApiVtex
+from chatbot_commerce.products.models import Product
+from chatbot_commerce.stores.models import Store
 
 # Utils
 from chatbot_commerce.utils.methods.represent import parser_to_represent
 
 
-class PageProducts(PageNumberPagination):
-    page_size = 10
-    page_size_query_param = 'page_size'
+class ProductViewset(mixins.RetrieveModelMixin,
+                      mixins.ListModelMixin,
+                      viewsets.GenericViewSet):
+    """Product viewset."""
 
+    serializer_class = ProductModelSerializer
+    lookup_field = 'pk'
+    permission_classes = [HasAPIKey | IsAdminUser]
+    filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
+    search_fields = ('name', 'department_name')
+    # ordering_fields = ('createld', 'block_status__reason', 'cto_status__name', 'cto_building',
+    #                    'quickly_installation', 'detail', 'code', 'cto_technology')
+    # filter_fields = ('code', 'cto_status__slug_name')
 
-class ProductsViewset(viewsets.ModelViewSet):
-    """Products viewset."""
-
-    serializer_class = ProductsModelSerializer
-    pagination_class = PageProducts
-    lookup_field = 'product_id'
-    allowed_methods = ['get', 'post']
-
-    @swagger_auto_schema(
-        responses={
-            HTTP_200_OK: "Created"
-        }
-    )
-    def get_queryset(self, *args, **kwargs):
-        """Restrict list to products active."""
-        query_params = self.request.query_params
-        not_allowed_keys = ['is_active']
-        allowed_keys = [key for key, value in vars(ProductsApiVtex).items() if type(value) == DeferredAttribute]
-        product_params = {key+'__in': parser_to_represent(string.split(',')) for key, string in query_params.items() if key in allowed_keys and key not in not_allowed_keys}
-        self.queryset = ProductsApiVtex.objects.filter(is_active=True, **product_params)
-        return self.queryset
-
-    def create(self, request, *args, **kwargs):
-        try:
-            self.get_object()
-        except (Http404, AssertionError):
-            data = self.serializer_class(self.queryset, many=True).data
-            status = HTTP_200_OK
-        return Response(data=data, status=status)
-
-    def post(self, *args, **kwargs):
-        """Restrict list to products active."""
-        obj = self.get_object()
-        data = self.serializer_class(obj).data
-        status = HTTP_200_OK
-        return Response(data=data, status=status)
+    def dispatch(self, request, *args, **kwargs):
+        slug_name = kwargs['store_slug_name']
+        self.store = get_object_or_404(Store, slug_name=slug_name)
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get_queryset(self):
+        queryset = Product.objects.all()
+        return queryset
