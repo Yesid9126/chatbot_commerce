@@ -1,6 +1,8 @@
 """Products serializers."""
 
 # Django rest framework
+from chatbot_commerce.stores.models.stores import StoresVtex
+from chatbot_commerce.products.models.departments import Department
 from chatbot_commerce.products.models.skus import FixedPrice, Price, Skus, Image, DateRange
 from rest_framework import serializers
 
@@ -72,6 +74,7 @@ class ProductsModelSerializer(serializers.ModelSerializer):
     """Product model serializer."""
 
     products_sku = SkuModelSerializer(many=True)
+    department_name = serializers.CharField(source='department_name.department_name')
 
     class Meta:
         """Meta class."""
@@ -80,3 +83,25 @@ class ProductsModelSerializer(serializers.ModelSerializer):
         fields = (
             'product_id', 'name', 'department_name', 'category_name', 'keywords', 'products_sku'
         )
+
+
+class DepartmentSerielizer(serializers.ModelSerializer):
+    """Department model serializer."""
+
+    departments_products = ProductsModelSerializer(many=True)
+
+    class Meta:
+
+        model = Department
+        fields = ('department_name', 'departments_products')
+
+
+class StoreSerializer(serializers.ModelSerializer):
+    """Store model serializer."""
+
+    departments = DepartmentSerielizer(many=True)
+
+    class Meta:
+
+        model = StoresVtex
+        fields = ('name', 'departments')

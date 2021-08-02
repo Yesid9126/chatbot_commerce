@@ -1,6 +1,7 @@
 """Product tasks."""
 
 # Django Rest Framework
+from chatbot_commerce.stores.models.stores import StoresVtex
 from rest_framework import status
 
 # Celery
@@ -25,7 +26,8 @@ def store_products():
 def departments_categories():
     """Create all products."""
     result = []
-    response = get_departments()
+    for store in StoresVtex.objects.all():
+        response = get_departments(store)
     result.append(response)
     response = status.HTTP_200_OK
     return response

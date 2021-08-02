@@ -68,13 +68,13 @@ class ImagesAdmin(admin.ModelAdmin):
 
 class InlineImageAdmin(admin.TabularInline):
     model = Image
-    estra = 0
+    extra = 0
     fields = ['archive_id', 'name', 'image_url']
 
 
 class InlinePriceAdmin(admin.TabularInline):
     model = Price
-    estra = 0
+    extra = 0
     fields = ['base_price', 'price']
 
 

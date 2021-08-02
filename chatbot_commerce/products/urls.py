@@ -11,7 +11,7 @@ from rest_framework.routers import DefaultRouter
 from .views import products as products_views
 
 router = DefaultRouter()
-router.register(r'pilatos/products', products_views.ProductsViewset, basename='products')
+router.register(r'(?P<store>[-a-zA-Z0-0_]+)/products', products_views.StoreViewset, basename='products')
 
 
 urlpatterns = [

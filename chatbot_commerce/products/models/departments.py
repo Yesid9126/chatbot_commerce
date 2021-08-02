@@ -58,11 +58,17 @@ class Department(ChatbootModel):
         through_fields=('department', 'category')
     )
 
+    store = models.ForeignKey(
+        'stores.StoresVtex',
+        on_delete=models.CASCADE,
+        related_name='departments'
+    )
+
     department_json = JSONField('Complete department data', null=True, blank=True)
 
     def __str__(self):
         """Return Department name."""
-        return f'name:{self.department_name}'
+        return f'{self.department_name}'
 
     class Meta:
         verbose_name = "Department"
