@@ -18,3 +18,6 @@ urlpatterns = [
     path('', include(router.urls)),
     path("vtex/pilatos", get_products_vtex_store, name='tienda_detail_api_view')
 ]
+
+handler404 = 'chatbot_commerce.products.utils.views.error_404'
+handler500 = 'chatbot_commerce.products.utils.views.error_500'
