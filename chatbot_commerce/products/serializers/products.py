@@ -1,12 +1,8 @@
 """Products serializers."""
 
-# Django
-from django.db.models.signals import post_init, pre_init
-from django.dispatch import receiver
-
 # Django rest framework
 from chatbot_commerce.products.models.skus import FixedPrice, Price, Skus, Image, DateRange
-from rest_framework import fields, serializers
+from rest_framework import serializers
 
 # Model
 from chatbot_commerce.products.models import ProductsApiVtex
