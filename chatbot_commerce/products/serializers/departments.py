@@ -42,3 +42,39 @@ class SubcategoryModelSerializer(serializers.ModelSerializer):
             'name',
             'category',
         )
+
+
+class SubcategoryTreeModelSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Subcategory
+        fields = (
+            'pk',
+            'name',
+        )
+
+
+class CategoryTreeModelSerializer(serializers.ModelSerializer):
+
+    subcategories = SubcategoryTreeModelSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Category
+        fields = (
+            'pk',
+            'name',
+            'subcategories'
+        )
+
+
+class DepartmentTreeModelSerializer(serializers.ModelSerializer):
+
+    categories = CategoryTreeModelSerializer(many=True)
+
+    class Meta:
+        model = Department
+        fields = (
+            'pk',
+            'name',
+            'categories'
+        )

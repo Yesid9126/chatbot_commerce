@@ -4,7 +4,7 @@ from django.conf import settings
 from rest_framework.routers import DefaultRouter, SimpleRouter
 
 # Views
-from chatbot_commerce.products.views import ProductViewset
+from chatbot_commerce.products.views import ProductViewset, DepartmentsViewset
 
 if settings.DEBUG:
     router = DefaultRouter()
@@ -14,7 +14,12 @@ else:
 router.register(
     r'stores/(?P<store_slug_name>[-a-zA-Z0-0_]+)/products',
     ProductViewset,
-    basename='Product'
+    basename='products'
+)
+router.register(
+    r'stores/(?P<store_slug_name>[-a-zA-Z0-0_]+)/departments',
+    DepartmentsViewset,
+    basename='departments'
 )
 
 app_name = "api"
