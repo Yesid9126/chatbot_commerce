@@ -17,13 +17,10 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from chatbot_commerce.products.models import Product
 from chatbot_commerce.stores.models import Store
 
-# Utils
-from chatbot_commerce.utils.methods.represent import parser_to_represent
-
 
 class ProductViewset(mixins.RetrieveModelMixin,
-                      mixins.ListModelMixin,
-                      viewsets.GenericViewSet):
+                     mixins.ListModelMixin,
+                     viewsets.GenericViewSet):
     """Product viewset."""
 
     serializer_class = ProductModelSerializer
@@ -39,7 +36,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
         slug_name = kwargs['store_slug_name']
         self.store = get_object_or_404(Store, slug_name=slug_name)
         return super().dispatch(request, *args, **kwargs)
-    
+
     def get_queryset(self):
         queryset = Product.objects.all()
         return queryset

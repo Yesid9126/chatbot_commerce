@@ -52,6 +52,7 @@ class VtexStores:
         return response_json
 
     def total_skus(self, **kwargs):
+        # TODO: Pagination as args for big stores
         uri = 'catalog_system/pvt/sku/stockkeepingunitids?page=1&pagesize=100'
         method = 'get'
         return self._get_json_resource(
@@ -92,7 +93,15 @@ class VtexStores:
         )
 
     def departments_categories(self):
-        uri = 'catalog_system/pub/category/tree/10'
+        uri = 'catalog_system/pub/category/tree/200'
+        method = 'get'
+        return self._get_json_resource(
+            uri,
+            method=method
+        )
+
+    def get_brands(self):
+        uri = 'catalog_system/pvt/brand/list'
         method = 'get'
         return self._get_json_resource(
             uri,

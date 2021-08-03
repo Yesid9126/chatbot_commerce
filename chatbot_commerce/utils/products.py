@@ -1,65 +1,72 @@
-"""list of Product with their skus."""
+"""list of product with their skus."""
 
 # Models
-from chatbot_commerce.products.models.departments import Category, Department
-from chatbot_commerce.products.models import Skus, Product, Price, FixedPrice, Image, DateRange
+from chatbot_commerce.products.models import (
+    Skus, Product, Price,
+    FixedPrice, Image, DateRange,
+    Brand, Category, Department,
+    Subcategory,
+)
+from chatbot_commerce.stores.models import Store
 
 # Apis
 from chatbot_commerce.utils.apis.vtex import VtexStores, VtexPriceSku
 
 
-def get_Product_vtex_store():
-    """Creation of Product available in the store."""
+def get_products_vtex_store():
+    """Creation of product available in the store."""
+    products_created = []
+    skus_created = []
     vtex = VtexStores()
     skus = vtex.total_skus()
-    Product_ids = []
+    products_skus = []
     if skus:
         for sku_unit in skus:
             sku = sku_unit
             product_id = vtex.unit_sku(sku=sku)
             product_id = product_id.get('ProductId')
-            if product_id not in Product_ids:
-                Product_ids.append(product_id)
-    for product in Product_ids:
-        Product = vtex.product_unit(product_id=product)
-        department = Department.objects.filter(department_id=Product.get('DepartmentId')).get()
-        category = Category.objects.filter(category_id=Product.get('CategoryId'))
-        if category:
-            category = category.get()
-            category_name = category.category_name
-        else:
-            category_name = ""
+            if product_id not in products_skus:
+                products_skus.append(product_id)
+    for product in products_skus:
+        sub_category = None
+        product = vtex.product_unit(product_id=product)
+        department = Department.objects.filter(external_id=product.get('DepartmentId')).last()
+        category = Category.objects.filter(external_id=product.get('CategoryId')).last()
+        if not category:
+            sub_category = Subcategory.objects.filter(external_id=product.get('CategoryId')).last()
+            category = sub_category.category
         try:
-            product_instance, created = Product.objects.update_or_create(
-                product_id=Product.get('Id'),
+            product_instance, _ = Product.objects.update_or_create(
+                store=Store.objects.last(),
+                external_id=product.get('Id'),
                 defaults={
-                    'name': Product.get('Name'),
-                    'department_id': Product.get('DepartmentId'),
-                    'category_id': Product.get('CatgoryId'),
-                    'department_name': department.department_name,
-                    'category_name': category_name,
-                    'brand_id': Product.get('BrandId'),
-                    'link_id': Product.get('LinkId'),
-                    'reference_id': Product.get('RefId'),
-                    'is_visible': Product.get('IsVisible'),
-                    'description': Product.get('Description'),
-                    'description_short': Product.get('DescriptionShort'),
-                    'keywords': Product.get('KeyWords'),
-                    'title': Product.get('Title'),
-                    'is_active': Product.get('IsActive'),
-                    'meta_tag_description': Product.get('MetaTagDescription'),
-                    'show_without_stock': Product.get('ShowWithoutStock'),
-                    'product_data': Product,
+                    'name': product.get('Name'),
+                    'department': department,
+                    'sub_category': sub_category,
+                    'category': category,
+                    'brand': Brand.objects.filter(external_id=product.get('BrandId')).last(),
+                    'link_id': product.get('LinkId'),
+                    'reference_id': product.get('RefId'),
+                    'is_visible': product.get('IsVisible'),
+                    'description': product.get('Description'),
+                    'description_short': product.get('DescriptionShort'),
+                    'keywords': product.get('KeyWords'),
+                    'title': product.get('Title'),
+                    'is_active': product.get('IsActive'),
+                    'meta_tag_description': product.get('MetaTagDescription'),
+                    'show_without_stock': product.get('ShowWithoutStock'),
+                    'raw_json': product,
                 })
+            products_created.append(product_instance.pk)
         except Exception as e:
-            error = e
+            print(e)
     # Create skus for product
-    for product in Product_ids:
+    for product in products_skus:
         skus_product = vtex.Product_skus(product_id=product)
         for skus in skus_product:
-            Product = Product.objects.filter(product_id=product).first()
+            product = Product.objects.filter(external_id=product).first()
             try:
-                sku_instance, created = Skus.objects.update_or_create(
+                sku_instance, _ = Skus.objects.update_or_create(
                     sku_id=skus.get('Id'),
                     defaults={
                         'product_id': skus.get('ProductId'),
@@ -76,17 +83,19 @@ def get_Product_vtex_store():
                         'reference_stock_id': skus.get('ReferenceStockKeepingUnitId'),
                         'is_inventoried': skus.get('IsInventoried'),
                         'is_transported': skus.get('IsTransported'),
-                        'Product': Product,
+                        'product': product,
                         'sku_json': skus
                     }
                 )
+                skus_created.append(sku_instance.pk)
             except Exception as e:
                 error = e
                 print(error)
-    # Delete Product not in store
-    all_Product = Product.objects.all()
-    non_existence_ids = all_Product.exclude(product_id__in=Product_ids)
-    non_existence_ids.delete()
+    # Delete product not in store
+    Product.objects.all().exclude(pk__in=products_created)
+    # Delete sku not in product
+    Skus.objects.all().exclude(pk__in=skus_created)
+
     # Prices & Images
     vtexprice = VtexPriceSku()
     all_skus_dics = Skus.objects.filter(
@@ -102,7 +111,7 @@ def get_Product_vtex_store():
             if price:
                 price.delete()
             continue
-        price_instance, created = Price.objects.update_or_create(
+        price_instance, _ = Price.objects.update_or_create(
             sku=sku,
             defaults={
                 "list_price": price_dic['listPrice'],
@@ -112,7 +121,7 @@ def get_Product_vtex_store():
             }
         )
         for fixedprice_dic in price_dic['fixedPrices']:
-            fixedprice_instace, created = FixedPrice.objects.update_or_create(
+            fixedprice_instace, _ = FixedPrice.objects.update_or_create(
                 price=price_instance,
                 trade_policy_id=fixedprice_dic["tradePolicyId"],
                 defaults={
@@ -123,7 +132,7 @@ def get_Product_vtex_store():
             )
             if 'dateRange' in fixedprice_dic:
                 daterange_dic = fixedprice_dic.get('dateRange')
-                daterange_instance, created = DateRange.objects.update_or_create(
+                DateRange.objects.update_or_create(
                     fixed_price=fixedprice_instace,
                     defaults={
                         'date_time_from': daterange_dic.get('from'),
@@ -146,7 +155,7 @@ def get_Product_vtex_store():
                 break
             archive_id = image_dic['ArchiveId']
             name = image_dic['Name']
-            image_instance, created = Image.objects.update_or_create(
+            Image.objects.update_or_create(
                 image_id=image_dic.get('Id'),
                 sku=sku,
                 defaults={

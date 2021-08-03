@@ -2,43 +2,53 @@
 
 # Django
 from django.db import models
-from django.db.models import JSONField
-from django.db.models.deletion import SET, SET_NULL
 
 # utilities
-from chatbot_commerce.utils.models import ChatbootModel
+from chatbot_commerce.utils.models import AbstractCategory
 
 
-class Product(ChatbootModel):
+class Brand(AbstractCategory):
+    pass
+
+
+class Product(AbstractCategory):
     """Main product model."""
-
-    product_id = models.CharField(
-        'Vtex product Id',
-        max_length=50,
+    store = models.ForeignKey(
+        to='stores.Store',
+        on_delete=models.CASCADE,
+        related_name='products',
+        null=True, blank=True
     )
 
-    name = models.CharField(
-        'Product name',
-        max_length=500,
-        null=True,
-        blank=True
-    )
-
-    deparment = models.ForeignKey(
-        to='products.Department',
+    sub_category = models.ForeignKey(
+        to='products.Subcategory',
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='Product'
+        related_name='products'
     )
 
+    department = models.ForeignKey(
+        to='products.Department',
+        on_delete=models.CASCADE,
+        related_name='products',
+        null=True, blank=True
+    )
 
-    brand_id = models.CharField(
-        'Brand id',
-        max_length=50,
+    category = models.ForeignKey(
+        to='products.Category',
+        on_delete=models.SET_NULL,
         null=True,
-        blank=True
+        blank=True,
+        related_name='products'
+    )
 
+    brand = models.ForeignKey(
+        Brand,
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+        related_name='products'
     )
 
     link_id = models.CharField(
@@ -57,13 +67,6 @@ class Product(ChatbootModel):
 
     is_visible = models.BooleanField(
         default=False,
-    )
-
-    description = models.TextField(
-        'Description',
-        max_length=500,
-        null=True,
-        blank=True
     )
 
     description_short = models.CharField(
@@ -102,8 +105,6 @@ class Product(ChatbootModel):
         'Without stock',
         default=False
     )
-
-    product_data = JSONField('Complete product data', null=True, blank=True)
 
     def __str__(self):
         """Return product name|id."""

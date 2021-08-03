@@ -4,7 +4,6 @@ from django.contrib import admin
 from django.conf.urls import url
 from django.urls import include, path
 from django.views import defaults as default_views
-from rest_framework.authtoken.views import obtain_auth_token
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 

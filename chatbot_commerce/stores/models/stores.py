@@ -5,7 +5,6 @@ from slugify import slugify
 
 # Django
 from django.db import models
-from django.db.models.fields import SlugField
 
 # utilities
 from chatbot_commerce.utils.models import ChatbootModel
