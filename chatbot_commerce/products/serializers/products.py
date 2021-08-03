@@ -1,11 +1,18 @@
-"""Products serializers."""
+"""Product serializers."""
 
 # Django rest framework
-from chatbot_commerce.products.models.skus import FixedPrice, Price, Skus, Image, DateRange
+from chatbot_commerce.products.models import FixedPrice, Price, Skus, Image, DateRange, Brand
 from rest_framework import serializers
 
 # Model
-from chatbot_commerce.products.models import ProductsApiVtex
+from chatbot_commerce.products.models import Product
+
+# Serializer
+from chatbot_commerce.products.serializers.departments import (
+    CategoryModelSerializer,
+    SubcategoryModelSerializer,
+    DepartmentModelSerializer
+)
 
 
 class ImageSkuModelSerializer(serializers.ModelSerializer):
@@ -17,6 +24,15 @@ class ImageSkuModelSerializer(serializers.ModelSerializer):
         model = Image
         fields = (
             'image_url',
+        )
+
+
+class BrandModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Brand
+        fields = (
+            'name',
+            'slug_name',
         )
 
 
@@ -39,7 +55,7 @@ class FixedPriceModelSerializer(serializers.ModelSerializer):
     class Meta:
         """Meta class"""
         model = FixedPrice
-        fields = ['trade_policy_id', 'value', 'min_quantity', 'date_ranges']
+        fields = ['value', 'date_ranges']
 
 
 class PriceModelSerializer(serializers.ModelSerializer):
@@ -64,19 +80,34 @@ class SkuModelSerializer(serializers.ModelSerializer):
 
         model = Skus
         fields = (
-            'sku_id', 'product_id', 'sku_name', 'sku_images', 'price'
+            'sku_id', 'sku_name', 'sku_images', 'price'
         )
 
 
-class ProductsModelSerializer(serializers.ModelSerializer):
+class ProductModelSerializer(serializers.ModelSerializer):
     """Product model serializer."""
 
-    products_sku = SkuModelSerializer(many=True)
+    skus = SkuModelSerializer(many=True)
+    brand = BrandModelSerializer(read_only=True)
+    tree_categories = serializers.SerializerMethodField('get_tree_categories')
+    product_id = serializers.CharField(source='pk')
 
     class Meta:
         """Meta class."""
 
-        model = ProductsApiVtex
-        fields = (
-            'product_id', 'name', 'department_name', 'category_name', 'keywords', 'products_sku'
-        )
+        model = Product
+        fields = [
+            'product_id',
+            'name',
+            'keywords',
+            'brand',
+            'tree_categories',
+            'skus',
+        ]
+
+    def get_tree_categories(self, obj):
+        if obj.sub_category:
+            return SubcategoryModelSerializer(obj.sub_category).data
+        elif obj.category:
+            return CategoryModelSerializer(obj.category).data
+        return DepartmentModelSerializer(obj.department).data

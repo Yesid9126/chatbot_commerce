@@ -1,64 +1,55 @@
-"""Products models admin."""
+"""Product models admin."""
 
 # Django
 from django.contrib import admin
 # Models
 from chatbot_commerce.products.models import (
-    ProductsApiVtex, Department,
-    Skus,
+    Department,
     Category,
     Subcategory,
+    Brand,
+    Product,
     Image,
     Price,
-    FixedPrice,
-    DateRange
+    DateRange,
+    Skus,
+    FixedPrice
 )
-
-
-class ProductsSkusInline(admin.TabularInline):
-    model = Skus
-    extra = 0
-    fields = ['sku_name', 'sku_id', 'product_id']
 
 
 @admin.register(Subcategory)
 class SubcategoryAdmin(admin.ModelAdmin):
-    """Departments model admin."""
+    """Subcategory model admin."""
 
-    list_display = ['subcategory_name', 'department', 'category']
-    search_fields = ['subcategory_name', 'department', 'category']
+    list_display = ['name', 'slug_name', 'category']
+    search_fields = ['name', 'slug_name']
 
 
 @admin.register(Category)
 class CategoriesAdmin(admin.ModelAdmin):
-    """Departments model admin."""
-
-    list_display = ['category_id', 'category_name']
-    search_fields = ['category_id', 'category_name']
-
-
-class CategoriessInline(admin.TabularInline):
-    model = Category
-    extra = 0
-    fields = ['category_name', 'category_id']
+    list_display = ['name', 'slug_name', 'department']
+    search_fields = ['name', 'slug_name']
+    list_filter = ['department']
 
 
 @admin.register(Department)
 class DepartmentsAdmin(admin.ModelAdmin):
-    """Departments model admin."""
-
-    list_display = ['department_name', 'title']
-    search_fields = ['department_name', 'title', 'categories']
-    inlines = [CategoriessInline]
+    list_display = ['name', 'slug_name']
+    search_fields = ['name', 'slug_name']
 
 
-@admin.register(ProductsApiVtex)
-class ProductsAdmin(admin.ModelAdmin):
+@admin.register(Brand)
+class BrandAdmin(admin.ModelAdmin):
+    list_display = ['name', 'slug_name']
+    search_fields = ['name', 'slug_name']
+
+
+@admin.register(Product)
+class ProductAdmin(admin.ModelAdmin):
     """Product model admin."""
 
-    list_display = ['id', 'name', 'product_id']
-    search_fields = ['name', 'product_id']
-    inlines = [ProductsSkusInline]
+    list_display = ['name', 'store', 'sub_category', 'department', 'category', 'brand']
+    search_fields = ['name', 'external_id']
 
 
 @admin.register(Image)
@@ -84,7 +75,6 @@ class SkusAdmin(admin.ModelAdmin):
 
     list_display = ['sku_id', 'sku_name', 'product_id']
     search_fields = ['sku_id', 'sku_name', 'product_id']
-    inlines = [InlineImageAdmin, InlinePriceAdmin]
 
 
 @admin.register(DateRange)

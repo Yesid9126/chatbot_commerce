@@ -1,5 +1,6 @@
 """Django models utilities."""
 
+from slugify import slugify
 # Django
 from django.db import models
 
@@ -32,3 +33,24 @@ class ChatbootModel(models.Model):
 
         get_latest_by = 'created'
         ordering = ['-created', '-modified']
+
+
+class AbstractCategory(ChatbootModel):
+
+    name = models.CharField(max_length=255)
+    slug_name = models.SlugField(max_length=255, null=True, blank=True)
+    external_id = models.IntegerField()
+    title = models.TextField(null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+    raw_json = models.JSONField(null=True, blank=True)
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        self.slug_name = slugify(self.name, separator="_")
+        return super().save(*args, **kwargs)
+
+    class Meta:
+        """Meta option."""
+        abstract = True

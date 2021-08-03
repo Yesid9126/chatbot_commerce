@@ -2,142 +2,48 @@
 
 # Django
 from django.db import models
-from django.db.models import JSONField
 
 # utilities
-from chatbot_commerce.utils.models import ChatbootModel
+from chatbot_commerce.utils.models import AbstractCategory
 
 
-class Department(ChatbootModel):
-    """Store departmentss"""
+class Department(AbstractCategory):
+    """Store departments."""
 
-    department_id = models.CharField(
-        'Department id',
-        max_length=6,
-        null=True,
-        blank=True
+    store = models.ForeignKey(
+        to='stores.Store',
+        on_delete=models.CASCADE,
+        related_name='departments',
     )
-
-    department_name = models.CharField(
-        'Department name',
-        max_length=50,
-        null=True,
-        blank=True
-    )
-
-    url_department = models.CharField(
-        'Url department',
-        max_length=5000,
-        null=True,
-        blank=True
-    )
-
-    has_children = models.BooleanField(
-        default=False,
-        null=True,
-        blank=True
-    )
-
-    title = models.CharField(
-        'Title',
-        max_length=500,
-        null=True,
-        blank=True
-    )
-
-    tag_description = models.CharField(
-        'Description',
-        max_length=500,
-        blank=True,
-        null=True
-    )
-
-    subcategories = models.ManyToManyField(
-        'products.Category',
-        through='products.Subcategory',
-        through_fields=('department', 'category')
-    )
-
-    department_json = JSONField('Complete department data', null=True, blank=True)
-
-    def __str__(self):
-        """Return Department name."""
-        return f'name:{self.department_name}'
 
     class Meta:
         verbose_name = "Department"
         verbose_name_plural = "Departments"
 
 
-class Subcategory(models.Model):
-    """Category subcategory."""
-
-    subcategory_name = models.CharField(
-        'Subcategory name',
-        max_length=255,
-        null=True,
-        blank=True
-    )
+class Category(AbstractCategory):
+    """Departaments categories."""
 
     department = models.ForeignKey(
-        to=Department,
+        Department,
         on_delete=models.CASCADE,
-        related_name='childs'
+        related_name='categories',
     )
+
+    class Meta:
+        verbose_name = "Category"
+        verbose_name_plural = "Categories"
+
+
+class Subcategory(AbstractCategory):
+    """Category subcategory."""
 
     category = models.ForeignKey(
         to='products.Category',
         on_delete=models.CASCADE,
-        related_name='childs'
-    )
-
-    category_tree = models.JSONField(
-        'Children for categories',
-        null=True,
-        blank=True
+        related_name='subcategories'
     )
 
     class Meta:
         verbose_name = "Subcategory"
         verbose_name_plural = "Subcategories"
-
-
-class Category(ChatbootModel):
-    """Departaments categories"""
-
-    category_id = models.CharField(
-        max_length=6,
-        null=True,
-        blank=True
-    )
-
-    category_name = models.CharField(
-        'Department category',
-        max_length=50,
-        null=True,
-        blank=True
-    )
-
-    has_children = models.BooleanField(
-        default=False,
-        null=True,
-        blank=True
-    )
-
-    departments = models.ForeignKey(
-        to='Department',
-        on_delete=models.CASCADE,
-        related_name='categories',
-        null=True,
-        blank=True
-    )
-
-    categories_json = JSONField('Complete categories data', null=True, blank=True)
-
-    def __str__(self):
-        """Return category name."""
-        return self.category_name
-
-    class Meta:
-        verbose_name = "Category"
-        verbose_name_plural = "Categories"

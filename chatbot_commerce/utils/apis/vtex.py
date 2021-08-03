@@ -4,7 +4,7 @@
 from django.conf import settings
 
 # Models
-from chatbot_commerce.stores.models import StoresVtex
+from chatbot_commerce.stores.models import Store
 
 # Utilities
 import requests
@@ -15,7 +15,7 @@ class VtexStores:
 
     def _get_resources(self, uri, **kwargs):
         """Get resources for store."""
-        store = StoresVtex.objects.filter(name='pilatos').get()
+        store = Store.objects.filter(name='pilatos').get()
         url = "{}/{}".format(settings.URL_VTEX, uri)
         r = requests.get(url, headers=store.headers, timeout=1000)
         return r
@@ -52,6 +52,7 @@ class VtexStores:
         return response_json
 
     def total_skus(self, **kwargs):
+        # TODO: Pagination as args for big stores
         uri = 'catalog_system/pvt/sku/stockkeepingunitids?page=1&pagesize=100'
         method = 'get'
         return self._get_json_resource(
@@ -75,7 +76,7 @@ class VtexStores:
             method=method
         )
 
-    def products_skus(self, product_id):
+    def Product_skus(self, product_id):
         uri = f'catalog_system/pvt/sku/stockkeepingunitByProductId/{product_id}'
         method = 'get'
         return self._get_json_resource(
@@ -92,7 +93,15 @@ class VtexStores:
         )
 
     def departments_categories(self):
-        uri = 'catalog_system/pub/category/tree/10'
+        uri = 'catalog_system/pub/category/tree/200'
+        method = 'get'
+        return self._get_json_resource(
+            uri,
+            method=method
+        )
+
+    def get_brands(self):
+        uri = 'catalog_system/pvt/brand/list'
         method = 'get'
         return self._get_json_resource(
             uri,
@@ -103,7 +112,7 @@ class VtexStores:
 class VtexPriceSku:
 
     def _get_resource(self, uri, **kwargs):
-        store = StoresVtex.objects.filter(name='pilatos').get()
+        store = Store.objects.filter(name='pilatos').get()
         url = '{}/{}'.format(settings.URL_PRICESKU_VTEX, uri)
         r = requests.get(url, headers=store.headers, timeout=1000)
         return r

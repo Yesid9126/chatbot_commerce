@@ -1,62 +1,54 @@
-"""Products model."""
+"""Product model."""
 
 # Django
 from django.db import models
-from django.db.models import JSONField
 
 # utilities
-from chatbot_commerce.utils.models import ChatbootModel
+from chatbot_commerce.utils.models import AbstractCategory
 
 
-class ProductsApiVtex(ChatbootModel):
+class Brand(AbstractCategory):
+    pass
+
+
+class Product(AbstractCategory):
     """Main product model."""
-
-    product_id = models.CharField(
-        'Vtex product Id',
-        max_length=50,
+    store = models.ForeignKey(
+        to='stores.Store',
+        on_delete=models.CASCADE,
+        related_name='products',
+        null=True, blank=True
     )
 
-    name = models.CharField(
-        'Product name',
-        max_length=500,
+    sub_category = models.ForeignKey(
+        to='products.Subcategory',
+        on_delete=models.SET_NULL,
         null=True,
-        blank=True
+        blank=True,
+        related_name='products'
     )
 
-    department_id = models.CharField(
-        'Department id',
-        max_length=50,
-        null=True,
-        blank=True
+    department = models.ForeignKey(
+        to='products.Department',
+        on_delete=models.CASCADE,
+        related_name='products',
+        null=True, blank=True
     )
 
-    category_id = models.CharField(
-        'Category id',
-        max_length=50,
+    category = models.ForeignKey(
+        to='products.Category',
+        on_delete=models.SET_NULL,
         null=True,
-        blank=True
+        blank=True,
+        related_name='products'
     )
 
-    department_name = models.CharField(
-        'Department name',
-        max_length=255,
+    brand = models.ForeignKey(
+        Brand,
+        on_delete=models.CASCADE,
+        blank=True,
         null=True,
-        blank=True
-    )
-
-    category_name = models.CharField(
-        'Category name',
-        max_length=255,
-        null=True,
-        blank=True
-    )
-
-    brand_id = models.CharField(
-        'Brand id',
-        max_length=50,
-        null=True,
-        blank=True
-
+        related_name='products'
     )
 
     link_id = models.CharField(
@@ -75,13 +67,6 @@ class ProductsApiVtex(ChatbootModel):
 
     is_visible = models.BooleanField(
         default=False,
-    )
-
-    description = models.TextField(
-        'Description',
-        max_length=500,
-        null=True,
-        blank=True
     )
 
     description_short = models.CharField(
@@ -121,12 +106,10 @@ class ProductsApiVtex(ChatbootModel):
         default=False
     )
 
-    product_data = JSONField('Complete product data', null=True, blank=True)
-
     def __str__(self):
         """Return product name|id."""
         return f'name:{self.name}'
 
     class Meta:
         verbose_name = "Product"
-        verbose_name_plural = "Products"
+        verbose_name_plural = "Product"

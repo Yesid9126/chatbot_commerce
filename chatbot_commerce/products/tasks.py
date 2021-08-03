@@ -1,31 +1,19 @@
 """Product tasks."""
 
-# Django Rest Framework
-from rest_framework import status
 
 # Celery
-from celery.decorators import task
+from celery.decorators import periodic_task
+from celery.schedules import crontab
+
 
 # Utils
-from chatbot_commerce.utils.products import get_products_vtex_store
 from chatbot_commerce.utils.departments_categories import get_departments
+from chatbot_commerce.utils.products import get_products_vtex_store
 
 
-@task(expires=259200, soft_time_limit=259200, time_limit=259200)
-def store_products():
-    """Create all products."""
-    result = []
-    response = get_products_vtex_store()
-    result.append(response)
-    response = status.HTTP_200_OK
-    return response
-
-
-@task(expires=259200, soft_time_limit=259200, time_limit=259200)
+@periodic_task(name='departments_categories', run_every=crontab(day_of_week='*', hour=1, minute=30))
 def departments_categories():
-    """Create all products."""
-    result = []
-    response = get_departments()
-    result.append(response)
-    response = status.HTTP_200_OK
-    return response
+    """Create all Product and departments."""
+    get_departments()
+    get_products_vtex_store()
+    return True
