@@ -55,7 +55,7 @@ class FixedPriceModelSerializer(serializers.ModelSerializer):
     class Meta:
         """Meta class"""
         model = FixedPrice
-        fields = ['trade_policy_id', 'value', 'min_quantity', 'date_ranges']
+        fields = ['value', 'date_ranges']
 
 
 class PriceModelSerializer(serializers.ModelSerializer):
@@ -80,7 +80,7 @@ class SkuModelSerializer(serializers.ModelSerializer):
 
         model = Skus
         fields = (
-            'pk', 'product_id', 'sku_name', 'sku_images', 'price'
+            'sku_id', 'sku_name', 'sku_images', 'price'
         )
 
 
@@ -90,13 +90,14 @@ class ProductModelSerializer(serializers.ModelSerializer):
     skus = SkuModelSerializer(many=True)
     brand = BrandModelSerializer(read_only=True)
     tree_categories = serializers.SerializerMethodField('get_tree_categories')
+    product_id = serializers.CharField(source='pk')
 
     class Meta:
         """Meta class."""
 
         model = Product
         fields = [
-            'pk',
+            'product_id',
             'name',
             'keywords',
             'brand',

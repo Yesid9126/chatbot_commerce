@@ -15,7 +15,6 @@ class DepartmentModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Department
         fields = (
-            'pk',
             'name',
         )
 
@@ -26,7 +25,6 @@ class CategoryModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = (
-            'pk',
             'name',
             'department',
         )
@@ -38,7 +36,6 @@ class SubcategoryModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subcategory
         fields = (
-            'pk',
             'name',
             'category',
         )
@@ -49,7 +46,6 @@ class SubcategoryTreeModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subcategory
         fields = (
-            'pk',
             'name',
         )
 
