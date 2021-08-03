@@ -61,10 +61,10 @@ def get_products_vtex_store():
         except Exception as e:
             print(e)
     # Create skus for product
-    for product in products_skus:
-        skus_product = vtex.Product_skus(product_id=product)
+    for product_key in products_skus:
+        product = Product.objects.filter(external_id=product_key).first()
+        skus_product = vtex.Product_skus(product_id=product_key)
         for skus in skus_product:
-            product = Product.objects.filter(external_id=product).first()
             try:
                 sku_instance, _ = Skus.objects.update_or_create(
                     sku_id=skus.get('Id'),
@@ -99,7 +99,7 @@ def get_products_vtex_store():
     # Prices & Images
     vtexprice = VtexPriceSku()
     all_skus_dics = Skus.objects.filter(
-        Product__in=Product.objects.all()
+        product__in=Product.objects.all()
     )\
         .values_list('sku_json', flat=True)
     for sku_dic in all_skus_dics:

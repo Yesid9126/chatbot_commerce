@@ -10,4 +10,5 @@ from chatbot_commerce.stores.models import Store
 class StoresAdmin(admin.ModelAdmin):
     """Product model admin."""
     list_display = ['name', 'url_enviroment']
+    exclude = ['slug_name']
     search_fields = ['name', 'url_enviroment', ]

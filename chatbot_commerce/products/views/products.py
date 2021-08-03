@@ -38,5 +38,5 @@ class ProductViewset(mixins.RetrieveModelMixin,
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
-        queryset = Product.objects.all()
+        queryset = Product.objects.filter(store=self.store)
         return queryset

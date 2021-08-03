@@ -75,7 +75,6 @@ class SkusAdmin(admin.ModelAdmin):
 
     list_display = ['sku_id', 'sku_name', 'product_id']
     search_fields = ['sku_id', 'sku_name', 'product_id']
-    inlines = [InlineImageAdmin, InlinePriceAdmin]
 
 
 @admin.register(DateRange)

@@ -12,7 +12,7 @@ else:
     router = SimpleRouter()
 
 router.register(
-    r'stores/(?P<store_slug_name>[-a-zA-Z0-0_]+)/Product',
+    r'stores/(?P<store_slug_name>[-a-zA-Z0-0_]+)/products',
     ProductViewset,
     basename='Product'
 )
