@@ -1,9 +1,12 @@
 """Skus model."""
 
+from slugify import slugify
+
 # Django
 from django.db import models
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
+
 
 # utilities
 from chatbot_commerce.utils.models import ChatbootModel
@@ -196,3 +199,31 @@ class DateRange(ChatbootModel):
         verbose_name = "Date range"
         verbose_name_plural = "Date range's"
         ordering = ['fixed_price', 'date_time_from']
+
+
+class AttributeType(ChatbootModel):
+
+    name = models.CharField(max_length=255)
+    slug_name = models.SlugField(max_length=255, null=True, blank=True, unique=True)
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        self.slug_name = slugify(self.name, separator="_")
+        return super().save(*args, **kwargs)
+
+
+class Attribute(ChatbootModel):
+    """Attributes model"""
+
+    sku = models.ForeignKey(Skus, on_delete=models.CASCADE, related_name='attributes')
+    attribute_type = models.ForeignKey(AttributeType, on_delete=models.CASCADE, related_name='attributes')
+    value = models.CharField(max_length=255)
+
+    class Meta:
+        """Meta class"""
+
+        verbose_name = "Attribute"
+        verbose_name_plural = "Attributes"
+        unique_together = ['sku', 'attribute_type']
