@@ -1,6 +1,7 @@
 """Product and skus views."""
 
 # Django Rest Framework
+from os import name
 from rest_framework.generics import get_object_or_404
 from rest_framework import viewsets, mixins
 from rest_framework.response import Response
@@ -16,10 +17,10 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+
 # Models
 from chatbot_commerce.products.models import Product, Department
 from chatbot_commerce.stores.models import Store
-
 
 test_param = openapi.Parameter('skus__attributes__attribute_type__name', openapi.IN_QUERY, description="attr_type", type=openapi.TYPE_STRING)
 
@@ -36,7 +37,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
     search_fields = (
         'name', 'brand__name', 'keywords', 'category__name',
         'sub_category__name', 'department__name', 'reference_id',
-        'skus__attributes__value'
+        'skus__attributes__value', 'skus__sku_name'
     )
     ordering_fields = ('created',)
     filter_fields = (
@@ -44,8 +45,8 @@ class ProductViewset(mixins.RetrieveModelMixin,
         'category__name',
         'sub_category__name',
         'department__name',
-        'skus__attributes__attribute_type__name'
-        'skus__attributes__attribute_value'
+        'skus__attributes__attribute_type__name',
+        'skus__attributes__value'
     )
 
     def dispatch(self, request, *args, **kwargs):
@@ -54,11 +55,17 @@ class ProductViewset(mixins.RetrieveModelMixin,
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
-        queryset = Product.objects.filter(store=self.store)
+        queryset = Product.objects.filter(store=self.store, is_active=True)
         return queryset
 
     @swagger_auto_schema(manual_parameters=[test_param])
     def list(self, request, *args, **kwargs):
+        """
+        Return all products 
+
+        search = Put a keyword like name category or department to filter whith it
+        example... search = jeans azul L
+        """
         queryset = self.filter_queryset(self.get_queryset())
 
         page = self.paginate_queryset(queryset)
@@ -69,13 +76,22 @@ class ProductViewset(mixins.RetrieveModelMixin,
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
+    def retrieve(self, request, *args, **kwargs):
+        """
+        Return a single product with
+        
+        
+        Hello kitty
+        """
+        return super().retrieve(request, *args, **kwargs)
+
 
 class DepartmentsViewset(mixins.RetrieveModelMixin,
                          mixins.ListModelMixin,
                          viewsets.GenericViewSet):
 
     serializer_class = DepartmentTreeModelSerializer
-    lookup_field = 'pk'
+    lookup_field = 'department_name'
     permission_classes = [HasAPIKey | IsAdminUser]
     filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
     search_fields = ('name', 'categories__name', 'categories__subcategories__name')
@@ -89,3 +105,21 @@ class DepartmentsViewset(mixins.RetrieveModelMixin,
     def get_queryset(self):
         queryset = Department.objects.filter(store=self.store)
         return queryset
+
+    def list(self, request, *args, **kwargs):
+        """
+        Return all departments with tree category
+        
+        search = Put a keyword like name category or department to filter whith it
+        example... search = Hombres 
+        """
+        return super().list(request, *args, **kwargs)
+
+    def retrieve(self, request, *args, **kwargs):
+        """
+        Return a single department with tree category
+        
+        Oelo
+        """
+        obj = Department.objects.filter(store=self.store, name=kwargs['department_name']).first()
+        return Response(self.serializer_class(obj).data)

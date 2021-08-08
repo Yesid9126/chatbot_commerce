@@ -107,6 +107,22 @@ class VtexStores:
             uri,
             method=method
         )
+    
+    def get_sku_specifications(self, sku_id):
+        uri = f'catalog/pvt/stockkeepingunit/{sku_id}/specification'
+        method = 'get'
+        return self._get_json_resource(
+            uri,
+            method=method
+        )
+
+    def get_specifications_field(self, field_id):
+        uri = f'catalog_system/pub/specification/fieldGet/{field_id}'
+        method = 'get'
+        return self._get_json_resource(
+            uri,
+            method=method
+        )
 
 
 class VtexPriceSku:
