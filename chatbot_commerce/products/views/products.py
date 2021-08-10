@@ -23,6 +23,7 @@ from chatbot_commerce.products.models import Product, Department
 from chatbot_commerce.stores.models import Store
 
 test_param = openapi.Parameter('skus__attributes__attribute_type__name', openapi.IN_QUERY, description="attr_type", type=openapi.TYPE_STRING)
+test_param_2 = openapi.Parameter('skus__attributes__value', openapi.IN_QUERY, description="attr_value", type=openapi.TYPE_STRING)
 
 
 class ProductViewset(mixins.RetrieveModelMixin,
@@ -58,7 +59,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
         queryset = Product.objects.filter(store=self.store, is_active=True)
         return queryset
 
-    @swagger_auto_schema(manual_parameters=[test_param])
+    @swagger_auto_schema(manual_parameters=[test_param, test_param_2])
     def list(self, request, *args, **kwargs):
         """
         Return all products 

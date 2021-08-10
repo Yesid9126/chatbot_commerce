@@ -127,5 +127,5 @@ class ProductModelSerializer(serializers.ModelSerializer):
         return DepartmentModelSerializer(obj.department).data
 
     def get_skus(self, obj):
-        skus = Skus.objects.filter(product=obj, is_active=True)
+        skus = Skus.objects.filter(product=obj)
         return SkuModelSerializer(skus, many=True).data
