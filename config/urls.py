@@ -1,7 +1,6 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.conf.urls import url
 from django.urls import include, path, re_path
 from django.views import defaults as default_views
 from drf_yasg.views import get_schema_view

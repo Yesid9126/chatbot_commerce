@@ -18,6 +18,7 @@ from chatbot_commerce.products.models import (
     AttributeType
 )
 
+
 @admin.register(Subcategory)
 class SubcategoryAdmin(admin.ModelAdmin):
     """Subcategory model admin."""
@@ -111,6 +112,7 @@ class PriceAdmin(admin.ModelAdmin):
 
     list_display = ['sku', 'base_price']
     inlines = [InlineFixedPriceAdmin]
+
 
 admin.site.register(Attribute)
 admin.site.register(AttributeType)

@@ -6,6 +6,7 @@ from chatbot_commerce.utils.products import get_products_vtex_store
 # Models
 from chatbot_commerce.stores.models.stores import Store
 
+
 class Command(BaseCommand):
 
     def handle(self, *args, **options):

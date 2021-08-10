@@ -107,7 +107,7 @@ class VtexStores:
             uri,
             method=method
         )
-    
+
     def get_sku_specifications(self, sku_id):
         uri = f'catalog/pvt/stockkeepingunit/{sku_id}/specification'
         method = 'get'

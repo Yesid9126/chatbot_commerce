@@ -15,8 +15,6 @@ from chatbot_commerce.utils.apis.vtex import VtexStores, VtexPriceSku
 
 def get_products_vtex_store(store):
     """Creation of product available in the store."""
-    import ipdb;
-    ipdb.set_trace()
     products_created = []
     skus_created = []
     vtex = VtexStores()

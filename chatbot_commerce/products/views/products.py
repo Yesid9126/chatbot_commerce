@@ -1,11 +1,9 @@
 """Product and skus views."""
 
 # Django Rest Framework
-from os import name
 from rest_framework.generics import get_object_or_404
 from rest_framework import viewsets, mixins
 from rest_framework.response import Response
-
 
 # Serializers
 from chatbot_commerce.products.serializers import ProductModelSerializer, DepartmentTreeModelSerializer
@@ -62,7 +60,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
     @swagger_auto_schema(manual_parameters=[test_param, test_param_2])
     def list(self, request, *args, **kwargs):
         """
-        Return all products 
+        Return all products
 
         search = Put a keyword like name category or department to filter whith it
         example... search = jeans azul L
@@ -80,9 +78,6 @@ class ProductViewset(mixins.RetrieveModelMixin,
     def retrieve(self, request, *args, **kwargs):
         """
         Return a single product with
-        
-        
-        Hello kitty
         """
         return super().retrieve(request, *args, **kwargs)
 
@@ -110,17 +105,15 @@ class DepartmentsViewset(mixins.RetrieveModelMixin,
     def list(self, request, *args, **kwargs):
         """
         Return all departments with tree category
-        
+
         search = Put a keyword like name category or department to filter whith it
-        example... search = Hombres 
+        example... search = Hombres
         """
         return super().list(request, *args, **kwargs)
 
     def retrieve(self, request, *args, **kwargs):
         """
         Return a single department with tree category
-        
-        Oelo
         """
         obj = Department.objects.filter(store=self.store, name=kwargs['department_name']).first()
         return Response(self.serializer_class(obj).data)
