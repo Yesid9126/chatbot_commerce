@@ -26,8 +26,8 @@ attr_value_param = openapi.Parameter('skus__attributes__value', openapi.IN_QUERY
 
 
 class ProductViewset(mixins.RetrieveModelMixin,
-                     mixins.ListModelMixin,
-                     viewsets.GenericViewSet):
+                    mixins.ListModelMixin,
+                    viewsets.GenericViewSet):
     """Product viewset."""
 
     serializer_class = ProductModelSerializer
@@ -37,14 +37,10 @@ class ProductViewset(mixins.RetrieveModelMixin,
     search_fields = (
         'name', 'brand__name', 'keywords', 'category__name',
         'sub_category__name', 'department__name', 'reference_id',
-        'skus__attributes__value', 'skus__sku_name'
+        'skus__attributes__attribute_type__name', 'skus__attributes__value', 'skus__sku_name'
     )
     ordering_fields = ('created',)
     filter_fields = (
-        'brand__name',
-        'category__name',
-        'sub_category__name',
-        'department__name',
         'skus__attributes__attribute_type__name',
         'skus__attributes__value'
     )
@@ -52,6 +48,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
     def dispatch(self, request, *args, **kwargs):
         slug_name = kwargs['store_slug_name']
         self.store = get_object_or_404(Store, slug_name=slug_name)
+        self.filter_data = {key: value for key, value in request.GET.items() if key in ['skus__attributes__attribute_type__name', 'skus__attributes__value']}
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
@@ -59,8 +56,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
         return queryset
 
     def get_serializer_context(self):
-        filter_data = {key: value for key, value in self.request.GET.items()}
-        return filter_data
+        return self.filter_data
 
     def list(self, request, *args, **kwargs):
         """
@@ -70,9 +66,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
         example... search = jeans azul L
         """
         queryset = self.filter_queryset(self.get_queryset())
-        filter_data = {key: value for key, value in request.GET.items()}
-        queryset = queryset.filter(store=self.store, is_active=True, skus__is_active=True, **filter_data).distinct()
-
+        queryset = queryset.filter(store=self.store, is_active=True, skus__is_active=True, **self.filter_data).distinct()
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -86,12 +80,13 @@ class ProductViewset(mixins.RetrieveModelMixin,
         """
         Return a single department with tree category
         """
-        return super().retrieve(request, *args, **kwargs)
+        obj = Product.objects.filter(store=self.store, **self.filter_data, pk=kwargs['pk']).first()
+        return Response(self.get_serializer(obj).data)
 
 
 class DepartmentsViewset(mixins.RetrieveModelMixin,
-                         mixins.ListModelMixin,
-                         viewsets.GenericViewSet):
+                        mixins.ListModelMixin,
+                        viewsets.GenericViewSet):
 
     serializer_class = DepartmentTreeModelSerializer
     lookup_field = 'department_name'

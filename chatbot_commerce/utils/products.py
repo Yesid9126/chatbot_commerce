@@ -48,7 +48,10 @@ def get_products_vtex_store(store):
         category = Category.objects.filter(external_id=product.get('CategoryId'), department__store=store).last()
         if not category:
             sub_category = Subcategory.objects.filter(external_id=product.get('CategoryId'), category__department__store=store).last()
-            category = sub_category.category
+            if not sub_category:
+                category = None
+            else:
+                category= sub_category.category
         try:
             product_instance, _ = Product.objects.update_or_create(
                 store=store,
