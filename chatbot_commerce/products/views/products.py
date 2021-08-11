@@ -26,8 +26,8 @@ attr_value_param = openapi.Parameter('skus__attributes__value', openapi.IN_QUERY
 
 
 class ProductViewset(mixins.RetrieveModelMixin,
-                    mixins.ListModelMixin,
-                    viewsets.GenericViewSet):
+                     mixins.ListModelMixin,
+                     viewsets.GenericViewSet):
     """Product viewset."""
 
     serializer_class = ProductModelSerializer
@@ -85,8 +85,8 @@ class ProductViewset(mixins.RetrieveModelMixin,
 
 
 class DepartmentsViewset(mixins.RetrieveModelMixin,
-                        mixins.ListModelMixin,
-                        viewsets.GenericViewSet):
+                         mixins.ListModelMixin,
+                         viewsets.GenericViewSet):
 
     serializer_class = DepartmentTreeModelSerializer
     lookup_field = 'department_name'

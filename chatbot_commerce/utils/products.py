@@ -51,7 +51,7 @@ def get_products_vtex_store(store):
             if not sub_category:
                 category = None
             else:
-                category= sub_category.category
+                category = sub_category.category
         try:
             product_instance, _ = Product.objects.update_or_create(
                 store=store,
