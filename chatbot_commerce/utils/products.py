@@ -29,7 +29,7 @@ def get_products_vtex_store(store):
     page = 1
     while True:
         skus_ids = vtex.total_skus(page=page)
-        if skus_ids == []:
+        if page == 2:
             break
         skus += skus_ids
         page += 1
