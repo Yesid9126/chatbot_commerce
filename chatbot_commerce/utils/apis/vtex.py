@@ -51,9 +51,9 @@ class VtexStores:
             }
         return response_json
 
-    def total_skus(self, **kwargs):
+    def total_skus(self, page, **kwargs):
         # TODO: Pagination as args for big stores
-        uri = 'catalog_system/pvt/sku/stockkeepingunitids?page=1&pagesize=100'
+        uri = f'catalog_system/pvt/sku/stockkeepingunitids?page={page}&pagesize=1000'
         method = 'get'
         return self._get_json_resource(
             uri,
@@ -102,6 +102,22 @@ class VtexStores:
 
     def get_brands(self):
         uri = 'catalog_system/pvt/brand/list'
+        method = 'get'
+        return self._get_json_resource(
+            uri,
+            method=method
+        )
+
+    def get_sku_specifications(self, sku_id):
+        uri = f'catalog/pvt/stockkeepingunit/{sku_id}/specification'
+        method = 'get'
+        return self._get_json_resource(
+            uri,
+            method=method
+        )
+
+    def get_specifications_field(self, field_id):
+        uri = f'catalog_system/pub/specification/fieldGet/{field_id}'
         method = 'get'
         return self._get_json_resource(
             uri,

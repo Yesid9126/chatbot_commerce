@@ -13,7 +13,9 @@ from chatbot_commerce.products.models import (
     Price,
     DateRange,
     Skus,
-    FixedPrice
+    FixedPrice,
+    Attribute,
+    AttributeType
 )
 
 
@@ -110,3 +112,7 @@ class PriceAdmin(admin.ModelAdmin):
 
     list_display = ['sku', 'base_price']
     inlines = [InlineFixedPriceAdmin]
+
+
+admin.site.register(Attribute)
+admin.site.register(AttributeType)

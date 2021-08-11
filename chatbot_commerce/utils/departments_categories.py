@@ -8,7 +8,7 @@ from chatbot_commerce.stores.models import Store
 from chatbot_commerce.utils.apis.vtex import VtexStores
 
 
-def get_departments():
+def get_departments(store):
     """Creation departments and categories."""
     vtex = VtexStores()
     departments = vtex.departments_categories()

@@ -5,20 +5,34 @@ from chatbot_commerce.products.models import (
     Skus, Product, Price,
     FixedPrice, Image, DateRange,
     Brand, Category, Department,
-    Subcategory,
+    Subcategory, AttributeType,
+    Attribute
 )
-from chatbot_commerce.stores.models import Store
 
 # Apis
 from chatbot_commerce.utils.apis.vtex import VtexStores, VtexPriceSku
 
 
-def get_products_vtex_store():
+def get_products_vtex_store(store):
     """Creation of product available in the store."""
     products_created = []
     skus_created = []
+    prices_created = []
+    fixedpirces_created = []
+    images_created = []
+    dateranges_created = []
+    attributes_type_created = []
+    attributes_created = []
+
     vtex = VtexStores()
-    skus = vtex.total_skus()
+    skus = []
+    page = 1
+    while True:
+        skus_ids = vtex.total_skus(page=page)
+        if skus_ids == []:
+            break
+        skus += skus_ids
+        page += 1
     products_skus = []
     if skus:
         for sku_unit in skus:
@@ -30,14 +44,14 @@ def get_products_vtex_store():
     for product in products_skus:
         sub_category = None
         product = vtex.product_unit(product_id=product)
-        department = Department.objects.filter(external_id=product.get('DepartmentId')).last()
-        category = Category.objects.filter(external_id=product.get('CategoryId')).last()
+        department = Department.objects.filter(external_id=product.get('DepartmentId'), store=store).last()
+        category = Category.objects.filter(external_id=product.get('CategoryId'), department__store=store).last()
         if not category:
-            sub_category = Subcategory.objects.filter(external_id=product.get('CategoryId')).last()
+            sub_category = Subcategory.objects.filter(external_id=product.get('CategoryId'), category__department__store=store).last()
             category = sub_category.category
         try:
             product_instance, _ = Product.objects.update_or_create(
-                store=Store.objects.last(),
+                store=store,
                 external_id=product.get('Id'),
                 defaults={
                     'name': product.get('Name'),
@@ -62,12 +76,13 @@ def get_products_vtex_store():
             print(e)
     # Create skus for product
     for product_key in products_skus:
-        product = Product.objects.filter(external_id=product_key).first()
+        product = Product.objects.filter(external_id=product_key, store=store).first()
         skus_product = vtex.Product_skus(product_id=product_key)
         for skus in skus_product:
             try:
                 sku_instance, _ = Skus.objects.update_or_create(
                     sku_id=skus.get('Id'),
+                    product=product,
                     defaults={
                         'product_id': skus.get('ProductId'),
                         'sku_name': skus.get('Name'),
@@ -83,7 +98,6 @@ def get_products_vtex_store():
                         'reference_stock_id': skus.get('ReferenceStockKeepingUnitId'),
                         'is_inventoried': skus.get('IsInventoried'),
                         'is_transported': skus.get('IsTransported'),
-                        'product': product,
                         'sku_json': skus
                     }
                 )
@@ -92,24 +106,19 @@ def get_products_vtex_store():
                 error = e
                 print(error)
     # Delete product not in store
-    Product.objects.all().exclude(pk__in=products_created)
+    Product.objects.filter(store=store).exclude(pk__in=products_created).delete()
     # Delete sku not in product
-    Skus.objects.all().exclude(pk__in=skus_created)
+    Skus.objects.filter(product__in=Product.objects.filter(store=store)).exclude(pk__in=skus_created).delete()
 
     # Prices & Images
     vtexprice = VtexPriceSku()
-    all_skus_dics = Skus.objects.filter(
-        product__in=Product.objects.all()
-    )\
-        .values_list('sku_json', flat=True)
-    for sku_dic in all_skus_dics:
-        sku = Skus.objects.filter(sku_id=sku_dic.get('Id'), product_id=sku_dic.get('ProductId')).first()
+    all_skus = Skus.objects.filter(
+        product__in=Product.objects.filter(store=store)
+    )
+    for sku in all_skus:
         # Create price for sku
-        price_dic = vtexprice.price_sku(sku_id=sku_dic.get('Id'))
+        price_dic = vtexprice.price_sku(sku_id=sku.sku_json.get('Id'))
         if 'listPrice' not in price_dic:
-            price = Price.objects.filter(sku=sku).first()
-            if price:
-                price.delete()
             continue
         price_instance, _ = Price.objects.update_or_create(
             sku=sku,
@@ -120,8 +129,9 @@ def get_products_vtex_store():
                 "base_price": price_dic['basePrice']
             }
         )
+        prices_created.append(price_instance.pk)
         for fixedprice_dic in price_dic['fixedPrices']:
-            fixedprice_instace, _ = FixedPrice.objects.update_or_create(
+            fixedprice_instance, _ = FixedPrice.objects.update_or_create(
                 price=price_instance,
                 trade_policy_id=fixedprice_dic["tradePolicyId"],
                 defaults={
@@ -130,32 +140,23 @@ def get_products_vtex_store():
                     "min_quantity": fixedprice_dic["minQuantity"]
                 }
             )
+            fixedpirces_created.append(fixedprice_instance.pk)
             if 'dateRange' in fixedprice_dic:
                 daterange_dic = fixedprice_dic.get('dateRange')
-                DateRange.objects.update_or_create(
-                    fixed_price=fixedprice_instace,
+                daterange_instance, _ = DateRange.objects.update_or_create(
+                    fixed_price=fixedprice_instance,
                     defaults={
                         'date_time_from': daterange_dic.get('from'),
                         'date_time_to': daterange_dic.get('to')
                     }
                 )
-                continue
-            date_ranges = DateRange.objects.filter(fixed_price=fixedprice_instace)
-            if date_ranges:
-                date_ranges.delete()
+                dateranges_created.append(daterange_instance.pk)
         # Create image for sku
-        images_array = vtex.image_sku(sku_id=sku_dic.get('Id'))
-        images = Image.objects.filter(sku=sku)
-        if len(images_array) != images.count():
-            images.delete()
+        images_array = vtex.image_sku(sku_id=sku.sku_json.get('Id'))
         for image_dic in images_array:
-            if 'ArchiveId' not in image_dic:
-                if images:
-                    images.delete()
-                break
             archive_id = image_dic['ArchiveId']
             name = image_dic['Name']
-            Image.objects.update_or_create(
+            image_instance, _ = Image.objects.update_or_create(
                 image_id=image_dic.get('Id'),
                 sku=sku,
                 defaults={
@@ -165,4 +166,45 @@ def get_products_vtex_store():
                     'archive_id': archive_id
                 }
             )
+            images_created.append(image_instance.pk)
+        sku_specifications_array = vtex.get_sku_specifications(sku_id=sku.sku_json.get('Id'))
+        if 'status_code' and 'message' in sku_specifications_array:
+            continue
+        for dic in sku_specifications_array:
+            specifications_field = vtex.get_specifications_field(field_id=dic.get('FieldId'))
+            attribute_type_instance, _ = AttributeType.objects.update_or_create(
+                name=specifications_field.get('Description')
+            )
+            attributes_type_created.append(attribute_type_instance.pk)
+            attribute_instance, _ = Attribute.objects.update_or_create(
+                sku=sku,
+                attribute_type=attribute_type_instance,
+                value=dic.get('Text')
+            )
+            attributes_created.append(attribute_instance.pk)
+    # Delete images not in sku
+    Image.objects.filter(sku__in=all_skus).exclude(pk__in=images_created).delete()
+    # Delete prices that not exists
+    Price.objects.filter(sku__in=all_skus).exclude(pk__in=prices_created).delete()
+    # Delete fixedprices not in prices
+    FixedPrice.objects.filter(
+        price__in=Price.objects.filter(
+            sku__in=all_skus
+        )
+    ).exclude(pk__in=fixedpirces_created).delete()
+    # Delete dateranges not in fixedprices
+    DateRange.objects.filter(
+        fixed_price__in=FixedPrice.objects.filter(
+            price__in=Price.objects.filter(
+                sku__in=all_skus)
+        )
+    ).exclude(pk__in=dateranges_created).delete()
+    # Delete attributes type that not exists
+    AttributeType.objects.filter(
+        attributes__in=Attribute.objects.filter(
+            sku__in=all_skus
+        )
+    ).distinct().exclude(pk__in=attributes_type_created).delete()
+    # Delete attributes that not exists
+    Attribute.objects.filter(sku__in=all_skus).exclude(pk__in=attributes_created).delete()
     return print('0k')

@@ -1,6 +1,7 @@
 """Product serializers."""
 
 # Django rest framework
+from chatbot_commerce.products.models.skus import Attribute
 from chatbot_commerce.products.models import FixedPrice, Price, Skus, Image, DateRange, Brand
 from rest_framework import serializers
 
@@ -69,25 +70,38 @@ class PriceModelSerializer(serializers.ModelSerializer):
         fields = ['base_price', 'fixed_prices']
 
 
+class AttributeModelSerializer(serializers.ModelSerializer):
+    """Attribute model serializer"""
+
+    attribute_name = serializers.CharField(source='attribute_type')
+
+    class Meta:
+        """Meta class"""
+        model = Attribute
+        fields = (
+            'attribute_name', 'value'
+        )
+
+
 class SkuModelSerializer(serializers.ModelSerializer):
     """Sku model serializer"""
 
     price = PriceModelSerializer(many=True)
     sku_images = ImageSkuModelSerializer(many=True)
+    attributes = AttributeModelSerializer(many=True)
 
     class Meta:
         """Meta class"""
-
         model = Skus
         fields = (
-            'sku_id', 'sku_name', 'sku_images', 'price'
+            'sku_id', 'sku_name', 'sku_images', 'price', 'attributes', 'is_active'
         )
 
 
 class ProductModelSerializer(serializers.ModelSerializer):
     """Product model serializer."""
 
-    skus = SkuModelSerializer(many=True)
+    skus = serializers.SerializerMethodField('get_skus')
     brand = BrandModelSerializer(read_only=True)
     tree_categories = serializers.SerializerMethodField('get_tree_categories')
     product_id = serializers.CharField(source='pk')
@@ -105,9 +119,24 @@ class ProductModelSerializer(serializers.ModelSerializer):
             'skus',
         ]
 
+    def __init__(self, instance=None, data=None, **kwargs):
+        filter_data = {}
+        if 'context' in kwargs:
+            if 'skus__attributes__attribute_type__name' in kwargs['context']:
+                filter_data['attributes__attribute_type__name'] = kwargs['context']['skus__attributes__attribute_type__name']
+            if 'skus__attributes__value' in kwargs['context']:
+                filter_data['attributes__value'] = kwargs['context']['skus__attributes__value']
+            del kwargs['context']
+        self.filter_data = filter_data
+        super().__init__(instance=instance, **kwargs)
+
     def get_tree_categories(self, obj):
         if obj.sub_category:
             return SubcategoryModelSerializer(obj.sub_category).data
         elif obj.category:
             return CategoryModelSerializer(obj.category).data
         return DepartmentModelSerializer(obj.department).data
+
+    def get_skus(self, obj):
+        skus = Skus.objects.filter(product=obj, is_active=True, **self.filter_data)
+        return SkuModelSerializer(skus, many=True).data

@@ -221,6 +221,9 @@ class Attribute(ChatbootModel):
     attribute_type = models.ForeignKey(AttributeType, on_delete=models.CASCADE, related_name='attributes')
     value = models.CharField(max_length=255)
 
+    def __str__(self):
+        return f'{self.sku.sku_name}: {self.attribute_type}: {self.value}'
+
     class Meta:
         """Meta class"""
 
