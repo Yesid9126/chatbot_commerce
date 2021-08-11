@@ -17,8 +17,22 @@ def get_products_vtex_store(store):
     """Creation of product available in the store."""
     products_created = []
     skus_created = []
+    prices_created = []
+    fixedpirces_created = []
+    images_created = []
+    dateranges_created = []
+    attributes_type_created = []
+    attributes_created = []
+
     vtex = VtexStores()
-    skus = vtex.total_skus()
+    skus = []
+    page = 1
+    while True:
+        skus_ids = vtex.total_skus(page=page)
+        if skus_ids == []:
+            break
+        skus += skus_ids
+        page += 1
     products_skus = []
     if skus:
         for sku_unit in skus:
@@ -101,12 +115,6 @@ def get_products_vtex_store(store):
     all_skus = Skus.objects.filter(
         product__in=Product.objects.filter(store=store)
     )
-    prices_created = []
-    fixedpirces_created = []
-    images_created = []
-    dateranges_created = []
-    attributes_type_created = []
-    attributes_created = []
     for sku in all_skus:
         # Create price for sku
         price_dic = vtexprice.price_sku(sku_id=sku.sku_json.get('Id'))

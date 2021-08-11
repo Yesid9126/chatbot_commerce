@@ -20,8 +20,9 @@ from drf_yasg import openapi
 from chatbot_commerce.products.models import Product, Department
 from chatbot_commerce.stores.models import Store
 
-test_param = openapi.Parameter('skus__attributes__attribute_type__name', openapi.IN_QUERY, description="attr_type", type=openapi.TYPE_STRING)
-test_param_2 = openapi.Parameter('skus__attributes__value', openapi.IN_QUERY, description="attr_value", type=openapi.TYPE_STRING)
+
+attr_type_param = openapi.Parameter('skus__attributes__attribute_type__name', openapi.IN_QUERY, description="attr_type", type=openapi.TYPE_STRING)
+attr_value_param = openapi.Parameter('skus__attributes__value', openapi.IN_QUERY, description="attr_value", type=openapi.TYPE_STRING)
 
 
 class ProductViewset(mixins.RetrieveModelMixin,
@@ -54,10 +55,13 @@ class ProductViewset(mixins.RetrieveModelMixin,
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
-        queryset = Product.objects.filter(store=self.store, is_active=True)
+        queryset = Product.objects.filter()
         return queryset
 
-    @swagger_auto_schema(manual_parameters=[test_param, test_param_2])
+    def get_serializer_context(self):
+        filter_data = {key: value for key, value in self.request.GET.items()}
+        return filter_data
+
     def list(self, request, *args, **kwargs):
         """
         Return all products
@@ -66,6 +70,8 @@ class ProductViewset(mixins.RetrieveModelMixin,
         example... search = jeans azul L
         """
         queryset = self.filter_queryset(self.get_queryset())
+        filter_data = {key: value for key, value in request.GET.items()}
+        queryset = queryset.filter(store=self.store, is_active=True, skus__is_active=True, **filter_data).distinct()
 
         page = self.paginate_queryset(queryset)
         if page is not None:
@@ -75,9 +81,10 @@ class ProductViewset(mixins.RetrieveModelMixin,
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
+    @swagger_auto_schema(manual_parameters=[attr_type_param, attr_value_param])
     def retrieve(self, request, *args, **kwargs):
         """
-        Return a single product with
+        Return a single department with tree category
         """
         return super().retrieve(request, *args, **kwargs)
 
