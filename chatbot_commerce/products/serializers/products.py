@@ -120,14 +120,7 @@ class ProductModelSerializer(serializers.ModelSerializer):
         ]
 
     def __init__(self, instance=None, data=None, **kwargs):
-        filter_data = {}
-        if 'context' in kwargs:
-            if 'skus__attributes__attribute_type__name' in kwargs['context']:
-                filter_data['attributes__attribute_type__name'] = kwargs['context']['skus__attributes__attribute_type__name']
-            if 'skus__attributes__value' in kwargs['context']:
-                filter_data['attributes__value'] = kwargs['context']['skus__attributes__value']
-            del kwargs['context']
-        self.filter_data = filter_data
+        self.skus = kwargs['context']
         super().__init__(instance=instance, **kwargs)
 
     def get_tree_categories(self, obj):
@@ -138,5 +131,4 @@ class ProductModelSerializer(serializers.ModelSerializer):
         return DepartmentModelSerializer(obj.department).data
 
     def get_skus(self, obj):
-        skus = Skus.objects.filter(product=obj, is_active=True, **self.filter_data)
-        return SkuModelSerializer(skus, many=True).data
+        return SkuModelSerializer(self.skus.filter(product=obj), many=True).data
