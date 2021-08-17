@@ -15,9 +15,10 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from django.db.models import Q
 
 # Models
-from chatbot_commerce.products.models import Product, Department
+from chatbot_commerce.products.models import Product, Department, Skus, Image
 from chatbot_commerce.stores.models import Store
 
 
@@ -49,14 +50,24 @@ class ProductViewset(mixins.RetrieveModelMixin,
         slug_name = kwargs['store_slug_name']
         self.store = get_object_or_404(Store, slug_name=slug_name)
         self.filter_data = {key: value for key, value in request.GET.items() if key in ['skus__attributes__attribute_type__name', 'skus__attributes__value']}
+
+        filter_data = {}
+        if 'skus__attributes__attribute_type__name' in kwargs:
+            filter_data['attributes__attribute_type__name'] = kwargs['skus__attributes__attribute_type__name']
+        if 'skus__attributes__value' in kwargs:
+            filter_data['attributes__value'] = kwargs['skus__attributes__value']
+        skus = Skus.objects.filter(product__in=self.get_queryset(), is_active=True, **filter_data)
+        sku_pks = Image.objects.filter(sku__in=skus).values_list('sku__pk', flat=True)
+        self.skus = skus.filter(Q(pk__in=sku_pks))
+
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
-        queryset = Product.objects.filter()
+        queryset = Product.objects.filter(store=self.store, is_active=True)
         return queryset
 
     def get_serializer_context(self):
-        return self.filter_data
+        return self.skus
 
     def list(self, request, *args, **kwargs):
         """
@@ -66,7 +77,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
         example... search = jeans azul L
         """
         queryset = self.filter_queryset(self.get_queryset())
-        queryset = queryset.filter(store=self.store, is_active=True, skus__is_active=True, **self.filter_data).distinct()
+        queryset = queryset.filter(skus__in=self.skus).distinct()
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
