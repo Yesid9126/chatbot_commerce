@@ -77,6 +77,7 @@ class SkusAdmin(admin.ModelAdmin):
 
     list_display = ['sku_id', 'sku_name', 'product_id']
     search_fields = ['sku_id', 'sku_name', 'product_id']
+    list_filter = ['is_active', 'is_inventoried', 'reference_stock_id']
 
 
 @admin.register(DateRange)

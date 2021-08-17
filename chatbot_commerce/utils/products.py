@@ -80,12 +80,20 @@ def get_products_vtex_store(store):
     # Create skus for product
     for product_key in products_skus:
         product = Product.objects.filter(external_id=product_key, store=store).first()
-        skus_product = vtex.Product_skus(product_id=product_key)
+        skus_product = vtex.product_skus(product_id=product_key)
+        skus_inventory = vtex.skus_inventory(sku_id=product_key)
+        for warehouse in skus_inventory:
+            warehouses = warehouse['balance']
+            total_quantity = 0
+            for quantity in warehouses:
+                quantity = quantity.get('totalQuantity')
+                total_quantity += quantity
         for skus in skus_product:
             try:
                 sku_instance, _ = Skus.objects.update_or_create(
                     sku_id=skus.get('Id'),
                     product=product,
+                    total_quantity=total_quantity,
                     defaults={
                         'product_id': skus.get('ProductId'),
                         'sku_name': skus.get('Name'),

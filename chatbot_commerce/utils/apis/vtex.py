@@ -76,13 +76,22 @@ class VtexStores:
             method=method
         )
 
-    def Product_skus(self, product_id):
+    def product_skus(self, product_id):
         uri = f'catalog_system/pvt/sku/stockkeepingunitByProductId/{product_id}'
         method = 'get'
         return self._get_json_resource(
             uri,
             method=method
         )
+    
+    def skus_inventory(self, sku_id):
+        uri = f'logistics/pvt/inventory/skus/{sku_id}'
+        method = 'get'
+        return self._get_json_resource(
+            uri,
+            method=method
+        )
+
 
     def image_sku(self, sku_id):
         uri = f'catalog/pvt/stockkeepingunit/{sku_id}/file'
@@ -93,7 +102,7 @@ class VtexStores:
         )
 
     def departments_categories(self):
-        uri = 'catalog_system/pub/category/tree/200'
+        uri = 'catalog_system/pub/category/tree/20'
         method = 'get'
         return self._get_json_resource(
             uri,
