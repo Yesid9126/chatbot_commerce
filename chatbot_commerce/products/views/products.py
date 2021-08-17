@@ -49,13 +49,8 @@ class ProductViewset(mixins.RetrieveModelMixin,
     def dispatch(self, request, *args, **kwargs):
         slug_name = kwargs['store_slug_name']
         self.store = get_object_or_404(Store, slug_name=slug_name)
-        self.filter_data = {key: value for key, value in request.GET.items() if key in ['skus__attributes__attribute_type__name', 'skus__attributes__value']}
 
-        filter_data = {}
-        if 'skus__attributes__attribute_type__name' in kwargs:
-            filter_data['attributes__attribute_type__name'] = kwargs['skus__attributes__attribute_type__name']
-        if 'skus__attributes__value' in kwargs:
-            filter_data['attributes__value'] = kwargs['skus__attributes__value']
+        filter_data = {key.replace('skus__', ''): value for key, value in request.GET.items() if key in ['skus__attributes__attribute_type__name', 'skus__attributes__value']}
         skus = Skus.objects.filter(product__in=self.get_queryset(), is_active=True, **filter_data)
         sku_pks = Image.objects.filter(sku__in=skus).values_list('sku__pk', flat=True)
         self.skus = skus.filter(Q(pk__in=sku_pks))
@@ -91,7 +86,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
         """
         Return a single department with tree category
         """
-        obj = Product.objects.filter(store=self.store, **self.filter_data, pk=kwargs['pk']).first()
+        obj = Product.objects.filter(store=self.store, skus__in=self.skus, pk=kwargs['pk']).first()
         return Response(self.get_serializer(obj).data)
 
 
