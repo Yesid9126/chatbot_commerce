@@ -28,6 +28,13 @@ class Skus(ChatbootModel):
         blank=True
     )
 
+    total_quantity = models.CharField(
+        'Quantity sku',
+        max_length=255,
+        null=True,
+        blank=True
+    )
+
     is_active = models.BooleanField(
         'Active sku',
         default=False,

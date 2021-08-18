@@ -75,8 +75,9 @@ class InlinePriceAdmin(admin.TabularInline):
 class SkusAdmin(admin.ModelAdmin):
     """Sku's model admin."""
 
-    list_display = ['sku_id', 'sku_name', 'product_id']
-    search_fields = ['sku_id', 'sku_name', 'product_id']
+    list_display = ['sku_id', 'sku_name', 'total_quantity']
+    search_fields = ['total_quantity']
+    list_filter = ['is_active', 'is_inventoried', 'reference_stock_id']
 
 
 @admin.register(DateRange)
