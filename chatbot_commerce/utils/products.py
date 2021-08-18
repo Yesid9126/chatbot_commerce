@@ -82,17 +82,20 @@ def get_products_vtex_store(store):
         product = Product.objects.filter(external_id=product_key, store=store).first()
         skus_product = vtex.product_skus(product_id=product_key)
         for skus in skus_product:
-            skus_inventory = vtex.skus_inventory(sku_id=skus.get('Id'))
-            sku_inventory = skus_inventory['balance']
             total_quantity = 0
-            for quantity in sku_inventory:
-                quantity_sku = quantity.get('totalQuantity')
-                total_quantity += quantity_sku
+            try:
+                skus_inventory = vtex.skus_inventory(sku_id=skus.get('Id'))
+                sku_inventory = skus_inventory['balance']
+                for quantity in sku_inventory:
+                    quantity_sku = quantity.get('totalQuantity')
+                    total_quantity += quantity_sku
+            except Exception as e:
+                error = e
+                print(error)
             try:
                 sku_instance, _ = Skus.objects.update_or_create(
                     sku_id=skus.get('Id'),
                     product=product,
-                    total_quantity=total_quantity,
                     defaults={
                         'sku_name': skus.get('Name'),
                         'is_active': skus.get('IsActive'),
@@ -107,6 +110,7 @@ def get_products_vtex_store(store):
                         'reference_stock_id': skus.get('ReferenceStockKeepingUnitId'),
                         'is_inventoried': skus.get('IsInventoried'),
                         'is_transported': skus.get('IsTransported'),
+                        'total_quantity': total_quantity,
                         'sku_json': skus
                     }
                 )
@@ -163,6 +167,8 @@ def get_products_vtex_store(store):
         # Create image for sku
         images_array = vtex.image_sku(sku_id=sku.sku_json.get('Id'))
         for image_dic in images_array:
+            if 'ArchiveId' not in image_dic:
+                continue
             archive_id = image_dic['ArchiveId']
             name = image_dic['Name']
             image_instance, _ = Image.objects.update_or_create(

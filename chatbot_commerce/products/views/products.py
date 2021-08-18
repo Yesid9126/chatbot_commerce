@@ -24,6 +24,7 @@ from chatbot_commerce.stores.models import Store
 
 attr_type_param = openapi.Parameter('skus__attributes__attribute_type__name', openapi.IN_QUERY, description="attr_type", type=openapi.TYPE_STRING)
 attr_value_param = openapi.Parameter('skus__attributes__value', openapi.IN_QUERY, description="attr_value", type=openapi.TYPE_STRING)
+total_quantity_param = openapi.Parameter('skus__total_quantity', openapi.IN_QUERY, description="quantity", type=openapi.TYPE_STRING)
 
 
 class ProductViewset(mixins.RetrieveModelMixin,
@@ -37,21 +38,22 @@ class ProductViewset(mixins.RetrieveModelMixin,
     filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
     search_fields = (
         'name', 'brand__name', 'keywords', 'category__name',
-        'sub_category__name', 'department__name', 'reference_id',
-        'skus__attributes__attribute_type__name', 'skus__attributes__value', 'skus__sku_name'
+        'sub_category__name', 'department__name', 'reference_id', 'skus__sku_name'
     )
     ordering_fields = ('created',)
     filter_fields = (
         'skus__attributes__attribute_type__name',
-        'skus__attributes__value'
+        'skus__attributes__value',
+        'skus__total_quantity'
     )
 
     def dispatch(self, request, *args, **kwargs):
         slug_name = kwargs['store_slug_name']
         self.store = get_object_or_404(Store, slug_name=slug_name)
 
-        filter_data = {key.replace('skus__', ''): value for key, value in request.GET.items() if key in ['skus__attributes__attribute_type__name', 'skus__attributes__value']}
-        skus = Skus.objects.filter(product__in=self.get_queryset(), is_active=True, **filter_data)
+        filter_data = {key.replace('skus__', ''): value for key, value in request.GET.items() if key in ['skus__attributes__attribute_type__name', 'skus__attributes__value', 'skus__total_quantity']}
+        skus = Skus.objects.filter(~Q(total_quantity=0), product__in=self.get_queryset(), is_active=True)
+        skus = skus.filter(**filter_data)
         sku_pks = Image.objects.filter(sku__in=skus).values_list('sku__pk', flat=True)
         self.skus = skus.filter(Q(pk__in=sku_pks))
 
@@ -64,6 +66,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
     def get_serializer_context(self):
         return self.skus
 
+    @swagger_auto_schema(manual_parameters=[attr_type_param, attr_value_param, total_quantity_param])
     def list(self, request, *args, **kwargs):
         """
         Return all products
@@ -81,7 +84,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
-    @swagger_auto_schema(manual_parameters=[attr_type_param, attr_value_param])
+    @swagger_auto_schema(manual_parameters=[attr_type_param, attr_value_param, total_quantity_param])
     def retrieve(self, request, *args, **kwargs):
         """
         Return a single department with tree category
