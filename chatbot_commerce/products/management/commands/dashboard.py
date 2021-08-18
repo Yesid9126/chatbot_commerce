@@ -1,6 +1,5 @@
 from django.core.management.base import BaseCommand
-from chatbot_commerce.products.tasks import departments_categories
-from chatbot_commerce.utils.departments_categories import get_brands
+from chatbot_commerce.utils.departments_categories import get_departments, get_brands
 from chatbot_commerce.utils.products import get_products_vtex_store
 
 # Models
@@ -13,7 +12,7 @@ class Command(BaseCommand):
         for store in Store.objects.all():
             get_brands()
             print('Finish brands')
-            departments_categories()
+            get_departments(store)
             print('Finish Categories')
             get_products_vtex_store(store)
             print('Finish products')

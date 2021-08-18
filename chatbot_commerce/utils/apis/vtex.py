@@ -83,7 +83,7 @@ class VtexStores:
             uri,
             method=method
         )
-    
+
     def skus_inventory(self, sku_id):
         uri = f'logistics/pvt/inventory/skus/{sku_id}'
         method = 'get'
@@ -91,7 +91,6 @@ class VtexStores:
             uri,
             method=method
         )
-
 
     def image_sku(self, sku_id):
         uri = f'catalog/pvt/stockkeepingunit/{sku_id}/file'
