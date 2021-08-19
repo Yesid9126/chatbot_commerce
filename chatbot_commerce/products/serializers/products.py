@@ -94,7 +94,7 @@ class SkuModelSerializer(serializers.ModelSerializer):
         """Meta class"""
         model = Skus
         fields = (
-            'sku_id', 'sku_name', 'sku_images', 'price', 'attributes', 'is_active'
+            'sku_id', 'sku_name', 'total_quantity', 'sku_images', 'price', 'attributes', 'is_active'
         )
 
 
