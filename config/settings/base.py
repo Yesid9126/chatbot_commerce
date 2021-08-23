@@ -75,6 +75,7 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     "chatbot_commerce.products.apps.ProductConfig",
     "chatbot_commerce.stores.apps.StoresConfig",
+    "chatbot_commerce.webhooks.apps.WebhooksConfig"
 
     # Your stuff: custom apps go here
 ]
