@@ -19,7 +19,7 @@ from chatbot_commerce.stores.models.stores import Store
 def departments_categories():
     """Create all Product and departments."""
     for store in Store.objects.all():
-        get_brands()
+        get_brands(store)
         get_departments(store)
         get_products_vtex_store(store)
     return True

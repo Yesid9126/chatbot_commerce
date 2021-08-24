@@ -10,7 +10,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         for store in Store.objects.all():
-            get_brands()
+            get_brands(store)
             print('Finish brands')
             get_departments(store)
             print('Finish Categories')
