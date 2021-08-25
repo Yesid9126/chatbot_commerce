@@ -51,12 +51,13 @@ def get_departments(store):
                     )
 
 
-def get_brands():
+def get_brands(store):
     """Creation departments and categories."""
     vtex = VtexStores()
     brands = vtex.get_brands()
     for brand in brands:
         Brand.objects.update_or_create(
+            store=store,
             external_id=brand.get('id'),
             defaults={
                 'name': brand.get('name'),

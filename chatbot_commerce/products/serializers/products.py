@@ -1,7 +1,7 @@
 """Product serializers."""
 
 # Django rest framework
-from chatbot_commerce.products.models.skus import Attribute
+from chatbot_commerce.products.models.skus import Attribute, AttributeType
 from chatbot_commerce.products.models import FixedPrice, Price, Skus, Image, DateRange, Brand
 from rest_framework import serializers
 
@@ -132,3 +132,43 @@ class ProductModelSerializer(serializers.ModelSerializer):
 
     def get_skus(self, obj):
         return SkuModelSerializer(self.skus.filter(product=obj), many=True).data
+
+
+class BrandsModelSerializer(serializers.ModelSerializer):
+    """Brand model serializer"""
+
+    class Meta:
+        """Meta class."""
+
+        model = Brand
+        fields = [
+            'external_id',
+            'name',
+            'title',
+            'description'
+        ]
+
+
+class AttributeTypeModelSerializer(serializers.ModelSerializer):
+    """Attribute type model serializer."""
+
+    attributes = serializers.SerializerMethodField('get_attributes')
+
+    class Meta:
+        """Meta class."""
+
+        model = AttributeType
+        fields = [
+            'attributes'
+        ]
+
+    def __init__(self, instance=None, data=None, **kwargs):
+        self.attributes = kwargs['context']
+        super().__init__(instance=instance, **kwargs)
+
+    def get_attributes(self, obj):
+        return self.attributes.filter(attribute_type=obj).values_list('value', flat=True).distinct()
+
+    def to_representation(self, instance):
+        self.fields[instance.name] = self.fields['attributes']
+        return super().to_representation(instance)

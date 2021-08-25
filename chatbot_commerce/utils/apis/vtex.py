@@ -15,7 +15,7 @@ class VtexStores:
 
     def _get_resources(self, uri, **kwargs):
         """Get resources for store."""
-        store = Store.objects.filter(name='pilatos').get()
+        store = Store.objects.filter(name='pilatos21').get()
         url = "{}/{}".format(settings.URL_VTEX, uri)
         r = requests.get(url, headers=store.headers, timeout=1000)
         return r
@@ -136,7 +136,7 @@ class VtexStores:
 class VtexPriceSku:
 
     def _get_resource(self, uri, **kwargs):
-        store = Store.objects.filter(name='pilatos').get()
+        store = Store.objects.filter(name='pilatos21').get()
         url = '{}/{}'.format(settings.URL_PRICESKU_VTEX, uri)
         r = requests.get(url, headers=store.headers, timeout=1000)
         return r

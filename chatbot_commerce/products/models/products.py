@@ -5,9 +5,13 @@ from django.db import models
 
 # utilities
 from chatbot_commerce.utils.models import AbstractCategory
+from django.utils.translation import gettext as _
 
 
 class Brand(AbstractCategory):
+    store = models.ForeignKey("stores.Store", verbose_name=_("Store"), on_delete=models.CASCADE,
+                              related_name='brands', default=None, null=True
+                              )
     pass
 
 

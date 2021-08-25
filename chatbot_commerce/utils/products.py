@@ -188,6 +188,7 @@ def get_products_vtex_store(store):
         for dic in sku_specifications_array:
             specifications_field = vtex.get_specifications_field(field_id=dic.get('FieldId'))
             attribute_type_instance, _ = AttributeType.objects.update_or_create(
+                store=store,
                 name=specifications_field.get('Description')
             )
             attributes_type_created.append(attribute_type_instance.pk)
