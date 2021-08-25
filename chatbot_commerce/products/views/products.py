@@ -144,7 +144,7 @@ class BrandsViewset(mixins.RetrieveModelMixin,
                     viewsets.GenericViewSet):
 
     serializer_class = BrandsModelSerializer
-    lookup_field = 'external_id'
+    lookup_field = 'name'
     permission_classes = [HasAPIKey | IsAdminUser]
     filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
     search_fields = ('name', 'title')
@@ -180,18 +180,16 @@ class BrandsViewset(mixins.RetrieveModelMixin,
 
         Parameters.
         """
-        obj = Brand.objects.filter(store=self.store, external_id=kwargs['external_id']).first()
+        obj = Brand.objects.filter(store=self.store, name=kwargs['name']).first()
         return Response(self.serializer_class(obj).data)
 
 
-class AttributesViewset(mixins.RetrieveModelMixin,
-                        mixins.ListModelMixin,
+class AttributesViewset(mixins.ListModelMixin,
                         viewsets.GenericViewSet):
 
     serializer_class = AttributeTypeModelSerializer
-    lookup_field = 'type'
     permission_classes = [HasAPIKey | IsAdminUser]
-    filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
+    filter_backends = (DjangoFilterBackend,)
 
     def dispatch(self, request, *args, **kwargs):
         slug_name = kwargs['store_slug_name']
@@ -221,12 +219,3 @@ class AttributesViewset(mixins.RetrieveModelMixin,
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
-
-    def retrieve(self, request, *args, **kwargs):
-        """
-        Return a single type with attributes
-
-        Parameters
-        """
-        obj = AttributeType.objects.filter(store=self.store, name=kwargs['type']).first()
-        return Response(self.serializer_class(obj).data)
