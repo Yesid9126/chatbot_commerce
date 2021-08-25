@@ -76,7 +76,11 @@ def get_products_vtex_store(store):
                 })
             products_created.append(product_instance.pk)
         except Exception as e:
-            print(e)
+            error = {
+                'message': e,
+                'product_id': product.get('Id'),
+            }
+            print(error)
     # Create skus for product
     for product_key in products_skus:
         product = Product.objects.filter(external_id=product_key, store=store).first()
@@ -116,7 +120,11 @@ def get_products_vtex_store(store):
                 )
                 skus_created.append(sku_instance.pk)
             except Exception as e:
-                error = e
+                error = {
+                    'message': e,
+                    'product_id': product_key,
+                    'sku_id': skus.get('Id'),
+                }
                 print(error)
     # Delete product not in store
     Product.objects.filter(store=store).exclude(pk__in=products_created).delete()
@@ -187,17 +195,28 @@ def get_products_vtex_store(store):
             continue
         for dic in sku_specifications_array:
             specifications_field = vtex.get_specifications_field(field_id=dic.get('FieldId'))
-            attribute_type_instance, _ = AttributeType.objects.update_or_create(
-                store=store,
-                name=specifications_field.get('Description')
-            )
-            attributes_type_created.append(attribute_type_instance.pk)
-            attribute_instance, _ = Attribute.objects.update_or_create(
-                sku=sku,
-                attribute_type=attribute_type_instance,
-                value=dic.get('Text')
-            )
-            attributes_created.append(attribute_instance.pk)
+            try:
+                attribute_type_instance, _ = AttributeType.objects.update_or_create(
+                    store=store,
+                    name=specifications_field.get('Description')
+                )
+                attributes_type_created.append(attribute_type_instance.pk)
+                attribute_instance, _ = Attribute.objects.update_or_create(
+                    sku=sku,
+                    attribute_type=attribute_type_instance,
+                    value=dic.get('Text')
+                )
+                attributes_created.append(attribute_instance.pk)
+            except Exception as e:
+                error = {
+                    'message': e,
+                    'FieldId': dic.get('FieldId'),
+                    'name': specifications_field.get('Description'),
+                    'sku_specification': dic
+                }
+                print(error)
+                raise Exception(error)
+
     # Delete images not in sku
     Image.objects.filter(sku__in=all_skus).exclude(pk__in=images_created).delete()
     # Delete prices that not exists
