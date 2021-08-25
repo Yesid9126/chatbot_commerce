@@ -120,8 +120,6 @@ def get_products_vtex_store(store):
                 )
                 skus_created.append(sku_instance.pk)
             except Exception as e:
-                import ipdb
-                ipdb.set_trace()
                 error = {
                     'message': e,
                     'product_id': product_key,
