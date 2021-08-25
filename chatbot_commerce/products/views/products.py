@@ -1,7 +1,7 @@
 """Product and skus views."""
 
 # Django Rest Framework
-from chatbot_commerce.products.models.skus import Attribute, AttributeType
+from chatbot_commerce.products.models.skus import Attribute, AttributeType, Price
 from chatbot_commerce.products.models.products import Brand
 from rest_framework.generics import get_object_or_404
 from rest_framework import viewsets, mixins
@@ -59,9 +59,10 @@ class ProductViewset(mixins.RetrieveModelMixin,
         filter_data = {key.replace('skus__', ''): value for key, value in request.GET.items() if key in ['skus__attributes__attribute_type__name', 'skus__attributes__value']}
         skus = Skus.objects.filter(product__in=self.get_queryset(), **filter_data)
         if self.store.apply_filters:
-            skus = skus.filter(~Q(total_quantity=0), is_active=True)
-            sku_pks = Image.objects.filter(sku__in=skus).values_list('sku__pk', flat=True)
-            skus = skus.filter(Q(pk__in=sku_pks))
+            sku_pks_images = Image.objects.filter(sku__in=skus).values_list('sku__pk', flat=True)
+            sku_pks_prices = Price.objects.filter(Q(~Q(base_price=None) & ~Q(base_price=0)), sku__in=skus).values_list('sku__pk', flat=True)
+            sku_pks = [*set(sku_pks_images) & set(sku_pks_prices)]
+            skus = skus.filter(Q(pk__in=sku_pks), ~Q(total_quantity=0), is_active=True)
         self.skus = skus
 
         return super().dispatch(request, *args, **kwargs)
