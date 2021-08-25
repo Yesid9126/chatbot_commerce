@@ -57,15 +57,19 @@ class ProductViewset(mixins.RetrieveModelMixin,
         self.store = get_object_or_404(Store, slug_name=slug_name)
 
         filter_data = {key.replace('skus__', ''): value for key, value in request.GET.items() if key in ['skus__attributes__attribute_type__name', 'skus__attributes__value']}
-        skus = Skus.objects.filter(~Q(total_quantity=0), product__in=self.get_queryset(), is_active=True)
-        skus = skus.filter(**filter_data)
-        sku_pks = Image.objects.filter(sku__in=skus).values_list('sku__pk', flat=True)
-        self.skus = skus.filter(Q(pk__in=sku_pks))
+        skus = Skus.objects.filter(product__in=self.get_queryset(), **filter_data)
+        if self.store.apply_filters:
+            skus = skus.filter(~Q(total_quantity=0), is_active=True)
+            sku_pks = Image.objects.filter(sku__in=skus).values_list('sku__pk', flat=True)
+            skus = skus.filter(Q(pk__in=sku_pks))
+        self.skus = skus
 
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
-        queryset = Product.objects.filter(store=self.store, is_active=True)
+        queryset = Product.objects.filter(store=self.store)
+        if self.store.apply_filters:
+            queryset = queryset.filter(is_active=True)
         return queryset
 
     def get_serializer_context(self):
@@ -80,7 +84,8 @@ class ProductViewset(mixins.RetrieveModelMixin,
         example... search = jeans azul L
         """
         queryset = self.filter_queryset(self.get_queryset())
-        queryset = queryset.filter(skus__in=self.skus).distinct()
+        if self.store.apply_filters:
+            queryset = queryset.filter(skus__in=self.skus).distinct()
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
