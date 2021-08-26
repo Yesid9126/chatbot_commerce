@@ -7,6 +7,7 @@ from django.contrib.postgres.fields import JSONField
 # utilities
 from chatbot_commerce.utils.models import ChatbootModel
 
+
 class Order(ChatbootModel):
     """Order class."""
 
@@ -38,7 +39,7 @@ class Order(ChatbootModel):
 
     def __str__(self):
         """Return order id."""
-        return str(self.customer)
+        return str(self.id)
 
     class Meta:
         """Meta class."""
@@ -50,7 +51,7 @@ class Order(ChatbootModel):
 class OrderItem(ChatbootModel):
     """Order item."""
 
-    sku_unit = models.OneToOneField(
+    sku_unit = models.ForeignKey(
         to='products.Skus',
         on_delete=models.CASCADE,
         related_name='sku'
@@ -68,8 +69,7 @@ class OrderItem(ChatbootModel):
         null=True
     )
 
-    price = models.CharField(
-        max_length=10,
+    price = models.PositiveIntegerField(
         blank=True,
         null=True
     )

@@ -50,7 +50,6 @@ class ProductViewset(mixins.RetrieveModelMixin,
     def dispatch(self, request, *args, **kwargs):
         slug_name = kwargs['store_slug_name']
         self.store = get_object_or_404(Store, slug_name=slug_name)
-
         filter_data = {key.replace('skus__', ''): value for key, value in request.GET.items() if key in ['skus__attributes__attribute_type__name', 'skus__attributes__value', 'skus__total_quantity']}
         skus = Skus.objects.filter(~Q(total_quantity=0), product__in=self.get_queryset(), is_active=True)
         skus = skus.filter(**filter_data)
