@@ -175,6 +175,10 @@ class Price(ChatbootModel):
         verbose_name_plural = "Price's"
         ordering = ['sku', 'cost_price']
 
+    def __str__(self):
+        """Return sku price."""
+        return f'sku:{self.base_price}'
+
 
 class FixedPrice(ChatbootModel):
     """Fixed price model"""

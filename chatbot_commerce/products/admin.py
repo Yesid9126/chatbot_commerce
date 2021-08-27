@@ -46,12 +46,20 @@ class BrandAdmin(admin.ModelAdmin):
     search_fields = ['name', 'slug_name']
 
 
+class InlineSkus(admin.TabularInline):
+    model = Skus
+    extra = 0
+    fields = ['sku_id', 'sku_name', 'total_quantity']
+
+
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     """Product model admin."""
 
-    list_display = ['name', 'store', 'sub_category', 'department', 'category', 'brand']
+    list_display = ['external_id', 'name', 'store', 'sub_category', 'department', 'category', 'brand']
     search_fields = ['name', 'external_id']
+    list_filter = ['is_active']
+    inlines = [InlineSkus]
 
 
 @admin.register(Image)
@@ -61,13 +69,13 @@ class ImagesAdmin(admin.ModelAdmin):
 
 class InlineImageAdmin(admin.TabularInline):
     model = Image
-    estra = 0
+    extra = 0
     fields = ['archive_id', 'name', 'image_url']
 
 
 class InlinePriceAdmin(admin.TabularInline):
     model = Price
-    estra = 0
+    extra = 0
     fields = ['base_price', 'price']
 
 
@@ -76,8 +84,9 @@ class SkusAdmin(admin.ModelAdmin):
     """Sku's model admin."""
 
     list_display = ['sku_id', 'sku_name', 'total_quantity']
-    search_fields = ['total_quantity']
+    search_fields = ['sku_id', 'sku_name']
     list_filter = ['is_active', 'is_inventoried', 'reference_stock_id']
+    readonly_fields = ['sku_json']
 
 
 @admin.register(DateRange)
@@ -111,9 +120,25 @@ class InlineFixedPriceAdmin(admin.TabularInline):
 class PriceAdmin(admin.ModelAdmin):
     """Price model admin."""
 
-    list_display = ['sku', 'base_price']
+    list_display = ['sku_id', 'sku', 'base_price']
     inlines = [InlineFixedPriceAdmin]
 
+    def sku_id(self, obj):
+        """Sku id."""
+        return obj.sku.sku_id
 
-admin.site.register(Attribute)
+
+@admin.register(Attribute)
+class AttributeAdmin(admin.ModelAdmin):
+    """Price model admin."""
+
+    list_display = ['sku_id', 'sku', 'attribute_type', 'value']
+    search_fields = ['value']
+
+    def sku_id(self, obj):
+        """Sku id."""
+        return obj.sku.sku_id
+
+
+# admin.site.register(Attribute)
 admin.site.register(AttributeType)
