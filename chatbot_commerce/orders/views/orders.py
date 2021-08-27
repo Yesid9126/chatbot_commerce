@@ -10,7 +10,7 @@ from rest_framework.response import Response
 from chatbot_commerce.orders.serializers import CreateOrderSerializer
 
 
-class WebHookViewSet(viewsets.GenericViewSet):
+class OrderViewSet(viewsets.GenericViewSet):
     """Web hook view set."""
 
     def get_serializer_class(self):
