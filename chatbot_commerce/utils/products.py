@@ -29,7 +29,7 @@ def get_products_vtex_store(store):
     page = 1
     while True:
         skus_ids = vtex.total_skus(page=page)
-        if page == 2:
+        if skus_ids == []:
             break
         skus += skus_ids
         page += 1
@@ -39,7 +39,7 @@ def get_products_vtex_store(store):
             sku = sku_unit
             product_id = vtex.unit_sku(sku=sku)
             product_id = product_id.get('ProductId')
-            if product_id not in products_skus:
+            if product_id not in products_skus and type(product_id) is int:
                 products_skus.append(product_id)
     for product in products_skus:
         sub_category = None
