@@ -8,6 +8,7 @@ from django.db import models
 
 # utilities
 from chatbot_commerce.utils.models import ChatbootModel
+from django.utils.translation import gettext as _
 
 
 class Store(ChatbootModel):
@@ -29,6 +30,8 @@ class Store(ChatbootModel):
     api_token = models.CharField(
         max_length=500
     )
+
+    apply_filters = models.BooleanField(_("Apply filters"), default=True)
 
     def __str__(self):
         """Return store name."""

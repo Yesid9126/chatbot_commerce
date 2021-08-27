@@ -1,12 +1,17 @@
 """Product and skus views."""
 
 # Django Rest Framework
+from chatbot_commerce.products.models.skus import Attribute, AttributeType, Price
+from chatbot_commerce.products.models.products import Brand
 from rest_framework.generics import get_object_or_404
 from rest_framework import viewsets, mixins
 from rest_framework.response import Response
 
 # Serializers
-from chatbot_commerce.products.serializers import ProductModelSerializer, DepartmentTreeModelSerializer
+from chatbot_commerce.products.serializers import (ProductModelSerializer,
+                                                   DepartmentTreeModelSerializer,
+                                                   BrandsModelSerializer,
+                                                   AttributeTypeModelSerializer)
 from rest_framework_api_key.permissions import HasAPIKey
 from rest_framework.permissions import IsAdminUser
 
@@ -50,22 +55,26 @@ class ProductViewset(mixins.RetrieveModelMixin,
     def dispatch(self, request, *args, **kwargs):
         slug_name = kwargs['store_slug_name']
         self.store = get_object_or_404(Store, slug_name=slug_name)
-        filter_data = {key.replace('skus__', ''): value for key, value in request.GET.items() if key in ['skus__attributes__attribute_type__name', 'skus__attributes__value', 'skus__total_quantity']}
-        skus = Skus.objects.filter(~Q(total_quantity=0), product__in=self.get_queryset(), is_active=True)
-        skus = skus.filter(**filter_data)
-        sku_pks = Image.objects.filter(sku__in=skus).values_list('sku__pk', flat=True)
-        self.skus = skus.filter(Q(pk__in=sku_pks))
-
+        filter_data = {key.replace('skus__', ''): value for key, value in request.GET.items() if key in ['skus__attributes__attribute_type__name', 'skus__attributes__value']}
+        skus = Skus.objects.filter(product__in=self.get_queryset(), **filter_data)
+        if self.store.apply_filters:
+            sku_pks_images = Image.objects.filter(sku__in=skus).values_list('sku__pk', flat=True)
+            sku_pks_prices = Price.objects.filter(Q(~Q(base_price=None) & ~Q(base_price=0)), sku__in=skus).values_list('sku__pk', flat=True)
+            sku_pks = [*set(sku_pks_images) & set(sku_pks_prices)]
+            skus = skus.filter(Q(pk__in=sku_pks), ~Q(total_quantity=0), is_active=True)
+        self.skus = skus
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
-        queryset = Product.objects.filter(store=self.store, is_active=True)
+        queryset = Product.objects.filter(store=self.store)
+        if self.store.apply_filters:
+            queryset = queryset.filter(is_active=True)
         return queryset
 
     def get_serializer_context(self):
         return self.skus
 
-    @swagger_auto_schema(manual_parameters=[attr_type_param, attr_value_param, total_quantity_param])
+    @swagger_auto_schema(manual_parameters=[attr_type_param, attr_value_param])
     def list(self, request, *args, **kwargs):
         """
         Return all products
@@ -74,7 +83,8 @@ class ProductViewset(mixins.RetrieveModelMixin,
         example... search = jeans azul L
         """
         queryset = self.filter_queryset(self.get_queryset())
-        queryset = queryset.filter(skus__in=self.skus).distinct()
+        if self.store.apply_filters:
+            queryset = queryset.filter(skus__in=self.skus).distinct()
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -83,10 +93,12 @@ class ProductViewset(mixins.RetrieveModelMixin,
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
-    @swagger_auto_schema(manual_parameters=[attr_type_param, attr_value_param, total_quantity_param])
+    @swagger_auto_schema(manual_parameters=[attr_type_param, attr_value_param])
     def retrieve(self, request, *args, **kwargs):
         """
-        Return a single department with tree category
+        Return a single department with tree category.
+
+        Parameters.
         """
         obj = Product.objects.filter(store=self.store, skus__in=self.skus, pk=kwargs['pk']).first()
         return Response(self.get_serializer(obj).data)
@@ -123,7 +135,91 @@ class DepartmentsViewset(mixins.RetrieveModelMixin,
 
     def retrieve(self, request, *args, **kwargs):
         """
-        Return a single department with tree category
+        Return a single department with tree category.
+
+        Parameters.
         """
         obj = Department.objects.filter(store=self.store, name=kwargs['department_name']).first()
         return Response(self.serializer_class(obj).data)
+
+
+class BrandsViewset(mixins.RetrieveModelMixin,
+                    mixins.ListModelMixin,
+                    viewsets.GenericViewSet):
+
+    serializer_class = BrandsModelSerializer
+    lookup_field = 'name'
+    permission_classes = [HasAPIKey | IsAdminUser]
+    filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
+    search_fields = ('name', 'title')
+
+    def dispatch(self, request, *args, **kwargs):
+        slug_name = kwargs['store_slug_name']
+        self.store = get_object_or_404(Store, slug_name=slug_name)
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        queryset = Brand.objects.filter(store=self.store)
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        """
+        Return all brands of a store.
+
+        Parameters.
+        """
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            data = {'Brands': [name for array in serializer.data for key, name in array.items() if key == 'name']}
+            return self.get_paginated_response(data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def retrieve(self, request, *args, **kwargs):
+        """
+        Return a single brand with tree category.
+
+        Parameters.
+        """
+        obj = Brand.objects.filter(store=self.store, name=kwargs['name']).first()
+        return Response(self.serializer_class(obj).data)
+
+
+class AttributesViewset(mixins.ListModelMixin,
+                        viewsets.GenericViewSet):
+
+    serializer_class = AttributeTypeModelSerializer
+    permission_classes = [HasAPIKey | IsAdminUser]
+    filter_backends = (DjangoFilterBackend,)
+
+    def dispatch(self, request, *args, **kwargs):
+        slug_name = kwargs['store_slug_name']
+        self.store = get_object_or_404(Store, slug_name=slug_name)
+        self.attributes = Attribute.objects.filter(attribute_type__in=self.get_queryset())
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        queryset = AttributeType.objects.filter(store=self.store)
+        return queryset
+
+    def get_serializer_context(self):
+        return self.attributes
+
+    def list(self, request, *args, **kwargs):
+        """
+        Return all attribute of a type.
+
+        Parameters.
+        """
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            data = {key: array for array in serializer.data for key, array in array.items()}
+            return self.get_paginated_response(data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)

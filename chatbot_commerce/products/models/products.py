@@ -5,9 +5,13 @@ from django.db import models
 
 # utilities
 from chatbot_commerce.utils.models import AbstractCategory
+from django.utils.translation import gettext as _
 
 
 class Brand(AbstractCategory):
+    store = models.ForeignKey("stores.Store", verbose_name=_("Store"), on_delete=models.CASCADE,
+                              related_name='brands', default=None, null=True
+                              )
     pass
 
 
@@ -69,18 +73,9 @@ class Product(AbstractCategory):
         default=False,
     )
 
-    description_short = models.CharField(
-        max_length=500,
-        null=True,
-        blank=True
-    )
+    description_short = models.TextField(_("Short description"), null=True, blank=True)
 
-    keywords = models.CharField(
-        'Keywords',
-        max_length=100,
-        null=True,
-        blank=True
-    )
+    keywords = models.TextField(_("Keywords"), blank=True, null=True)
 
     title = models.CharField(
         'Title',
@@ -94,12 +89,7 @@ class Product(AbstractCategory):
         default=True
     )
 
-    meta_tag_description = models.CharField(
-        'Tag description',
-        max_length=500,
-        null=True,
-        blank=True
-    )
+    meta_tag_description = models.TextField(_("Tag description"), null=True, blank=True)
 
     show_without_stock = models.BooleanField(
         'Without stock',

@@ -155,7 +155,7 @@ class Image(ChatbootModel):
 
 @receiver(pre_save, sender=Image)
 def create_image_url(sender, instance, *args, **kwargs):
-    store_name = 'pilatos'
+    store_name = 'pilatos21'
     instance.image_url = f'https://{store_name}.vteximg.com.br/arquivos/ids/{instance.archive_id}/{instance.name}.jpg'
 
 
@@ -214,8 +214,12 @@ class DateRange(ChatbootModel):
 
 class AttributeType(ChatbootModel):
 
+    store = models.ForeignKey(
+        "stores.Store", verbose_name=_("Store"), on_delete=models.CASCADE,
+        related_name='attributes_type', default=None, null=True
+    )
     name = models.CharField(max_length=255)
-    slug_name = models.SlugField(max_length=255, null=True, blank=True, unique=True)
+    slug_name = models.SlugField(max_length=255, null=True, blank=True)
 
     def __str__(self):
         return self.name
