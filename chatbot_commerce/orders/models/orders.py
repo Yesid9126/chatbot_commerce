@@ -2,7 +2,6 @@
 
 # Django
 from django.db import models
-from django.contrib.postgres.fields import JSONField
 
 # utilities
 from chatbot_commerce.utils.models import ChatbootModel

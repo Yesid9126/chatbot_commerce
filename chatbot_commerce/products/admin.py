@@ -86,6 +86,7 @@ class SkusAdmin(admin.ModelAdmin):
     list_display = ['sku_id', 'sku_name', 'total_quantity']
     search_fields = ['sku_id', 'sku_name']
     list_filter = ['is_active', 'is_inventoried', 'reference_stock_id']
+    readonly_fields = ['sku_json']
 
 
 @admin.register(DateRange)
@@ -121,7 +122,7 @@ class PriceAdmin(admin.ModelAdmin):
 
     list_display = ['sku_id', 'sku', 'base_price']
     inlines = [InlineFixedPriceAdmin]
-    
+
     def sku_id(self, obj):
         """Sku id."""
         return obj.sku.sku_id
@@ -137,5 +138,7 @@ class AttributeAdmin(admin.ModelAdmin):
     def sku_id(self, obj):
         """Sku id."""
         return obj.sku.sku_id
+
+
 # admin.site.register(Attribute)
 admin.site.register(AttributeType)

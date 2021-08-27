@@ -1,15 +1,11 @@
 """Orders serializers."""
 
 # Django rest framework
-from re import S
 from rest_framework import serializers
 
 # Models
 from chatbot_commerce.orders.models import Order, OrderItem
 from chatbot_commerce.products.models import Skus
-
-# Utils
-from chatbot_commerce.utils import order_items
 
 
 class CreateOrderSerializer(serializers.Serializer):
@@ -29,7 +25,7 @@ class CreateOrderSerializer(serializers.Serializer):
             price = sku.price.get()
             price = price.base_price
             quantity = item.get('quantity')
-            order_item = OrderItem.objects.create(
+            OrderItem.objects.create(
                 order=order,
                 sku_unit=sku,
                 quantity=quantity,

@@ -1,7 +1,6 @@
 """Orders models admin."""
 
 # Django
-from chatbot_commerce.products.models.skus import Skus
 from django.contrib import admin
 
 # Models
@@ -21,6 +20,7 @@ class OrderAdmin(admin.ModelAdmin):
     list_display = ['id', 'customer', 'status', 'price']
     search_fields = ['id', 'customer']
     inlines = [InlineOrderItemAdmin]
+    readonly_fields = ['hook_data']
 
 
 @admin.register(OrderItem)
