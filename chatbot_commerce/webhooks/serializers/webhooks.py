@@ -31,20 +31,21 @@ class CreateOrderSerializer(serializers.Serializer):
             quantity = item.get('quantity')
             order_item = OrderItem.objects.create(
                 order=order,
-                sku_unit =sku,
+                sku_unit=sku,
                 quantity=quantity,
                 price=price
             )
-        
         order = Order.objects.filter(id=order.id).get()
         quantities = order.item.values_list('quantity', flat=True)
-        prices_items = order.item.values_list('price',flat=True)
+        prices_items = order.item.values_list('price', flat=True)
         price_order = 0
-        for price in prices_items:
-            for quantity in quantities:
-                quantity = int(quantity)
-                price = price * quantity
-                price_order += price
-                import ipdb ; ipdb.set_trace()
-                
+        for price in range(0, len(prices_items)):
+            price = prices_items[price] * int(quantities[price])
+            price_order += price
+        order = Order.objects.update_or_create(
+            id=order.id,
+            defaults={
+                'price': price_order
+            }
+        )
         return order

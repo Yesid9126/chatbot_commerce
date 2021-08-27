@@ -18,7 +18,7 @@ class InlineOrderItemAdmin(admin.TabularInline):
 class OrderAdmin(admin.ModelAdmin):
     """Order model admin."""
 
-    list_display = ['id', 'customer', 'status']
+    list_display = ['id', 'customer', 'status', 'price']
     search_fields = ['id', 'customer']
     inlines = [InlineOrderItemAdmin]
 

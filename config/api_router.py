@@ -23,7 +23,7 @@ router.register(
     basename='departments'
 )
 router.register(
-    r'hooks/orders',
+    r'orders',
     WebHookViewSet,
     basename='orders'
 )
