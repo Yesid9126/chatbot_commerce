@@ -1,11 +1,11 @@
-"""Webhooks serializers."""
+"""Orders serializers."""
 
 # Django rest framework
 from re import S
 from rest_framework import serializers
 
 # Models
-from chatbot_commerce.webhooks.models import Order, OrderItem
+from chatbot_commerce.orders.models import Order, OrderItem
 from chatbot_commerce.products.models import Skus
 
 # Utils

@@ -1,4 +1,4 @@
-"""Webhooks views."""
+"""Orders views."""
 
 
 # Django Rest Framework
@@ -7,7 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 # Serializer
-from chatbot_commerce.webhooks.serializers import CreateOrderSerializer
+from chatbot_commerce.orders.serializers import CreateOrderSerializer
 
 
 class WebHookViewSet(viewsets.GenericViewSet):

@@ -1,11 +1,11 @@
-"""Webhooks models admin."""
+"""Orders models admin."""
 
 # Django
 from chatbot_commerce.products.models.skus import Skus
 from django.contrib import admin
 
 # Models
-from chatbot_commerce.webhooks.models import Order, OrderItem
+from chatbot_commerce.orders.models import Order, OrderItem
 
 
 class InlineOrderItemAdmin(admin.TabularInline):

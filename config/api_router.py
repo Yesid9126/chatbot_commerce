@@ -5,7 +5,7 @@ from rest_framework.routers import DefaultRouter, SimpleRouter
 
 # Views
 from chatbot_commerce.products.views import ProductViewset, DepartmentsViewset
-from chatbot_commerce.webhooks.views import WebHookViewSet
+from chatbot_commerce.orders.views import WebHookViewSet
 
 if settings.DEBUG:
     router = DefaultRouter()
