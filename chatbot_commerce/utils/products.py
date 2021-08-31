@@ -30,18 +30,21 @@ def get_products_vtex_store(store):
     while True:
         skus_ids = vtex.total_skus(page=page)
         if skus_ids == []:
+            print('Break')
             break
         skus += skus_ids
         page += 1
     products_skus = []
     if skus:
         for sku_unit in skus:
+            print(f'sku_id: {sku_unit}')
             sku = sku_unit
             product_id = vtex.unit_sku(sku=sku)
             product_id = product_id.get('ProductId')
             if product_id not in products_skus and type(product_id) is int:
                 products_skus.append(product_id)
     for product in products_skus:
+        print(f'product_id: {product}')
         sub_category = None
         product = vtex.product_unit(product_id=product)
         department = Department.objects.filter(external_id=product.get('DepartmentId'), store=store).last()
