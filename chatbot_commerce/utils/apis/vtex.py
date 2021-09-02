@@ -1,11 +1,5 @@
 """Vtex Api integration."""
 
-# Django
-from django.conf import settings
-
-# Models
-from chatbot_commerce.stores.models import Store
-
 # Utilities
 import requests
 
@@ -13,11 +7,13 @@ import requests
 class VtexStores:
     """Wrapper for vtex api service."""
 
+    def __init__(self, store):
+        self.store = store
+
     def _get_resources(self, uri, **kwargs):
         """Get resources for store."""
-        store = Store.objects.filter(name='pilatos21').get()
-        url = "{}/{}".format(settings.URL_VTEX, uri)
-        r = requests.get(url, headers=store.headers, timeout=1000)
+        url = "{}/{}".format(self.store.urls['base_url'], uri)
+        r = requests.get(url, headers=self.store.headers, timeout=1000)
         return r
 
     def _get_json_resource(self, uri, **kwargs):
@@ -135,10 +131,12 @@ class VtexStores:
 
 class VtexPriceSku:
 
+    def __init__(self, store):
+        self.store = store
+
     def _get_resource(self, uri, **kwargs):
-        store = Store.objects.filter(name='pilatos21').get()
-        url = '{}/{}'.format(settings.URL_PRICESKU_VTEX, uri)
-        r = requests.get(url, headers=store.headers, timeout=1000)
+        url = '{}/{}'.format(self.store.urls['base_price_url'], uri)
+        r = requests.get(url, headers=self.store.headers, timeout=1000)
         return r
 
     def _get_json_resource(self, uri, **kwargs):

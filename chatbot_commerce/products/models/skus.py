@@ -155,7 +155,7 @@ class Image(ChatbootModel):
 
 @receiver(pre_save, sender=Image)
 def create_image_url(sender, instance, *args, **kwargs):
-    store_name = 'pilatos21'
+    store_name = instance.sku.product.store.name
     instance.image_url = f'https://{store_name}.vteximg.com.br/arquivos/ids/{instance.archive_id}/{instance.name}.jpg'
 
 

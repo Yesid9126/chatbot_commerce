@@ -13,7 +13,7 @@ from chatbot_commerce.products.models import (
 from chatbot_commerce.utils.apis.vtex import VtexStores, VtexPriceSku
 
 
-def get_products_vtex_store(store):
+def get_products_vtex_store(store, limit):
     """Creation of product available in the store."""
     products_created = []
     skus_created = []
@@ -24,12 +24,14 @@ def get_products_vtex_store(store):
     attributes_type_created = []
     attributes_created = []
 
-    vtex = VtexStores()
+    vtex = VtexStores(store=store)
     skus = []
     page = 1
     while True:
         skus_ids = vtex.total_skus(page=page)
-        if skus_ids == []:
+        if skus_ids == [] or page == limit:
+            if limit is None:
+                store.last_page = page - 1
             print('Break')
             break
         skus += skus_ids
@@ -43,6 +45,8 @@ def get_products_vtex_store(store):
             product_id = product_id.get('ProductId')
             if product_id not in products_skus and type(product_id) is int:
                 products_skus.append(product_id)
+            if len(products_skus) == limit:
+                break
     for product in products_skus:
         print(f'product_id: {product}')
         sub_category = None
@@ -135,90 +139,90 @@ def get_products_vtex_store(store):
     Skus.objects.filter(product__in=Product.objects.filter(store=store)).exclude(pk__in=skus_created).delete()
 
     # Prices & Images
-    vtexprice = VtexPriceSku()
+    vtexprice = VtexPriceSku(store=store)
     all_skus = Skus.objects.filter(
         product__in=Product.objects.filter(store=store)
-    )
+    ).order_by('sku_id')
+    print(f'total_skus: {len(all_skus)}')
     for sku in all_skus:
         # Create price for sku
+        sku_id = sku.sku_json.get('Id')
+        print(f'sku_id: {sku_id}')
         price_dic = vtexprice.price_sku(sku_id=sku.sku_json.get('Id'))
-        if 'listPrice' not in price_dic:
-            continue
-        price_instance, _ = Price.objects.update_or_create(
-            sku=sku,
-            defaults={
-                "list_price": price_dic['listPrice'],
-                "cost_price": price_dic['costPrice'],
-                "markup": price_dic['markup'],
-                "base_price": price_dic['basePrice']
-            }
-        )
-        prices_created.append(price_instance.pk)
-        for fixedprice_dic in price_dic['fixedPrices']:
-            fixedprice_instance, _ = FixedPrice.objects.update_or_create(
-                price=price_instance,
-                trade_policy_id=fixedprice_dic["tradePolicyId"],
+        if 'listPrice' in price_dic:
+            price_instance, _ = Price.objects.update_or_create(
+                sku=sku,
                 defaults={
-                    "value": fixedprice_dic["value"],
-                    "list_price": fixedprice_dic["listPrice"],
-                    "min_quantity": fixedprice_dic["minQuantity"]
+                    "list_price": price_dic['listPrice'],
+                    "cost_price": price_dic['costPrice'],
+                    "markup": price_dic['markup'],
+                    "base_price": price_dic['basePrice']
                 }
             )
-            fixedpirces_created.append(fixedprice_instance.pk)
-            if 'dateRange' in fixedprice_dic:
-                daterange_dic = fixedprice_dic.get('dateRange')
-                daterange_instance, _ = DateRange.objects.update_or_create(
-                    fixed_price=fixedprice_instance,
+            prices_created.append(price_instance.pk)
+            for fixedprice_dic in price_dic['fixedPrices']:
+                fixedprice_instance, _ = FixedPrice.objects.update_or_create(
+                    price=price_instance,
+                    trade_policy_id=fixedprice_dic["tradePolicyId"],
                     defaults={
-                        'date_time_from': daterange_dic.get('from'),
-                        'date_time_to': daterange_dic.get('to')
+                        "value": fixedprice_dic["value"],
+                        "list_price": fixedprice_dic["listPrice"],
+                        "min_quantity": fixedprice_dic["minQuantity"]
                     }
                 )
-                dateranges_created.append(daterange_instance.pk)
+                fixedpirces_created.append(fixedprice_instance.pk)
+                if 'dateRange' in fixedprice_dic:
+                    daterange_dic = fixedprice_dic.get('dateRange')
+                    daterange_instance, _ = DateRange.objects.update_or_create(
+                        fixed_price=fixedprice_instance,
+                        defaults={
+                            'date_time_from': daterange_dic.get('from'),
+                            'date_time_to': daterange_dic.get('to')
+                        }
+                    )
+                    dateranges_created.append(daterange_instance.pk)
         # Create image for sku
         images_array = vtex.image_sku(sku_id=sku.sku_json.get('Id'))
         for image_dic in images_array:
-            if 'ArchiveId' not in image_dic:
-                continue
-            archive_id = image_dic['ArchiveId']
-            name = image_dic['Name']
-            image_instance, _ = Image.objects.update_or_create(
-                image_id=image_dic.get('Id'),
-                sku=sku,
-                defaults={
-                    'is_main': image_dic.get('IsMain'),
-                    'name': name,
-                    'label': image_dic.get('Label'),
-                    'archive_id': archive_id
-                }
-            )
-            images_created.append(image_instance.pk)
-        sku_specifications_array = vtex.get_sku_specifications(sku_id=sku.sku_json.get('Id'))
-        if 'status_code' and 'message' in sku_specifications_array:
-            continue
-        for dic in sku_specifications_array:
-            specifications_field = vtex.get_specifications_field(field_id=dic.get('FieldId'))
-            try:
-                attribute_type_instance, _ = AttributeType.objects.update_or_create(
-                    store=store,
-                    name=specifications_field.get('Description')
-                )
-                attributes_type_created.append(attribute_type_instance.pk)
-                attribute_instance, _ = Attribute.objects.update_or_create(
+            if 'ArchiveId' in image_dic:
+                archive_id = image_dic['ArchiveId']
+                name = image_dic['Name']
+                image_instance, _ = Image.objects.update_or_create(
+                    image_id=image_dic.get('Id'),
                     sku=sku,
-                    attribute_type=attribute_type_instance,
-                    value=dic.get('Text')
+                    defaults={
+                        'is_main': image_dic.get('IsMain'),
+                        'name': name,
+                        'label': image_dic.get('Label'),
+                        'archive_id': archive_id
+                    }
                 )
-                attributes_created.append(attribute_instance.pk)
-            except Exception as e:
-                error = {
-                    'message': e,
-                    'FieldId': dic.get('FieldId'),
-                    'name': specifications_field.get('Description'),
-                    'sku_specification': dic
-                }
-                print(error)
-                raise Exception(error)
+                images_created.append(image_instance.pk)
+        sku_specifications_array = vtex.get_sku_specifications(sku_id=sku.sku_json.get('Id'))
+        if 'status_code' and 'message' not in sku_specifications_array:
+            for dic in sku_specifications_array:
+                specifications_field = vtex.get_specifications_field(field_id=dic.get('FieldId'))
+                try:
+                    attribute_type_instance, _ = AttributeType.objects.update_or_create(
+                        store=store,
+                        name=specifications_field.get('Description')
+                    )
+                    attributes_type_created.append(attribute_type_instance.pk)
+                    attribute_instance, _ = Attribute.objects.update_or_create(
+                        sku=sku,
+                        attribute_type=attribute_type_instance,
+                        value=dic.get('Text')
+                    )
+                    attributes_created.append(attribute_instance.pk)
+                except Exception as e:
+                    error = {
+                        'message': e,
+                        'FieldId': dic.get('FieldId'),
+                        'name': specifications_field.get('Description'),
+                        'sku_specification': dic
+                    }
+                    print(error)
+                    raise Exception(error)
 
     # Delete images not in sku
     Image.objects.filter(sku__in=all_skus).exclude(pk__in=images_created).delete()
@@ -245,4 +249,6 @@ def get_products_vtex_store(store):
     ).distinct().exclude(pk__in=attributes_type_created).delete()
     # Delete attributes that not exists
     Attribute.objects.filter(sku__in=all_skus).exclude(pk__in=attributes_created).delete()
+    store.sync_status = True
+    store.save()
     return print('0k')

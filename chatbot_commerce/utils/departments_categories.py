@@ -2,7 +2,6 @@
 
 # Models
 from chatbot_commerce.products.models import Department, Category, Subcategory, Brand
-from chatbot_commerce.stores.models import Store
 
 # Apis
 from chatbot_commerce.utils.apis.vtex import VtexStores
@@ -10,9 +9,8 @@ from chatbot_commerce.utils.apis.vtex import VtexStores
 
 def get_departments(store):
     """Creation departments and categories."""
-    vtex = VtexStores()
+    vtex = VtexStores(store=store)
     departments = vtex.departments_categories()
-    store = Store.objects.last()
     for department in departments:
         children = department['children']
         departament_obj, _ = Department.objects.update_or_create(
@@ -53,7 +51,7 @@ def get_departments(store):
 
 def get_brands(store):
     """Creation departments and categories."""
-    vtex = VtexStores()
+    vtex = VtexStores(store=store)
     brands = vtex.get_brands()
     for brand in brands:
         Brand.objects.update_or_create(
