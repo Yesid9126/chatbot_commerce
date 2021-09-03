@@ -155,7 +155,18 @@ class Image(ChatbootModel):
 
 @receiver(pre_save, sender=Image)
 def create_image_url(sender, instance, *args, **kwargs):
-    store_name = instance.sku.product.store.name
+    try:
+        store_name = instance.sku.product.store.name
+        print(store_name)
+    except Exception as message:
+        error = {
+            'message': message,
+            'instance': instance,
+            'sku': instance.sku,
+            'product': instance.sku.product,
+            'sku_id': instance.sku.pk
+        }
+        raise Exception(error)
     instance.image_url = f'https://{store_name}.vteximg.com.br/arquivos/ids/{instance.archive_id}/{instance.name}.jpg'
 
 

@@ -51,8 +51,11 @@ class ProductViewset(mixins.RetrieveModelMixin,
     def dispatch(self, request, *args, **kwargs):
         slug_name = kwargs['store_slug_name']
         self.store = get_object_or_404(Store, slug_name=slug_name)
+        self.queryset = Product.objects.filter(store=self.store)
+        if self.store.apply_filters:
+            self.queryset = self.queryset.filter(is_active=True)
         filter_data = {key.removeprefix('skus__')+'__icontains': value for key, value in request.GET.items() if key in ['skus__attributes__attribute_type__name', 'skus__attributes__value', 'skus__sku_name']}
-        skus = Skus.objects.filter(product__in=self.get_queryset(), **filter_data)
+        skus = Skus.objects.filter(product__in=self.queryset, **filter_data).order_by()
         if self.store.apply_filters:
             sku_pks_images = Image.objects.filter(sku__in=skus).values_list('sku__pk', flat=True)
             sku_pks_prices = Price.objects.filter(Q(~Q(base_price=None) & ~Q(base_price=0)), sku__in=skus).values_list('sku__pk', flat=True)
@@ -62,10 +65,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
-        queryset = Product.objects.filter(store=self.store)
-        if self.store.apply_filters:
-            queryset = queryset.filter(is_active=True)
-        return queryset
+        return self.queryset
 
     def get_serializer_context(self):
         return self.skus

@@ -7,7 +7,7 @@ from slugify import slugify
 from django.db import models
 
 # Celery
-from django_celery_beat.models import PeriodicTask, IntervalSchedule
+from django_celery_beat.models import PeriodicTask, CrontabSchedule
 
 # utilities
 from chatbot_commerce.utils.models import ChatbootModel
@@ -91,13 +91,19 @@ def execute_task(sender, instance, *args, **kwargs):
     if instance.status is True and instance.sync_status is False:
         from chatbot_commerce.products.tasks import store_begining
         store_begining.s(store=instance.name).apply_async(countdown=5)
+
     if instance.sync_status is True:
-        every_100_years, _ = IntervalSchedule.objects.get_or_create(every=365*100, period=IntervalSchedule.DAYS)
-        task_instance, _ = PeriodicTask.objects.get_or_create(name=f'all objects {instance.name}', task='departments_categories', defaults=dict(interval=every_100_years, kwargs='{"store": "%s"}' % (instance.name)))
+        every_1, _ = CrontabSchedule.objects.get_or_create(day_of_week='*', hour=1)
+        every_1_30, _ = CrontabSchedule.objects.get_or_create(day_of_week='*', hour=1, minute=30)
+        task_instance, _ = PeriodicTask.objects.get_or_create(name=f'{instance.name} create & new', task='principal_periodic_task', defaults=dict(crontab=every_1, kwargs='{"store": "%s"}' % (instance.name)))
+        task_instance, _ = PeriodicTask.objects.get_or_create(name=f'{instance.name} update', task='update_periodic_task', defaults=dict(crontab=every_1_30, kwargs='{"store": "%s"}' % (instance.name)))
+
     if instance.status is False or instance.sync_status is False:
-        PeriodicTask.objects.filter(name=f'all objects {instance.name}', task='departments_categories').delete()
+        PeriodicTask.objects.filter(name=f'{instance.name} create & new', task='principal_periodic_task').delete()
+        PeriodicTask.objects.filter(name=f'{instance.name} update', task='update_periodic_task').delete()
 
 
 @receiver(post_delete, sender=Store)
 def delete_task(sender, instance, *args, **kwargs):
-    PeriodicTask.objects.filter(name=f'all objects {instance.name}', task='departments_categories').delete()
+    PeriodicTask.objects.filter(name=f'{instance.name} create & new', task='principal_periodic_task').delete()
+    PeriodicTask.objects.filter(name=f'{instance.name} update', task='update_periodic_task').delete()
