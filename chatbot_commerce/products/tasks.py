@@ -15,6 +15,7 @@ from chatbot_commerce.utils.celery.tasks import create_attributes, create_images
 # Models
 from chatbot_commerce.stores.models.stores import Store
 
+
 @task(name='principal_periodic_task')
 def principal_periodic_task(*args, **kwargs):
     """Create all Product and departments."""

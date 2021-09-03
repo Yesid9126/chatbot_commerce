@@ -67,6 +67,7 @@ def create_price(store, skus=None):
                     dateranges_created.append(daterange_instance.pk)
     return True
 
+
 @task(name='create_images')
 def create_images(store, skus=None):
     store = Store.objects.filter(name=store).first()
@@ -100,6 +101,7 @@ def create_images(store, skus=None):
                 )
                 images_created.append(image_instance.pk)
     return True
+
 
 @task(name='create_attributes')
 def create_attributes(store, skus=None):
