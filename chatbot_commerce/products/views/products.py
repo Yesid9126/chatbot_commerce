@@ -30,6 +30,7 @@ from chatbot_commerce.stores.models import Store
 attr_type_param = openapi.Parameter('skus__attributes__attribute_type__name', openapi.IN_QUERY, description="attr_type", type=openapi.TYPE_STRING)
 attr_value_param = openapi.Parameter('skus__attributes__value', openapi.IN_QUERY, description="attr_value", type=openapi.TYPE_STRING)
 total_quantity_param = openapi.Parameter('skus__total_quantity', openapi.IN_QUERY, description="quantity", type=openapi.TYPE_STRING)
+sku_name_param = openapi.Parameter('skus__sku_name', openapi.IN_QUERY, description="sku_name", type=openapi.TYPE_STRING)
 
 
 class ProductViewset(mixins.RetrieveModelMixin,
@@ -43,38 +44,33 @@ class ProductViewset(mixins.RetrieveModelMixin,
     filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
     search_fields = (
         'name', 'brand__name', 'keywords', 'category__name',
-        'sub_category__name', 'department__name', 'reference_id', 'skus__sku_name'
+        'sub_category__name', 'department__name'
     )
     ordering_fields = ('created',)
-    filter_fields = (
-        'skus__attributes__attribute_type__name',
-        'skus__attributes__value',
-        'skus__total_quantity'
-    )
 
     def dispatch(self, request, *args, **kwargs):
         slug_name = kwargs['store_slug_name']
         self.store = get_object_or_404(Store, slug_name=slug_name)
-        filter_data = {key.replace('skus__', ''): value for key, value in request.GET.items() if key in ['skus__attributes__attribute_type__name', 'skus__attributes__value']}
-        skus = Skus.objects.filter(product__in=self.get_queryset(), **filter_data)
+        self.queryset = Product.objects.filter(store=self.store)
+        if self.store.apply_filters:
+            self.queryset = self.queryset.filter(is_active=True)
+        filter_data = {key.removeprefix('skus__')+'__icontains': value for key, value in request.GET.items() if key in ['skus__attributes__attribute_type__name', 'skus__attributes__value', 'skus__sku_name']}
+        skus = Skus.objects.filter(product__in=self.queryset, **filter_data).order_by()
         if self.store.apply_filters:
             sku_pks_images = Image.objects.filter(sku__in=skus).values_list('sku__pk', flat=True)
             sku_pks_prices = Price.objects.filter(Q(~Q(base_price=None) & ~Q(base_price=0)), sku__in=skus).values_list('sku__pk', flat=True)
-            sku_pks = [*set(sku_pks_images) & set(sku_pks_prices)]
-            skus = skus.filter(Q(pk__in=sku_pks), ~Q(total_quantity=0), is_active=True)
+            skus_pks = [*set(sku_pks_images) & set(sku_pks_prices)]
+            skus = skus.filter(~Q(total_quantity=0), pk__in=skus_pks, is_active=True)
         self.skus = skus
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
-        queryset = Product.objects.filter(store=self.store)
-        if self.store.apply_filters:
-            queryset = queryset.filter(is_active=True)
-        return queryset
+        return self.queryset
 
     def get_serializer_context(self):
         return self.skus
 
-    @swagger_auto_schema(manual_parameters=[attr_type_param, attr_value_param])
+    @swagger_auto_schema(manual_parameters=[sku_name_param, attr_type_param, attr_value_param])
     def list(self, request, *args, **kwargs):
         """
         Return all products
@@ -93,7 +89,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
-    @swagger_auto_schema(manual_parameters=[attr_type_param, attr_value_param])
+    @swagger_auto_schema(manual_parameters=[sku_name_param, attr_type_param, attr_value_param])
     def retrieve(self, request, *args, **kwargs):
         """
         Return a single department with tree category.
@@ -128,7 +124,7 @@ class DepartmentsViewset(mixins.RetrieveModelMixin,
         """
         Return all departments with tree category
 
-        search = Put a keyword like name category or department to filter whith it
+        for search Put a keyword like name category or department to filter whith it
         example... search = Hombres
         """
         return super().list(request, *args, **kwargs)
