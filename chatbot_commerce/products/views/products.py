@@ -16,10 +16,11 @@ from rest_framework_api_key.permissions import HasAPIKey
 from rest_framework.permissions import IsAdminUser
 
 # Filters
-from django_filters.rest_framework import DjangoFilterBackend
+from django_filters.rest_framework import DjangoFilterBackend, FilterSet
+from django_filters import filters
 from rest_framework.filters import SearchFilter, OrderingFilter
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
+# from drf_yasg.utils import swagger_auto_schema
+# from drf_yasg import openapi
 from django.db.models import Q
 
 # Models
@@ -27,35 +28,57 @@ from chatbot_commerce.products.models import Product, Department, Skus, Image
 from chatbot_commerce.stores.models import Store
 
 
-attr_type_param = openapi.Parameter('skus__attributes__attribute_type__name', openapi.IN_QUERY, description="attr_type", type=openapi.TYPE_STRING)
-attr_value_param = openapi.Parameter('skus__attributes__value', openapi.IN_QUERY, description="attr_value", type=openapi.TYPE_STRING)
-total_quantity_param = openapi.Parameter('skus__total_quantity', openapi.IN_QUERY, description="quantity", type=openapi.TYPE_STRING)
-sku_name_param = openapi.Parameter('skus__sku_name', openapi.IN_QUERY, description="sku_name", type=openapi.TYPE_STRING)
+# attr_type_param = openapi.Parameter('skus__attributes__attribute_type__name', openapi.IN_QUERY, description="attr_type", type=openapi.TYPE_STRING)
+# attr_value_param = openapi.Parameter('skus__attributes__value', openapi.IN_QUERY, description="attr_value", type=openapi.TYPE_STRING)
+# total_quantity_param = openapi.Parameter('skus__total_quantity', openapi.IN_QUERY, description="quantity", type=openapi.TYPE_STRING)
+# sku_name_param = openapi.Parameter('skus__sku_name', openapi.IN_QUERY, description="sku_name", type=openapi.TYPE_STRING)
 
+class ProductFilterSet(FilterSet):
 
-class ProductViewset(mixins.RetrieveModelMixin,
-                     mixins.ListModelMixin,
+    sku_name = filters.CharFilter(field_name='skus__sku_name', lookup_expr='icontains', distinct=True)
+    attribute_type = filters.CharFilter(field_name='skus__attributes__attribute_type__name', lookup_expr='icontains', distinct=True)
+    attribute_value = filters.CharFilter(field_name='skus__attributes__value', lookup_expr='icontains', distinct=True)
+
+    def filter_queryset(self, queryset):
+        return super().filter_queryset(queryset)
+    class Meta:
+        model = Product
+        fields = ['sku_name', 'attribute_type', 'attribute_value']
+class ProductViewset(mixins.ListModelMixin,
+                     mixins.RetrieveModelMixin,
                      viewsets.GenericViewSet):
     """Product viewset."""
 
     serializer_class = ProductModelSerializer
     lookup_field = 'pk'
     permission_classes = [HasAPIKey | IsAdminUser]
-    filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
-    search_fields = (
+    filter_backends = (SearchFilter, DjangoFilterBackend, OrderingFilter)
+    search_fields = [
         'name', 'brand__name', 'keywords', 'category__name',
         'sub_category__name', 'department__name'
-    )
+    ]
     ordering_fields = ('created',)
+    filter_class = ProductFilterSet
+    # filter_fields = {
+    #     'skus__sku_name',
+    #     'skus__attributes__attribute_type__name',
+    #     'skus__attributes__value'
+    # }
 
     def dispatch(self, request, *args, **kwargs):
         slug_name = kwargs['store_slug_name']
         self.store = get_object_or_404(Store, slug_name=slug_name)
-        self.queryset = Product.objects.filter(store=self.store)
+        self.queryset = Product.objects.filter(store=self.store).order_by()
         if self.store.apply_filters:
             self.queryset = self.queryset.filter(is_active=True)
-        filter_data = {key.removeprefix('skus__')+'__icontains': value for key, value in request.GET.items() if key in ['skus__attributes__attribute_type__name', 'skus__attributes__value', 'skus__sku_name']}
-        skus = Skus.objects.filter(product__in=self.queryset, **filter_data).order_by()
+        filter_data = {key: value for key, value in request.GET.items() if key in ['attribute_type', 'attribute_value', 'sku_name']}
+        if 'sku_name' in filter_data:
+            filter_data['sku_name__icontains'] = filter_data.pop('sku_name')
+        if 'attribute_type' in filter_data:
+            filter_data['attributes__attribute_type__name__icontains'] = filter_data.pop('attribute_type')
+        if 'attribute_value' in filter_data:
+            filter_data['attributes__value__icontains'] = filter_data.pop('attribute_value')
+        skus = Skus.objects.filter(product__in=self.queryset, **filter_data).order_by().distinct()
         if self.store.apply_filters:
             sku_pks_images = Image.objects.filter(sku__in=skus).values_list('sku__pk', flat=True)
             sku_pks_prices = Price.objects.filter(Q(~Q(base_price=None) & ~Q(base_price=0)), sku__in=skus).values_list('sku__pk', flat=True)
@@ -70,7 +93,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
     def get_serializer_context(self):
         return self.skus
 
-    @swagger_auto_schema(manual_parameters=[sku_name_param, attr_type_param, attr_value_param])
+    # @swagger_auto_schema(manual_parameters=[sku_name_param, attr_type_param, attr_value_param])
     def list(self, request, *args, **kwargs):
         """
         Return all products
@@ -89,7 +112,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
-    @swagger_auto_schema(manual_parameters=[sku_name_param, attr_type_param, attr_value_param])
+    # @swagger_auto_schema(manual_parameters=[sku_name_param, attr_type_param, attr_value_param])
     def retrieve(self, request, *args, **kwargs):
         """
         Return a single department with tree category.

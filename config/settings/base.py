@@ -70,6 +70,9 @@ THIRD_PARTY_APPS = [
     'django_filters',
     'drf_yasg',
     "rest_framework_api_key",
+    "django_grpc_framework",
+    "django_elasticsearch_dsl",
+    "django_elasticsearch_dsl_drf",
 ]
 
 LOCAL_APPS = [
@@ -308,4 +311,21 @@ SWAGGER_SETTINGS = {
     'USE_SESSION_AUTH': True,
     'LOGOUT_URL': reverse_lazy('admin:logout'),
     'LOGIN_URL': reverse_lazy('admin:login'),
+    'DEFAULT_PARSER_CLASSES': [
+        'rest_framework.parsers.FormParser',
+        'rest_framework.parsers.MultiPartParser',
+        'rest_framework.parsers.JSONParser',
+    ],
+    'JSON_EDITOR': False,
+    'SECURITY_DEFINITIONS': {
+        'basic': {
+            'type': 'basic'
+        }
+    },
+}
+
+ELASTICSEARCH_DSL = {
+    'default': {
+        'hosts': 'localhost:9200'
+    },
 }

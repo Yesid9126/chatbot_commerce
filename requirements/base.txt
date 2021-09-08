@@ -25,6 +25,11 @@ drf-yasg
 django-jsoneditor
 djangorestframework-api-key
 openpyxl
+djangogrpcframework
+grpcio
+grpcio-tools
+django-elasticsearch-dsl
+django-elasticsearch-dsl-drf
 
 # Swagger
 drf-yasg
