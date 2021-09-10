@@ -27,8 +27,10 @@ urlpatterns = [
     path("api/", include("config.api_router"))
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
+
 def grpc_handlers(server):
     products_pb2_grpc.add_ProductControllerServicer_to_server(ProductService.as_servicer(), server)
+
 
 if settings.DEBUG:
     # This allows the error pages to be debugged during development, just visit
