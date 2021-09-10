@@ -27,6 +27,8 @@ from django.db.models import Q
 from chatbot_commerce.products.models import Product, Department, Skus, Image
 from chatbot_commerce.stores.models import Store
 
+# gRPC
+from chatbot_commerce.utils.gRPC.vtex.client import VtexService
 
 # attr_type_param = openapi.Parameter('skus__attributes__attribute_type__name', openapi.IN_QUERY, description="attr_type", type=openapi.TYPE_STRING)
 # attr_value_param = openapi.Parameter('skus__attributes__value', openapi.IN_QUERY, description="attr_value", type=openapi.TYPE_STRING)
@@ -68,6 +70,10 @@ class ProductViewset(mixins.ListModelMixin,
     def dispatch(self, request, *args, **kwargs):
         slug_name = kwargs['store_slug_name']
         self.store = get_object_or_404(Store, slug_name=slug_name)
+        self.gRPC = VtexService(store=self.store)
+        self.response = self.gRPC.all_products()
+        import ipdb
+        ipdb.set_trace()
         self.queryset = Product.objects.filter(store=self.store).order_by()
         if self.store.apply_filters:
             self.queryset = self.queryset.filter(is_active=True)

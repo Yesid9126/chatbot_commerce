@@ -172,3 +172,13 @@ class AttributeTypeModelSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         self.fields[instance.name] = self.fields['attributes']
         return super().to_representation(instance)
+
+from django_grpc_framework import proto_serializers
+from chatbot_commerce.utils.gRPC.vtex.products import products_pb2
+
+
+class ProductProtoSerializer(proto_serializers.ModelProtoSerializer):
+    class Meta:
+        model = Product
+        proto_class = products_pb2.Product
+        fields = ['id', 'external_id', 'brand', 'department', 'category', 'sub_category', 'title', 'meta_tag_description']

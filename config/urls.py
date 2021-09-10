@@ -6,6 +6,9 @@ from django.views import defaults as default_views
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
+from chatbot_commerce.utils.gRPC.vtex.products import products_pb2_grpc
+from chatbot_commerce.products.services import ProductService
+
 schema_view = get_schema_view(
     openapi.Info(
         title="TodoViernes 😎 commerce chatbot API",
@@ -24,6 +27,8 @@ urlpatterns = [
     path("api/", include("config.api_router"))
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
+def grpc_handlers(server):
+    products_pb2_grpc.add_ProductControllerServicer_to_server(ProductService.as_servicer(), server)
 
 if settings.DEBUG:
     # This allows the error pages to be debugged during development, just visit

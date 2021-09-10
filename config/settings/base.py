@@ -1,6 +1,7 @@
 """
 Base settings to build other settings files upon.
 """
+from logging import DEBUG
 from pathlib import Path
 from django.urls import reverse_lazy
 import environ
@@ -329,3 +330,6 @@ ELASTICSEARCH_DSL = {
         'hosts': 'localhost:9200'
     },
 }
+
+GRPC_VERBOSITY=DEBUG
+GRPC_TRACE='tcp'

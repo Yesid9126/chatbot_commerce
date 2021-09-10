@@ -1,0 +1,8 @@
+#!/bin/bash
+
+set -o errexit
+set -o pipefail
+set -o nounset
+
+
+python manage.py grpcrunserver --dev 0.0.0.0:60867

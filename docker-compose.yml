@@ -35,6 +35,20 @@ services:
   redis:
     image: redis:5.0
 
+  gRPC:
+    <<: *django
+    image: chatbot_commerce_local_grpc
+    depends_on:
+      - postgres
+    volumes:
+      - .:/app:z
+    env_file:
+      - ./.envs/.local/.django
+      - ./.envs/.local/.postgres
+    ports:
+      - "60867:60867"
+    command: /start-gRPC
+
   celeryworker:
     <<: *django
     image: chatbot_commerce_local_celeryworker

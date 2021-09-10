@@ -21,3 +21,6 @@ CATALOG=catalog/pvt
 CATALOG_SYSTEM=catalog_system/pvt/sku
 DEPARTMENT_CATEGORIES=catalog_system/pub/category/tree/3
 
+GRPC_VERBOSITY=debug
+GRPC_TRACE=tcp
+

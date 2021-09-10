@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package products;
+
+import "google/protobuf/empty.proto";
+
+service ProductController {
+    rpc List(ProductListRequest) returns (stream Product) {}
+    rpc Create(Product) returns (Product) {}
+    rpc Retrieve(ProductRetrieveRequest) returns (Product) {}
+    rpc Update(Product) returns (Product) {}
+    rpc Destroy(Product) returns (google.protobuf.Empty) {}
+}
+
+message Product {
+    int32 id = 1;
+    int32 external_id = 2;
+    int32 brand = 3;
+    int32 department = 4;
+    int32 category = 5;
+    int32 sub_category = 6;
+    string title = 7;
+    string meta_tag_description = 8;
+}
+
+message ProductListRequest {
+}
+
+message ProductRetrieveRequest {
+    int32 id = 1;
+}

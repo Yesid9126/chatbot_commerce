@@ -28,6 +28,7 @@ openpyxl
 djangogrpcframework
 grpcio
 grpcio-tools
+protobuf
 django-elasticsearch-dsl
 django-elasticsearch-dsl-drf
 

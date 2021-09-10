@@ -40,12 +40,18 @@ services:
     volumes:
       - production_traefik:/etc/traefik/acme:z
     ports:
+      - "0.0.0.0:60867:60867"
       - "0.0.0.0:80:80"
       - "0.0.0.0:443:443"
       - "0.0.0.0:5555:5555"
 
   redis:
     image: redis:5.0
+
+  gRPC:
+    <<: *django
+    image: chatbot_commerce_production_grpc
+    command: /start-gRPC
 
   celeryworker:
     <<: *django
