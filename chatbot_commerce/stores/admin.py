@@ -13,6 +13,7 @@ class StoresAdmin(admin.ModelAdmin):
     exclude = ['slug_name']
     search_fields = ['name', 'url_enviroment']
 
+
 @admin.register(SaleChannel)
 class SaleChannelAdmin(admin.ModelAdmin):
     """Sale channel model admin."""

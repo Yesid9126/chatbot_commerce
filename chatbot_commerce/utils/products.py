@@ -146,7 +146,7 @@ def get_products_vtex_store(store, limit=None, products_skus=[]):
                 print(f'array {list_skus_ids} vacio for channel {channel_id}')
                 objs = []
             instance_sale_channel, _ = SaleChannel.objects.update_or_create(
-                store=store, external_id=channel_id, 
+                store=store, external_id=channel_id,
                 defaults={
                     'name': channel.get('Name'),
                     'is_active': channel.get('IsActive'),

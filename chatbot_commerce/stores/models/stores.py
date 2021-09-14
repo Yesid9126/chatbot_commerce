@@ -124,6 +124,7 @@ def delete_task(sender, instance, *args, **kwargs):
     PeriodicTask.objects.filter(name=f'{instance.name} create & new', task='principal_periodic_task').delete()
     PeriodicTask.objects.filter(name=f'{instance.name} update', task='update_periodic_task').delete()
 
+
 class SaleChannel(ChatbootModel):
     """Trade policy model."""
 

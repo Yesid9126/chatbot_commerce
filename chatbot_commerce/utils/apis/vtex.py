@@ -144,6 +144,7 @@ class VtexStores:
             method=method
         )
 
+
 class VtexPriceSku:
 
     def __init__(self, store):
