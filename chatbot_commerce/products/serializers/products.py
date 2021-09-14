@@ -1,19 +1,13 @@
 """Product serializers."""
 
 # Django rest framework
-from chatbot_commerce.products.models.skus import Attribute, AttributeType
-from chatbot_commerce.products.models import FixedPrice, Price, Skus, Image, DateRange, Brand
+from chatbot_commerce.products.models.skus import AttributeType
+from chatbot_commerce.products.models import Skus, Brand
 from rest_framework import serializers
 
 # Model
 from chatbot_commerce.products.models import Product
 
-# Serializer
-from chatbot_commerce.products.serializers.departments import (
-    CategoryModelSerializer,
-    SubcategoryModelSerializer,
-    DepartmentModelSerializer
-)
 
 class BrandsModelSerializer(serializers.ModelSerializer):
     """Brand model serializer"""
@@ -28,14 +22,8 @@ class BrandsModelSerializer(serializers.ModelSerializer):
             'title',
             'description'
         ]
+        read_only_fields = fields
 
-class BrandModelSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Brand
-        fields = (
-            'name',
-            'slug_name',
-        )
 
 class SkuModelSerializer(serializers.ModelSerializer):
     """Sku model serializer"""
@@ -48,17 +36,18 @@ class SkuModelSerializer(serializers.ModelSerializer):
         """Meta class"""
         model = Skus
         fields = (
-            'sku_id', 'sku_name', 'total_quantity', 'images', 
+            'sku_id', 'sku_name', 'total_quantity', 'images',
             'price',
             'attributes', 'is_active'
         )
+        read_only_fields = fields
 
     def get_images(self, obj):
         return obj.get_images
-    
+
     def get_prices(self, obj):
         return obj.get_prices
-    
+
     def get_attributes(self, obj):
         return obj.get_attributes
 
@@ -83,6 +72,7 @@ class ProductModelSerializer(serializers.ModelSerializer):
             'tree_categories',
             'skus',
         ]
+        read_only_fields = fields
 
     def __init__(self, instance=None, data=None, **kwargs):
         self.skus = kwargs['context']
@@ -97,6 +87,7 @@ class ProductModelSerializer(serializers.ModelSerializer):
     def get_skus(self, obj):
         return self.skus.filter(product__pk=obj.pk).values_list('serializer_data', flat=True)
 
+
 class AttributeTypeModelSerializer(serializers.ModelSerializer):
     """Attribute type model serializer."""
 
@@ -109,6 +100,7 @@ class AttributeTypeModelSerializer(serializers.ModelSerializer):
         fields = [
             'attributes'
         ]
+        read_only_fields = fields
 
     def __init__(self, instance=None, data=None, **kwargs):
         self.attributes = kwargs['context']

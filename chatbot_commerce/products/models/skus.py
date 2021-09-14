@@ -1,11 +1,10 @@
 """Skus model."""
 
-from django.db.models.fields.json import JSONField
 from slugify import slugify
 
 # Django
 from django.db import models
-from django.db.models.signals import pre_save, post_save
+from django.db.models.signals import pre_save, post_save, post_delete
 from django.dispatch import receiver
 
 
@@ -149,7 +148,7 @@ class Skus(ChatbootModel):
             'is_active': self.is_active,
             'images': self.get_images,
             'attributes': self.get_attributes,
-            'price': self.get_prices 
+            'price': self.get_prices
         }
         return sku_dict
 
@@ -162,7 +161,7 @@ class Skus(ChatbootModel):
     @property
     def get_attributes(self):
         return list(self.attributes.all().order_by().values_list('serializer_data', flat=True))
-    
+
     @property
     def get_images(self):
         return list(self.sku_images.all().order_by().values_list('image_url', flat=True))
@@ -203,9 +202,16 @@ def create_image_url(sender, instance, *args, **kwargs):
         raise Exception(error)
     instance.image_url = f'https://{store_name}.vteximg.com.br/arquivos/ids/{instance.archive_id}/{instance.name}.jpg'
 
+
 @receiver(post_save, sender=Image)
-def call_sku_save(sender, instance, *args, **kwargs):
+def call_sku_save_from_image_for_save(sender, instance, *args, **kwargs):
     instance.sku.save()
+
+
+@receiver(post_delete, sender=Image)
+def call_sku_save_from_image_for_delete(sender, instance, *args, **kwargs):
+    instance.sku.save()
+
 
 class Price(ChatbootModel):
     """Price model"""
@@ -220,6 +226,7 @@ class Price(ChatbootModel):
     def save(self, *args, **kwargs):
         self.serializer_data = self.get_price
         return super().save(*args, **kwargs)
+
     class Meta:
         """Meta class"""
 
@@ -239,9 +246,16 @@ class Price(ChatbootModel):
         }
         return price
 
+
 @receiver(post_save, sender=Price)
-def call_sku_save(sender, instance, *args, **kwargs):
+def call_sku_save_from_price_for_save(sender, instance, *args, **kwargs):
     instance.sku.save()
+
+
+@receiver(post_delete, sender=Price)
+def call_sku_save_from_price_for_delete(sender, instance, *args, **kwargs):
+    instance.sku.save()
+
 
 class FixedPrice(ChatbootModel):
     """Fixed price model"""
@@ -253,9 +267,10 @@ class FixedPrice(ChatbootModel):
     min_quantity = models.IntegerField(_('Minimun quantity'), null=True, blank=True)
     serializer_data = models.JSONField(null=True, blank=True)
 
-    def save(self,*args, **kwargs):
+    def save(self, *args, **kwargs):
         self.serializer_data = self.get_fixed_price
         return super().save(*args, **kwargs)
+
     class Meta:
         """Meta class"""
 
@@ -266,14 +281,21 @@ class FixedPrice(ChatbootModel):
     @property
     def get_fixed_price(self):
         fixed_price = {
-            "value": self.value, 
+            "value": self.value,
             "date_ranges": list(self.date_ranges.all().order_by().values_list('serializer_data', flat=True))
         }
         return fixed_price
 
+
 @receiver(post_save, sender=FixedPrice)
-def call_price_save(sender, instance, *args, **kwargs):
+def call_price_save_from_fixedprice_for_save(sender, instance, *args, **kwargs):
     instance.price.save()
+
+
+@receiver(post_delete, sender=FixedPrice)
+def call_price_save_from_fixedprice_for_delete(sender, instance, *args, **kwargs):
+    instance.price.save()
+
 
 class DateRange(ChatbootModel):
     """Date range model"""
@@ -302,8 +324,14 @@ class DateRange(ChatbootModel):
         }
         return date_rage
 
+
 @receiver(post_save, sender=DateRange)
-def call_fixed_price_save(sender, instance, *args, **kwargs):
+def call_fixedprice_save_from_daterange_for_save(sender, instance, *args, **kwargs):
+    instance.fixed_price.save()
+
+
+@receiver(post_delete, sender=DateRange)
+def call_fixedprice_save_from_daterange_for_delete(sender, instance, *args, **kwargs):
     instance.fixed_price.save()
 
 
@@ -323,9 +351,11 @@ class AttributeType(ChatbootModel):
         self.slug_name = slugify(self.name, separator="_")
         return super().save(*args, **kwargs)
 
+
 @receiver(post_save, sender=AttributeType)
-def call_attributes_save(sender, instance, *args, **kwargs):
+def call_attributes_save_from_attributetype_for_save(sender, instance, *args, **kwargs):
     [attribute.save() for attribute in instance.attributes.all().order_by()]
+
 
 class Attribute(ChatbootModel):
     """Attributes model"""
@@ -357,6 +387,12 @@ class Attribute(ChatbootModel):
         }
         return attribute_dict
 
+
 @receiver(post_save, sender=Attribute)
-def call_sku_save(sender, instance, *args, **kwargs):
+def call_sku_save_from_attribute_for_save(sender, instance, *args, **kwargs):
+    instance.sku.save()
+
+
+@receiver(post_delete, sender=Attribute)
+def call_sku_save_from_attribute_for_delete(sender, instance, *args, **kwargs):
     instance.sku.save()

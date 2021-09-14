@@ -38,12 +38,16 @@ class Store(ChatbootModel):
     )
 
     sync_status = models.BooleanField(_("Task begun Finish"), default=False)
+    updating_elements_status = models.BooleanField(_("Task updating store elements"), default=False)
+    creating_elements_status = models.BooleanField(_("Task creating store elments"), default=False)
 
     status = models.BooleanField(_("Valid connection"), default=False)
 
     store_type = models.CharField(_("Type of store"), max_length=500)
 
     last_page = models.BigIntegerField(_("Last page get of skus"), default=0, blank=True, null=True)
+
+    domain = models.CharField(_("Domain of store"), max_length=50, blank=True, null=True)
 
     disable_filters = models.BooleanField(_("Disable filters"), default=False)
     apply_filter_enable_products = models.BooleanField(_("Enable products"), default=True)
@@ -107,8 +111,8 @@ def execute_task(sender, instance, *args, **kwargs):
             every_1_30, _ = CrontabSchedule.objects.get_or_create(day_of_week='*', hour=1, minute=30)
             task_instance, _ = PeriodicTask.objects.get_or_create(name=f'{instance.name} create & new', task='principal_periodic_task', defaults=dict(crontab=every_1, kwargs='{"store": "%s"}' % (instance.name)))
             task_instance, _ = PeriodicTask.objects.get_or_create(name=f'{instance.name} update', task='update_periodic_task', defaults=dict(crontab=every_1_30, kwargs='{"store": "%s"}' % (instance.name)))
-        except:
-            pass
+        except Exception as message:
+            print(message)
 
     if instance.status is False or instance.sync_status is False:
         PeriodicTask.objects.filter(name=f'{instance.name} create & new', task='principal_periodic_task').delete()
