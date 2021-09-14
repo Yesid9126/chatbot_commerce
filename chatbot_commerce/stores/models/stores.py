@@ -23,7 +23,7 @@ class Store(ChatbootModel):
     name = models.CharField(
         max_length=255
     )
-    slug_name = models.SlugField(max_length=50, unique=True, null=True, blank=True)
+    slug_name = models.SlugField(max_length=50, null=True, blank=True)
 
     url_enviroment = models.CharField(
         max_length=500, blank=True, null=True
@@ -47,7 +47,7 @@ class Store(ChatbootModel):
 
     last_page = models.BigIntegerField(_("Last page get of skus"), default=0, blank=True, null=True)
 
-    domain = models.CharField(_("Domain of store"), max_length=50, blank=True, null=True)
+    domain = models.CharField(_("Domain of store"), max_length=500, blank=True, null=True)
 
     disable_filters = models.BooleanField(_("Disable filters"), default=False)
     apply_filter_enable_products = models.BooleanField(_("Enable products"), default=True)
@@ -123,3 +123,31 @@ def execute_task(sender, instance, *args, **kwargs):
 def delete_task(sender, instance, *args, **kwargs):
     PeriodicTask.objects.filter(name=f'{instance.name} create & new', task='principal_periodic_task').delete()
     PeriodicTask.objects.filter(name=f'{instance.name} update', task='update_periodic_task').delete()
+
+class SaleChannel(ChatbootModel):
+    """Trade policy model."""
+
+    # Info filter
+    name = models.CharField(_("Name of sale channel"), max_length=500)
+    slug_name = models.SlugField(max_length=50, null=True, blank=True)
+    external_id = models.BigIntegerField(_("Sale Channel or Trade policy id"))
+    is_active = models.BooleanField(_("Status"), default=False)
+
+    # Relation ship filter
+    store = models.ForeignKey("Store", verbose_name=_("Store"), on_delete=models.CASCADE)
+    skus = models.ManyToManyField("products.Skus", verbose_name=_("Skus"), related_name='trade_policys')
+
+    # Raw data
+    raw_json = models.JSONField(_("Raw data"))
+
+    def __str__(self):
+        """Return store name."""
+        return f'{self.store.name.capitalize()}: sale channel = {self.name}, ID = {self.external_id}'
+
+    def save(self, *args, **kwargs):
+        self.slug_name = slugify(self.name, separator="_")
+        return super().save(*args, **kwargs)
+
+    class Meta:
+        verbose_name = "Sale Channel"
+        verbose_name_plural = "Sales Channel"
