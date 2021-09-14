@@ -38,6 +38,8 @@ class Store(ChatbootModel):
     )
 
     sync_status = models.BooleanField(_("Task begun Finish"), default=False)
+    updating_elements_status = models.BooleanField(_("Task updating store elements"), default=False)
+    creating_elements_status = models.BooleanField(_("Task creating store elments"), default=False)
 
     status = models.BooleanField(_("Valid connection"), default=False)
 
@@ -45,7 +47,13 @@ class Store(ChatbootModel):
 
     last_page = models.BigIntegerField(_("Last page get of skus"), default=0, blank=True, null=True)
 
-    apply_filters = models.BooleanField(_("Apply filters"), default=True)
+    domain = models.CharField(_("Domain of store"), max_length=50, blank=True, null=True)
+
+    disable_filters = models.BooleanField(_("Disable filters"), default=False)
+    apply_filter_enable_products = models.BooleanField(_("Enable products"), default=True)
+    apply_filter_enable_skus = models.BooleanField(_("Enable skus"), default=True)
+    apply_filter_price = models.BooleanField(_("Valid price"), default=True)
+    apply_filter_image = models.BooleanField(_("Valid image"), default=True)
 
     def __str__(self):
         """Return store name."""
@@ -74,6 +82,11 @@ class Store(ChatbootModel):
         return urls
 
     def save(self, *args, **kwargs):
+        if self.disable_filters:
+            self.apply_filter_enable_products = False
+            self.apply_filter_enable_skus = False
+            self.apply_filter_image = False
+            self.apply_filter_price = False
         try:
             r = requests.get(url=self.urls["status_url"], headers=self.headers, timeout=1000)
             if r.status_code in [requests.codes.ok]:
@@ -93,10 +106,13 @@ def execute_task(sender, instance, *args, **kwargs):
         store_begining.s(store=instance.name).apply_async(countdown=5)
 
     if instance.sync_status is True:
-        every_1, _ = CrontabSchedule.objects.get_or_create(day_of_week='*', hour=1)
-        every_1_30, _ = CrontabSchedule.objects.get_or_create(day_of_week='*', hour=1, minute=30)
-        task_instance, _ = PeriodicTask.objects.get_or_create(name=f'{instance.name} create & new', task='principal_periodic_task', defaults=dict(crontab=every_1, kwargs='{"store": "%s"}' % (instance.name)))
-        task_instance, _ = PeriodicTask.objects.get_or_create(name=f'{instance.name} update', task='update_periodic_task', defaults=dict(crontab=every_1_30, kwargs='{"store": "%s"}' % (instance.name)))
+        try:
+            every_1, _ = CrontabSchedule.objects.get_or_create(day_of_week='*', hour=1)
+            every_1_30, _ = CrontabSchedule.objects.get_or_create(day_of_week='*', hour=1, minute=30)
+            task_instance, _ = PeriodicTask.objects.get_or_create(name=f'{instance.name} create & new', task='principal_periodic_task', defaults=dict(crontab=every_1, kwargs='{"store": "%s"}' % (instance.name)))
+            task_instance, _ = PeriodicTask.objects.get_or_create(name=f'{instance.name} update', task='update_periodic_task', defaults=dict(crontab=every_1_30, kwargs='{"store": "%s"}' % (instance.name)))
+        except Exception as message:
+            print(message)
 
     if instance.status is False or instance.sync_status is False:
         PeriodicTask.objects.filter(name=f'{instance.name} create & new', task='principal_periodic_task').delete()

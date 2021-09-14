@@ -1,137 +1,12 @@
 """Product serializers."""
 
 # Django rest framework
-from chatbot_commerce.products.models.skus import Attribute, AttributeType
-from chatbot_commerce.products.models import FixedPrice, Price, Skus, Image, DateRange, Brand
+from chatbot_commerce.products.models.skus import AttributeType
+from chatbot_commerce.products.models import Skus, Brand
 from rest_framework import serializers
 
 # Model
 from chatbot_commerce.products.models import Product
-
-# Serializer
-from chatbot_commerce.products.serializers.departments import (
-    CategoryModelSerializer,
-    SubcategoryModelSerializer,
-    DepartmentModelSerializer
-)
-
-
-class ImageSkuModelSerializer(serializers.ModelSerializer):
-    """Image model serializer"""
-
-    class Meta:
-        """Meta class"""
-
-        model = Image
-        fields = (
-            'image_url',
-        )
-
-
-class BrandModelSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Brand
-        fields = (
-            'name',
-            'slug_name',
-        )
-
-
-class DateRangeModelSerializer(serializers.ModelSerializer):
-    """Date range model serializer"""
-
-    class Meta:
-        """Meta class"""
-        model = DateRange
-        fields = (
-            'date_time_from', 'date_time_to'
-        )
-
-
-class FixedPriceModelSerializer(serializers.ModelSerializer):
-    """FixedPrice model serializer"""
-
-    date_ranges = DateRangeModelSerializer(many=True)
-
-    class Meta:
-        """Meta class"""
-        model = FixedPrice
-        fields = ['value', 'date_ranges']
-
-
-class PriceModelSerializer(serializers.ModelSerializer):
-    """Price model serializer"""
-
-    fixed_prices = FixedPriceModelSerializer(many=True)
-
-    class Meta:
-        """Meta class"""
-        model = Price
-        fields = ['base_price', 'fixed_prices']
-
-
-class AttributeModelSerializer(serializers.ModelSerializer):
-    """Attribute model serializer"""
-
-    attribute_name = serializers.CharField(source='attribute_type')
-
-    class Meta:
-        """Meta class"""
-        model = Attribute
-        fields = (
-            'attribute_name', 'value'
-        )
-
-
-class SkuModelSerializer(serializers.ModelSerializer):
-    """Sku model serializer"""
-
-    price = PriceModelSerializer(many=True)
-    sku_images = ImageSkuModelSerializer(many=True)
-    attributes = AttributeModelSerializer(many=True)
-
-    class Meta:
-        """Meta class"""
-        model = Skus
-        fields = (
-            'sku_id', 'sku_name', 'total_quantity', 'sku_images', 'price', 'attributes', 'is_active'
-        )
-
-
-class ProductModelSerializer(serializers.ModelSerializer):
-    """Product model serializer."""
-
-    skus = serializers.SerializerMethodField('get_skus')
-    brand = BrandModelSerializer(read_only=True)
-    tree_categories = serializers.SerializerMethodField('get_tree_categories')
-    product_id = serializers.CharField(source='pk')
-
-    class Meta:
-        """Meta class."""
-
-        model = Product
-        fields = [
-            'product_id',
-            'name',
-            'keywords',
-            'brand',
-            'tree_categories',
-            'skus',
-        ]
-
-    def __init__(self, instance=None, data=None, **kwargs):
-        self.skus = kwargs['context']
-        super().__init__(instance=instance, **kwargs)
-
-    def get_tree_categories(self, obj):
-        if obj.sub_category:
-            return SubcategoryModelSerializer(obj.sub_category).data
-        elif obj.category:
-            return CategoryModelSerializer(obj.category).data
-        return DepartmentModelSerializer(obj.department).data
-
-    def get_skus(self, obj):
-        return SkuModelSerializer(self.skus.filter(product=obj), many=True).data
 
 
 class BrandsModelSerializer(serializers.ModelSerializer):
@@ -147,6 +22,70 @@ class BrandsModelSerializer(serializers.ModelSerializer):
             'title',
             'description'
         ]
+        read_only_fields = fields
+
+
+class SkuModelSerializer(serializers.ModelSerializer):
+    """Sku model serializer"""
+
+    price = serializers.SerializerMethodField('get_prices')
+    images = serializers.SerializerMethodField('get_images')
+    attributes = serializers.SerializerMethodField('get_attributes')
+
+    class Meta:
+        """Meta class"""
+        model = Skus
+        fields = (
+            'sku_id', 'sku_name', 'total_quantity', 'images',
+            'price',
+            'attributes', 'is_active'
+        )
+        read_only_fields = fields
+
+    def get_images(self, obj):
+        return obj.get_images
+
+    def get_prices(self, obj):
+        return obj.get_prices
+
+    def get_attributes(self, obj):
+        return obj.get_attributes
+
+
+class ProductModelSerializer(serializers.ModelSerializer):
+    """Product model serializer."""
+
+    skus = serializers.SerializerMethodField('get_skus')
+    brand = serializers.SerializerMethodField('get_brand')
+    tree_categories = serializers.SerializerMethodField('get_tree_categories')
+    product_id = serializers.CharField(source='pk')
+
+    class Meta:
+        """Meta class."""
+
+        model = Product
+        fields = [
+            'product_id',
+            'name',
+            'keywords',
+            'brand',
+            'tree_categories',
+            'skus',
+        ]
+        read_only_fields = fields
+
+    def __init__(self, instance=None, data=None, **kwargs):
+        self.skus = kwargs['context']
+        super().__init__(instance=instance, **kwargs)
+
+    def get_tree_categories(self, obj):
+        return obj.category_tree
+
+    def get_brand(self, obj):
+        return obj.get_brand
+
+    def get_skus(self, obj):
+        return self.skus.filter(product__pk=obj.pk).values_list('serializer_data', flat=True)
 
 
 class AttributeTypeModelSerializer(serializers.ModelSerializer):
@@ -161,6 +100,7 @@ class AttributeTypeModelSerializer(serializers.ModelSerializer):
         fields = [
             'attributes'
         ]
+        read_only_fields = fields
 
     def __init__(self, instance=None, data=None, **kwargs):
         self.attributes = kwargs['context']

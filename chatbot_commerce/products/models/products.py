@@ -103,3 +103,38 @@ class Product(AbstractCategory):
     class Meta:
         verbose_name = "Product"
         verbose_name_plural = "Product"
+
+    @property
+    def get_brand(self):
+        brand_dict = {
+            'name': self.brand.name,
+            'slug_name': self.brand.slug_name
+        }
+        return brand_dict
+
+    @property
+    def category_tree(self):
+        if self.sub_category:
+            category_tree_dict = {
+                'name': self.sub_category.name,
+                'category': {
+                    'name': self.category.name,
+                    'department': {
+                        'name': self.department.name
+                    }
+                }
+            }
+        elif self.category:
+            category_tree_dict = {
+                'name': self.category.name,
+                'department': {
+                    'name': self.department.name
+                }
+            }
+        elif self.department:
+            category_tree_dict = {
+                'name': self.department.name
+            }
+        else:
+            category_tree_dict = {}
+        return category_tree_dict

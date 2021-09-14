@@ -4,6 +4,7 @@ ENV PYTHONUNBUFFERED 1
 ENV PYTHONDONTWRITEBYTECODE 1
 
 RUN apt-get update \
+    && pip install --upgrade pip \
     # dependencies for building Python packages
     && apt-get install -y build-essential \
     # psycopg2 dependencies

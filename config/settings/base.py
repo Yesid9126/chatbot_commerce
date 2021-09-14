@@ -68,6 +68,8 @@ THIRD_PARTY_APPS = [
     "rest_framework.authtoken",
     "corsheaders",
     'django_filters',
+    'coreapi',
+    'cython',
     'drf_yasg',
     "rest_framework_api_key",
 ]
@@ -282,6 +284,7 @@ CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 # -------------------------------------------------------------------------------
 # django-rest-framework - https://www.django-rest-framework.org/api-guide/settings/
 REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
     ),
@@ -309,3 +312,5 @@ SWAGGER_SETTINGS = {
     'LOGOUT_URL': reverse_lazy('admin:logout'),
     'LOGIN_URL': reverse_lazy('admin:login'),
 }
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

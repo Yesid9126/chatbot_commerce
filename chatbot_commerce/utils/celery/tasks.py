@@ -1,5 +1,5 @@
 # Celery
-from celery.task import task
+from celery import Celery
 
 # Models
 from chatbot_commerce.products.models import (
@@ -12,8 +12,10 @@ from chatbot_commerce.stores.models import Store
 # Utils
 from chatbot_commerce.utils.apis.vtex import VtexPriceSku, VtexStores
 
+app = Celery()
 
-@task(name='create_price')
+
+@app.task(name='create_price')
 def create_price(store, skus=None):
     store = Store.objects.filter(name=store).first()
     vtexprice = VtexPriceSku(store=store)
@@ -68,7 +70,7 @@ def create_price(store, skus=None):
     return True
 
 
-@task(name='create_images')
+@app.task(name='create_images')
 def create_images(store, skus=None):
     store = Store.objects.filter(name=store).first()
     vtex = VtexStores(store=store)
@@ -103,7 +105,7 @@ def create_images(store, skus=None):
     return True
 
 
-@task(name='create_attributes')
+@app.task(name='create_attributes')
 def create_attributes(store, skus=None):
     store = Store.objects.filter(name=store).first()
     vtex = VtexStores(store=store)

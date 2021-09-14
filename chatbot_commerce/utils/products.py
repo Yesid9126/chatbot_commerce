@@ -130,7 +130,5 @@ def get_products_vtex_store(store, limit=None, products_skus=[]):
                         'sku_id': skus.get('Id'),
                     }
                     print(error)
-    store.sync_status = True
-    store.save()
     Skus.objects.filter(product=None).delete()
     return skus_created
