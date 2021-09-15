@@ -85,7 +85,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
 
     def retrieve(self, request, *args, **kwargs):
         """
-        Return a single department with tree category.
+        Return a single product with his skus.
 
         Parameters.
         """
@@ -132,12 +132,10 @@ class DepartmentsViewset(mixins.RetrieveModelMixin,
         return Response(self.serializer_class(obj).data)
 
 
-class BrandsViewset(mixins.RetrieveModelMixin,
-                    mixins.ListModelMixin,
+class BrandsViewset(mixins.ListModelMixin,
                     viewsets.GenericViewSet):
 
     serializer_class = BrandsModelSerializer
-    lookup_field = 'name'
     permission_classes = [HasAPIKey | IsAdminUser]
     filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
     search_fields = ('name', 'title')
@@ -168,15 +166,6 @@ class BrandsViewset(mixins.RetrieveModelMixin,
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
-
-    def retrieve(self, request, *args, **kwargs):
-        """
-        Return a single brand with tree category.
-
-        Parameters.
-        """
-        obj = Brand.objects.filter(store=self.store, name=kwargs['name']).first()
-        return Response(self.serializer_class(obj).data)
 
 
 class AttributesViewset(mixins.ListModelMixin,

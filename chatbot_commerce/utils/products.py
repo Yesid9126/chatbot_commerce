@@ -6,6 +6,7 @@ from chatbot_commerce.products.models import (
     Brand, Category, Department,
     Subcategory
 )
+from chatbot_commerce.stores.models import SaleChannel
 
 # Apis
 from chatbot_commerce.utils.apis.vtex import VtexStores
@@ -20,7 +21,7 @@ def get_products_vtex_store(store, limit=None, products_skus=[]):
     if not products_skus:
         skus = []
         page = 1
-        while True:
+        while 1:
             skus_ids = vtex.total_skus(page=page)
             if skus_ids == [] or page in [limit]:
                 if limit is None:
@@ -29,7 +30,7 @@ def get_products_vtex_store(store, limit=None, products_skus=[]):
                 break
             skus += skus_ids
             page += 1
-        db_sku_ids = Skus.objects.filter(product__in=Product.objects.filter(store=store)).values_list('sku_id', flat=True).distinct()
+        db_sku_ids = Skus.objects.filter(product__store__pk=store.pk).values_list('sku_id', flat=True).distinct('sku_id')
         db_sku_ids = [int(sku_id) for sku_id in db_sku_ids if sku_id.isnumeric()]
         skus = [sku_id for sku_id in skus if sku_id not in db_sku_ids]
         if skus:
@@ -42,6 +43,7 @@ def get_products_vtex_store(store, limit=None, products_skus=[]):
                     products_skus.append(product_id)
                 if len(products_skus) == limit:
                     break
+
     if products_skus:
         for product in products_skus:
             print(f'product_id: {product}')
@@ -84,22 +86,24 @@ def get_products_vtex_store(store, limit=None, products_skus=[]):
                     'product_id': product.get('Id'),
                 }
                 print(error)
+
         # Create skus for product
-        for product_key in products_skus:
-            product = Product.objects.filter(external_id=product_key, store=store).first()
+        products_skus = Product.objects.filter(store__pk=store.pk, external_id__in=products_skus).order_by()
+        for product in products_skus:
+            product_id = product.external_id
             print(f'product object: {product}')
-            skus_product = vtex.product_skus(product_id=product_key)
+            skus_product = vtex.product_skus(product_id=product_id)
             for skus in skus_product:
                 total_quantity = 0
-                try:
-                    skus_inventory = vtex.skus_inventory(sku_id=skus.get('Id'))
-                    sku_inventory = skus_inventory['balance']
+                sku_id = skus.get('Id')
+                if sku_id:
+                    skus_inventory = vtex.skus_inventory(sku_id=sku_id)
+                    sku_inventory = skus_inventory.get('balance')
                     for quantity in sku_inventory:
                         quantity_sku = quantity.get('totalQuantity')
                         total_quantity += quantity_sku
-                except Exception as e:
-                    error = e
-                    print(error)
+                else:
+                    print(f'error in sku: {skus} 98 utils/products.py')
                 try:
                     sku_instance, _ = Skus.objects.update_or_create(
                         sku_id=skus.get('Id'),
@@ -126,9 +130,33 @@ def get_products_vtex_store(store, limit=None, products_skus=[]):
                 except Exception as e:
                     error = {
                         'message': e,
-                        'product_id': product_key,
+                        'product_id': product_id,
                         'sku_id': skus.get('Id'),
                     }
                     print(error)
     Skus.objects.filter(product=None).delete()
+
+    sales_channel = vtex.get_sales_channel()
+    for channel in sales_channel:
+        channel_id = channel.get('Id')
+        if channel_id:
+            list_skus_ids = vtex.get_list_skus_by_storeid(store_id=channel_id)
+            print(f'store_id: {channel_id}')
+            if type(list_skus_ids) is list:
+                objs = Skus.objects.filter(product__store__pk=store.pk, sku_id__in=list_skus_ids).order_by()
+            else:
+                print(f'array {list_skus_ids} vacio for channel {channel_id}')
+                objs = []
+            instance_sale_channel, _ = SaleChannel.objects.update_or_create(
+                store=store, external_id=channel_id,
+                defaults={
+                    'name': channel.get('Name'),
+                    'is_active': channel.get('IsActive'),
+                    'raw_json': channel | {'endpoint_sku_ids': list_skus_ids}
+                }
+            )
+            instance_sale_channel.skus.add(*objs)
+        else:
+            print(f'channel: {channel}, sales_channel: {sales_channel}')
+
     return skus_created

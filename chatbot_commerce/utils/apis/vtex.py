@@ -65,7 +65,7 @@ class VtexStores:
         )
 
     def product_unit(self, product_id):
-        uri = f'catalog/pvt/product/{product_id}'
+        uri = f'catalog_system/pvt/products/productget/{product_id}'
         method = 'get'
         return self._get_json_resource(
             uri,
@@ -122,6 +122,22 @@ class VtexStores:
 
     def get_specifications_field(self, field_id):
         uri = f'catalog_system/pub/specification/fieldGet/{field_id}'
+        method = 'get'
+        return self._get_json_resource(
+            uri,
+            method=method
+        )
+
+    def get_sales_channel(self):
+        uri = 'catalog_system/pvt/saleschannel/list'
+        method = 'get'
+        return self._get_json_resource(
+            uri,
+            method=method
+        )
+
+    def get_list_skus_by_storeid(self, store_id):
+        uri = f'catalog_system/pvt/sku/stockkeepingunitidsbysaleschannel?sc={store_id}&page=1&pageSize=1999999999'
         method = 'get'
         return self._get_json_resource(
             uri,
