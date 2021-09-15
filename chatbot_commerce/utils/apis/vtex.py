@@ -151,7 +151,7 @@ class VtexStores:
             uri,
             method=method
         )
-        uri = f'catalog_system/pvt/seller/list?sc=1&sellerType=1&isBetterScope=true'
+        uri = f'catalog_system/pvt/seller/list?sc={sc_id}&sellerType=1&isBetterScope=true'
         r2 = self._get_json_resource(
             uri,
             method=method
