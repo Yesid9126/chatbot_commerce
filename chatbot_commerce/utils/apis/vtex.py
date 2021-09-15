@@ -129,7 +129,7 @@ class VtexStores:
         )
 
     def get_sales_channel(self):
-        uri = f'catalog_system/pvt/saleschannel/list'
+        uri = 'catalog_system/pvt/saleschannel/list'
         method = 'get'
         return self._get_json_resource(
             uri,
