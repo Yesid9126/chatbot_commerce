@@ -6,7 +6,7 @@ from chatbot_commerce.products.models import (
     Brand, Category, Department,
     Subcategory
 )
-from chatbot_commerce.stores.models import SaleChannel
+from chatbot_commerce.stores.models import SaleChannel, Seller
 
 # Apis
 from chatbot_commerce.utils.apis.vtex import VtexStores
@@ -140,12 +140,26 @@ def get_products_vtex_store(store, limit=None, products_skus=[]):
     for channel in sales_channel:
         channel_id = channel.get('Id')
         if channel_id:
-            list_skus_ids = vtex.get_list_skus_by_storeid(store_id=channel_id)
             print(f'store_id: {channel_id}')
-            if type(list_skus_ids) is list:
+            list_sellers = vtex.get_list_sellers_by_sc(sc_id=channel_id)
+            sellers = []
+            if type(list_sellers) == list:
+                for seller in list_sellers:
+                    instance, _ = Seller.objects.update_or_create(
+                        store=store, name=seller.get('Name'), seller_id=seller.get('SellerId'),
+                        defaults={
+                            'hibrit_payment_options': seller.get('UseHybridPaymentOptions'),
+                            'is_active': seller.get('IsActive'),
+                            'description': seller.get('Description'),
+                            'raw_json_response': seller
+                        }
+                    )
+                    sellers.append(instance)
+            list_skus_ids = vtex.get_list_skus_by_storeid(store_id=channel_id)
+            if type(list_skus_ids) == list:
                 objs = Skus.objects.filter(product__store__pk=store.pk, sku_id__in=list_skus_ids).order_by()
             else:
-                print(f'array {list_skus_ids} vacio for channel {channel_id}')
+                print(f'error: skus {list_skus_ids}, sellers {list_sellers}, badrequest for channel {channel_id}')
                 objs = []
             instance_sale_channel, _ = SaleChannel.objects.update_or_create(
                 store=store, external_id=channel_id,
@@ -156,6 +170,7 @@ def get_products_vtex_store(store, limit=None, products_skus=[]):
                 }
             )
             instance_sale_channel.skus.add(*objs)
+            instance_sale_channel.sellers.add(*sellers)
         else:
             print(f'channel: {channel}, sales_channel: {sales_channel}')
 

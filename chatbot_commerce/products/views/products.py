@@ -25,6 +25,7 @@ from chatbot_commerce.products.filters import products_skus
 # Models
 from chatbot_commerce.products.models import Product, Department
 from chatbot_commerce.stores.models import Store
+# from django.db.models import Prefetch
 
 
 class ProductViewset(mixins.RetrieveModelMixin,

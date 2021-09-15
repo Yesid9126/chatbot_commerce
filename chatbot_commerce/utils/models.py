@@ -37,10 +37,13 @@ class ChatbootModel(models.Model):
 
 class AbstractCategory(ChatbootModel):
 
+    # Filter data
     name = models.CharField(max_length=255)
     slug_name = models.SlugField(max_length=255, null=True, blank=True)
     external_id = models.IntegerField()
     title = models.TextField(null=True, blank=True)
+
+    # Extra data
     description = models.TextField(null=True, blank=True)
     raw_json = models.JSONField(null=True, blank=True)
 

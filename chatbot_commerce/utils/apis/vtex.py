@@ -144,6 +144,27 @@ class VtexStores:
             method=method
         )
 
+    def get_list_sellers_by_sc(self, sc_id):
+        uri = f'catalog_system/pvt/seller/list?sc={sc_id}&sellerType=1&isBetterScope=false'
+        method = 'get'
+        r1 = self._get_json_resource(
+            uri,
+            method=method
+        )
+        uri = f'catalog_system/pvt/seller/list?sc=1&sellerType=1&isBetterScope=true'
+        r2 = self._get_json_resource(
+            uri,
+            method=method
+        )
+        if type(r2) == type(r1) == list:
+            return r2 + r1
+        elif type(r2) == list:
+            return r2
+        elif type(r1) == list:
+            return r1
+        else:
+            return [r1, r2]
+
 
 class VtexPriceSku:
 

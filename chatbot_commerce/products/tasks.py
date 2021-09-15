@@ -24,7 +24,10 @@ def principal_periodic_task(*args, **kwargs):
     """Starting Products, Skus, Categories and Brands."""
 
     # Validations
-    store = Store.objects.filter(name=kwargs['store']).first()
+    try:
+        store = Store.objects.get(pk=kwargs['store'])
+    except Exception as message:
+        return f'error: store no match, message_error: {message}'
     if store.creating_elements_status:
         if not store.sync_status:
             return 'sync_status: False'
@@ -64,7 +67,10 @@ def store_begining(store, *args, **kwargs):
     """Create Products, Skus, Categories and Brands."""
 
     # Validations
-    store = Store.objects.filter(name=store).first()
+    try:
+        store = Store.objects.get(pk=store)
+    except Exception as message:
+        return f'error: store no match, message_error: {message}'
     if store.sync_status:
         return 'sync_status already runed'
     store_pk = store.pk
@@ -96,7 +102,10 @@ def update_periodic_task(*args, **kwargs):
     """Update Products, Skus, Categories and Brands."""
 
     # Validations
-    store = Store.objects.filter(name=kwargs['store']).first()
+    try:
+        store = Store.objects.get(pk=kwargs['store'])
+    except Exception as message:
+        return f'error: store no match, message_error: {message}'
     if store.updating_elements_status:
         if not store.sync_status:
             return 'sync_status: False'
