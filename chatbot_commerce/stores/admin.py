@@ -6,6 +6,11 @@ from django.contrib import admin
 from chatbot_commerce.stores.models import Store, SaleChannel
 
 
+class InlineSkuAdmin(admin.TabularInline):
+    extra = 0
+    model = SaleChannel.skus.through
+
+
 @admin.register(Store)
 class StoresAdmin(admin.ModelAdmin):
     """Product model admin."""
@@ -18,7 +23,7 @@ class StoresAdmin(admin.ModelAdmin):
 class SaleChannelAdmin(admin.ModelAdmin):
     """Sale channel model admin."""
     list_display = ['name', 'slug_name', 'is_active']
-    exclude = ['slug_name']
+    exclude = ['slug_name', 'skus']
     search_fields = ['name']
-    filter_vertical = ['skus']
     list_filter = ['is_active']
+    inlines = [InlineSkuAdmin]

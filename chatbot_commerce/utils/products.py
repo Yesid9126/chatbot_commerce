@@ -30,7 +30,7 @@ def get_products_vtex_store(store, limit=None, products_skus=[]):
                 break
             skus += skus_ids
             page += 1
-        db_sku_ids = Skus.objects.filter(product__in=Product.objects.filter(store=store)).values_list('sku_id', flat=True).distinct()
+        db_sku_ids = Skus.objects.filter(product__store__pk=store.pk).values_list('sku_id', flat=True).distinct('sku_id')
         db_sku_ids = [int(sku_id) for sku_id in db_sku_ids if sku_id.isnumeric()]
         skus = [sku_id for sku_id in skus if sku_id not in db_sku_ids]
         if skus:
@@ -86,22 +86,24 @@ def get_products_vtex_store(store, limit=None, products_skus=[]):
                     'product_id': product.get('Id'),
                 }
                 print(error)
+
         # Create skus for product
-        for product_key in products_skus:
-            product = Product.objects.filter(external_id=product_key, store=store).first()
+        products_skus = Product.objects.filter(store__pk=store.pk, external_id__in=products_skus).order_by()
+        for product in products_skus:
+            product_id = product.external_id
             print(f'product object: {product}')
-            skus_product = vtex.product_skus(product_id=product_key)
+            skus_product = vtex.product_skus(product_id=product_id)
             for skus in skus_product:
                 total_quantity = 0
-                try:
-                    skus_inventory = vtex.skus_inventory(sku_id=skus.get('Id'))
-                    sku_inventory = skus_inventory['balance']
+                sku_id = skus.get('Id')
+                if sku_id:
+                    skus_inventory = vtex.skus_inventory(sku_id=sku_id)
+                    sku_inventory = skus_inventory.get('balance')
                     for quantity in sku_inventory:
                         quantity_sku = quantity.get('totalQuantity')
                         total_quantity += quantity_sku
-                except Exception as e:
-                    error = e
-                    print(error)
+                else:
+                    print(f'error in sku: {skus} 98 utils/products.py')
                 try:
                     sku_instance, _ = Skus.objects.update_or_create(
                         sku_id=skus.get('Id'),
@@ -128,7 +130,7 @@ def get_products_vtex_store(store, limit=None, products_skus=[]):
                 except Exception as e:
                     error = {
                         'message': e,
-                        'product_id': product_key,
+                        'product_id': product_id,
                         'sku_id': skus.get('Id'),
                     }
                     print(error)
