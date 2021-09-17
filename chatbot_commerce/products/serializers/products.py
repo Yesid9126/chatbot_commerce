@@ -74,18 +74,40 @@ class ProductModelSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = fields
 
-    def __init__(self, instance=None, data=None, **kwargs):
-        self.skus = kwargs['context']
-        super().__init__(instance=instance, **kwargs)
-
     def get_tree_categories(self, obj):
-        return obj.category_tree
+        if obj.sub_category:
+            category_tree = {
+                'name': obj.sub_category.name,
+                'category': {
+                    'name': obj.category.name,
+                    'department': {
+                        'name': obj.department.name
+                    }
+                }
+            }
+        elif obj.category:
+            category_tree = {
+                'name': obj.category.name,
+                'department': {
+                    'name': obj.department.name
+                }
+            }
+        else:
+            category_tree = {
+                'name': obj.department.name
+            }
+        return category_tree
 
     def get_brand(self, obj):
-        return obj.get_brand
+        if obj.brand:
+            brand = {
+                'name': obj.brand.name,
+                'slug_name': obj.brand.slug_name
+            }
+        return brand
 
     def get_skus(self, obj):
-        return self.skus.filter(product__pk=obj.pk).values_list('serializer_data', flat=True)
+        return obj.skus.values_list('serializer_data', flat=True)
 
 
 class AttributeTypeModelSerializer(serializers.ModelSerializer):

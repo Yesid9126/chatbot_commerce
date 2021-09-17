@@ -109,13 +109,14 @@ def create_attributes(store_pk, skus=None):
     store = Store.objects.get(pk=store_pk)
     vtex = VtexStores(store=store)
     if skus is None:
-        all_skus = Skus.objects.filter(product__store__pk=store.pk).order_by()
+        all_skus = Skus.objects.filter(product__store__pk=store.pk).order_by('pk')
     else:
-        all_skus = Skus.objects.filter(product__store__pk=store.pk, sku_id__in=skus).order_by()
+        all_skus = Skus.objects.filter(product__store__pk=store.pk, sku_id__in=skus).order_by('pk')
 
     attributes_type_created = []
     attributes_created = []
     for sku in all_skus:
+        print(f'Hola jeje {sku}')
         sku_id = int(sku.sku_id)
         sku_specifications_array = vtex.get_sku_specifications(sku_id=sku_id)
         if 'status_code' and 'message' not in sku_specifications_array:

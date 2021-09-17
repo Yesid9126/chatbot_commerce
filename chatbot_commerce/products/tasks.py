@@ -46,13 +46,6 @@ def principal_periodic_task(*args, **kwargs):
         create_price.s(store_pk=store_pk, skus=skus).apply_async()
         create_images.s(store_pk=store_pk, skus=skus).apply_async()
         create_attributes(store_pk=store_pk, skus=skus)
-        # size = len(skus)
-        # num_max_task = 4
-        # num_of_elems = round(size/num_max_task) + 1
-        # splited_skus = [skus[i:i+num_of_elems]for i in range(0, size, num_of_elems)]
-
-        # [create_attributes.s(store_pk=store_pk, skus=skus).apply_async() for skus in splited_skus if skus != splited_skus[0]]
-        # create_attributes(store_pk=store_pk, skus=splited_skus[0])
     except Exception as message:
         print(f'error: {message}')
 
@@ -84,13 +77,6 @@ def store_begining(store, *args, **kwargs):
     create_price.s(store_pk=store_pk, skus=skus).apply_async()
     create_images.s(store_pk=store_pk, skus=skus).apply_async()
     create_attributes(store_pk=store_pk, skus=skus)
-    # size = len(skus)
-    # num_max_task = 4
-    # num_of_elems = round(size/num_max_task) + 1
-    # splited_skus = [skus[i:i+num_of_elems]for i in range(0, size, num_of_elems)]
-
-    # [create_attributes.s(store_pk=store_pk, skus=skus).apply_async() for skus in splited_skus if skus != splited_skus[0]]
-    # create_attributes(store_pk=store_pk, skus=splited_skus[0])
 
     store.sync_status = True
     store.save()
@@ -121,23 +107,10 @@ def update_periodic_task(*args, **kwargs):
         products_skus = Product.objects.filter(store__pk=store.pk).order_by().values_list('external_id', flat=True).distinct('external_id')
         get_products_vtex_store(store=store, products_skus=products_skus)
 
-        # skus
-        # skus = Skus.objects.filter(
-        #         product__store__pk=store.pk
-        #     ).order_by().values_list('sku_id', flat=True)
-
         # skus extra components
         create_price.s(store_pk=store_pk).apply_async()
         create_images.s(store_pk=store_pk).apply_async()
         create_attributes(store_pk=store_pk)
-        # size = len(skus)
-        # num_max_task = 4
-        # num_of_elems = round(size/num_max_task) + 1
-        # splited_skus = [skus[i:i+num_of_elems]for i in range(0, size, num_of_elems)]
-
-        # tasks = group([create_attributes.s(store_pk=store_pk, skus=skus) for skus in splited_skus if skus != splited_skus[0]])
-        # group_task = tasks.apply_async()
-        # create_attributes(store_pk=store_pk, skus=splited_skus[0])
     except Exception as message:
         print(f'error: {message}')
 
