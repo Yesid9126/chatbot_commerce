@@ -76,10 +76,10 @@ def update_or_create_sku(product_instance, product_id, sku, sku_id, vtex, store)
     try:
         # Get instance
         sku_instance, _ = Skus.objects.update_or_create(
-            sku_id=sku_id,
+            external_id=sku_id,
             product=product_instance,
             defaults={
-                'sku_name': sku.get('NameComplete'),
+                'name': sku.get('NameComplete'),
                 'is_active': sku.get('IsActive'),
                 'ref_id': sku.get('RefId'),
                 'packaged_height': sku.get('Height'),
@@ -160,7 +160,7 @@ def create_products_vtex_store(store, limit=None):
             print(add)
             skus += add
             page += 1
-    db_sku_ids = Skus.objects.filter(product__store=store).values_list('sku_id', flat=True).distinct('sku_id')
+    db_sku_ids = Skus.objects.filter(product__store=store).values_list('external_id', flat=True).distinct('external_id')
     db_sku_ids = [int(sku_id) for sku_id in db_sku_ids if sku_id.isnumeric()]
     skus = set(skus) - set(db_sku_ids)
 
@@ -236,7 +236,7 @@ def update_products_vtex_store(store):
     """Creation of product available in the store."""
 
     # Get list of skus in db
-    skus = Skus.objects.values_list('sku_id', flat=True)
+    skus = Skus.objects.filter(product__store=store).values_list('external_id', flat=True)
 
     # Products that were successfuly updated
     products_updated = []

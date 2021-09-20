@@ -21,7 +21,7 @@ class CreateOrderSerializer(serializers.Serializer):
         order = Order.objects.create(customer=customer, hook_data=data)
         for item in sku_ids:
             sku_id = item.get('sku_id')
-            sku = Skus.objects.filter(sku_id=sku_id).get()
+            sku = Skus.objects.filter(external_id=sku_id).get()
             price = sku.price.get()
             price = price.base_price
             quantity = item.get('quantity')

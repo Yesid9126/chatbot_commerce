@@ -25,33 +25,6 @@ class BrandsModelSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
-class SkuModelSerializer(serializers.ModelSerializer):
-    """Sku model serializer"""
-
-    price = serializers.SerializerMethodField('get_prices')
-    images = serializers.SerializerMethodField('get_images')
-    attributes = serializers.SerializerMethodField('get_attributes')
-
-    class Meta:
-        """Meta class"""
-        model = Skus
-        fields = (
-            'sku_id', 'sku_name', 'total_quantity', 'images',
-            'price',
-            'attributes', 'is_active'
-        )
-        read_only_fields = fields
-
-    def get_images(self, obj):
-        return obj.get_images
-
-    def get_prices(self, obj):
-        return obj.get_prices
-
-    def get_attributes(self, obj):
-        return obj.get_attributes
-
-
 class ProductModelSerializer(serializers.ModelSerializer):
     """Product model serializer."""
 

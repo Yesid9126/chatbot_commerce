@@ -3,6 +3,7 @@
 from slugify import slugify
 # Django
 from django.db import models
+from django.utils.translation import gettext as _
 
 
 class ChatbootModel(models.Model):
@@ -34,18 +35,36 @@ class ChatbootModel(models.Model):
         get_latest_by = 'created'
         ordering = ['-created', '-modified']
 
+class BaseRawAbstract(ChatbootModel):
 
-class AbstractCategory(ChatbootModel):
+    # Raw_data
+    raw_json = models.JSONField(null=True, blank=True)
+
+    # Hack to db queries
+    serializer_data = models.JSONField(null=True, blank=True)
+
+    class Meta:
+        """Meta option."""
+        abstract = True
+
+class BaseAbstract(BaseRawAbstract):
 
     # Filter data
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=500, null=True, blank=True)
+    external_id = models.BigIntegerField(_("External ID"))
+    
+    class Meta:
+        """Meta option."""
+        abstract = True
+
+class AbstractCategory(BaseAbstract):
+
+    # Filter data
     slug_name = models.SlugField(max_length=255, null=True, blank=True)
-    external_id = models.IntegerField()
     title = models.TextField(null=True, blank=True)
 
     # Extra data
     description = models.TextField(null=True, blank=True)
-    raw_json = models.JSONField(null=True, blank=True)
 
     def __str__(self):
         return self.name

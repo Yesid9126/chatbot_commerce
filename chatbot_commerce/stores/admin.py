@@ -3,7 +3,7 @@
 # Django
 from django.contrib import admin
 # Models
-from chatbot_commerce.stores.models import Store, SaleChannel, Seller
+from chatbot_commerce.stores.models import Store, SaleChannel, Seller, SkuSeller
 
 
 class InlineSkuAdmin(admin.TabularInline):
@@ -31,6 +31,11 @@ class SellerAdmin(admin.ModelAdmin):
     inlines = [InlineSellers]
     search_fields = list_display
 
+@admin.register(SkuSeller)
+class SkuSellerAdmin(admin.ModelAdmin):
+    """Seller model admin."""
+    list_display = ['seller', 'sku', 'is_active']
+    list_filter = ['is_active']
 
 @admin.register(SaleChannel)
 class SaleChannelAdmin(admin.ModelAdmin):

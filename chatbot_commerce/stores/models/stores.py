@@ -10,7 +10,7 @@ from django.db import models
 from django_celery_beat.models import PeriodicTask, CrontabSchedule
 
 # utilities
-from chatbot_commerce.utils.models import ChatbootModel
+from chatbot_commerce.utils.models import ChatbootModel, BaseAbstract
 from django.utils.translation import gettext as _
 from django.dispatch import receiver
 from django.db.models.signals import post_save, post_delete
@@ -115,24 +115,16 @@ def delete_task(sender, instance, *args, **kwargs):
     PeriodicTask.objects.filter(name=f'{instance.name} update', task='update_periodic_task').delete()
 
 
-class SaleChannel(ChatbootModel):
+class SaleChannel(BaseAbstract):
     """Trade policy model."""
 
     # Filter data
-    name = models.CharField(_("Name of sale channel"), max_length=500)
     slug_name = models.SlugField(max_length=50, null=True, blank=True)
-    external_id = models.BigIntegerField(_("Sale Channel or Trade policy id"))
     is_active = models.BooleanField(_("Status"), default=False)
 
     # Relationship filter
     store = models.ForeignKey("Store", verbose_name=_("Store"), on_delete=models.CASCADE)
     sellers = models.ManyToManyField("Seller", verbose_name=_("Sellers"))
-
-    # Raw data
-    raw_json = models.JSONField(_("Raw data"))
-
-    # Hack to db queries
-    serializer_data = models.JSONField(null=True, blank=True)
 
     def __str__(self):
         """Return store name."""
@@ -175,7 +167,7 @@ class Seller(ChatbootModel):
 
     # Filter data
     seller_id = models.CharField(_("Id of seller"), help_text=_("coud be a text instade a number"), max_length=500)
-    name = models.CharField(_("Name of seller"), max_length=500)
+    name = models.CharField(_("Name of seller"), max_length=500, null=True, blank=True)
     slug_name = models.SlugField(max_length=50, null=True, blank=True)
     hibrit_payment_options = models.BooleanField(_("Various forms of payment"), default=False, null=True)
     is_active = models.BooleanField(_("Status"), default=False)
@@ -249,9 +241,7 @@ class SkuSeller(ChatbootModel):
     @property
     def get_sku_seller(self):
         sku_seller_dict = {
-            'sc': list(self.seller.sales_channel.values_list('external_id', flat=True)),
             'seller_id': self.seller.seller_id,
-            'sku_id': self.sku.sku_id,
             'is_active': self.is_active
         }
         return sku_seller_dict

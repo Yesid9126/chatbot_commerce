@@ -49,7 +49,7 @@ class BrandAdmin(admin.ModelAdmin):
 class InlineSkus(admin.TabularInline):
     model = Skus
     extra = 0
-    fields = ['sku_id', 'sku_name', 'total_quantity']
+    fields = ['external_id', 'name', 'total_quantity']
 
 
 @admin.register(Product)
@@ -85,8 +85,8 @@ class InlinePriceAdmin(admin.TabularInline):
 class SkusAdmin(admin.ModelAdmin):
     """Sku's model admin."""
 
-    list_display = ['sku_id', 'sku_name', 'total_quantity']
-    search_fields = ['sku_id', 'sku_name']
+    list_display = ['external_id', 'name', 'total_quantity']
+    search_fields = ['external_id', 'name']
     list_filter = ['is_active', 'is_inventoried', 'reference_stock_id']
     readonly_fields = ['raw_json', 'serializer_data']
 
@@ -130,7 +130,7 @@ class PriceAdmin(admin.ModelAdmin):
 
     def sku_id(self, obj):
         """Sku id."""
-        return obj.sku.sku_id
+        return obj.sku.external_id
 
 
 @admin.register(Attribute)
@@ -143,7 +143,7 @@ class AttributeAdmin(admin.ModelAdmin):
 
     def sku_id(self, obj):
         """Sku id."""
-        return obj.sku.sku_id
+        return obj.sku.external_id
 
 
 # admin.site.register(Attribute)

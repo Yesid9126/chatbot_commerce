@@ -20,7 +20,7 @@ class ProductFilterSet(FilterSet):
         label='Value of attribute',
     )
     sku_name = filters.CharFilter(
-        field_name='skus__sku_name',
+        field_name='skus__name',
         lookup_expr='icontains',
         label='Sku name',
     )

@@ -24,12 +24,6 @@ class Product(AbstractCategory):
     """Main product model."""
 
     # Filter data
-    title = models.CharField(
-        _('Title'),
-        max_length=500,
-        null=True,
-        blank=True
-    )
     is_visible = models.BooleanField(
         default=False,
     )
@@ -90,9 +84,6 @@ class Product(AbstractCategory):
     )
     description_short = models.TextField(_("Short description"), null=True, blank=True)
     meta_tag_description = models.TextField(_("Tag description"), null=True, blank=True)
-
-    # Hack to db queries
-    serializer_data = models.JSONField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
         self.serializer_data = self.get_product

@@ -20,9 +20,9 @@ def create_price(store_pk, skus=None):
     store = Store.objects.get(pk=store_pk)
     vtexprice = VtexPriceSku(store=store)
     if skus is None:
-        all_skus = Skus.objects.filter(product__store__pk=store.pk)
+        all_skus = Skus.objects.filter(product__store=store)
     else:
-        all_skus = Skus.objects.filter(product__store__pk=store.pk, sku_id__in=skus)
+        all_skus = Skus.objects.filter(product__store=store, external_id__in=skus)
     print(f'total_skus: {len(all_skus)}')
 
     prices_created = []
@@ -30,7 +30,7 @@ def create_price(store_pk, skus=None):
     dateranges_created = []
     for sku in all_skus:
         # Create price for sku
-        sku_id = int(sku.sku_id)
+        sku_id = int(sku.external_id)
         print(f'sku_id: {sku_id}')
         price_dic = vtexprice.price_sku(sku_id=sku_id)
         listprice = price_dic.get('listPrice')
@@ -41,7 +41,8 @@ def create_price(store_pk, skus=None):
                     "list_price": listprice,
                     "cost_price": price_dic.get('costPrice'),
                     "markup": price_dic.get('markup'),
-                    "base_price": price_dic.get('basePrice')
+                    "base_price": price_dic.get('basePrice'),
+                    "raw_json": price_dic
                 }
             )
             prices_created.append(price_instance.pk)
@@ -52,7 +53,8 @@ def create_price(store_pk, skus=None):
                     defaults={
                         "value": fixedprice_dic["value"],
                         "list_price": fixedprice_dic["listPrice"],
-                        "min_quantity": fixedprice_dic["minQuantity"]
+                        "min_quantity": fixedprice_dic["minQuantity"],
+                        "raw_json": fixedprice_dic
                     }
                 )
                 fixedpirces_created.append(fixedprice_instance.pk)
@@ -62,7 +64,8 @@ def create_price(store_pk, skus=None):
                         fixed_price=fixedprice_instance,
                         defaults={
                             'date_time_from': daterange_dic.get('from'),
-                            'date_time_to': daterange_dic.get('to')
+                            'date_time_to': daterange_dic.get('to'),
+                            "raw_json": daterange_dic
                         }
                     )
                     dateranges_created.append(daterange_instance.pk)
@@ -75,7 +78,7 @@ def create_images(store_pk, skus=None):
     if skus is None:
         all_skus = Skus.objects.filter(product__store=store)
     else:
-        all_skus = Skus.objects.filter(product__store=store, sku_id__in=skus)
+        all_skus = Skus.objects.filter(product__store=store, external_id__in=skus)
     images_created = []
     print(f'total_skus: {len(all_skus)}')
     for sku in all_skus:
@@ -106,9 +109,9 @@ def create_attributes(store_pk, skus=None):
     print('create_attributes')
     store = Store.objects.get(pk=store_pk)
     if skus is None:
-        all_skus = Skus.objects.filter(product__store__pk=store.pk)
+        all_skus = Skus.objects.filter(product__store=store)
     else:
-        all_skus = Skus.objects.filter(product__store__pk=store.pk, sku_id__in=skus)
+        all_skus = Skus.objects.filter(product__store=store, external_id__in=skus)
 
     for sku in all_skus:
         sku_dict = sku.raw_json
@@ -124,6 +127,6 @@ def create_attributes(store_pk, skus=None):
                 attribute_instance, _ = Attribute.objects.update_or_create(
                     sku=sku,
                     attribute_type=attribute_type_instance,
-                    value=value
+                    value=value,
                 )
     return True
