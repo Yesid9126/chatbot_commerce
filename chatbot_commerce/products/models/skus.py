@@ -4,7 +4,7 @@ from slugify import slugify
 
 # Django
 from django.db import models
-from django.db.models.signals import pre_save, post_save, post_delete
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 
 
@@ -16,64 +16,39 @@ from django.utils.translation import gettext as _
 class Skus(ChatbootModel):
     """Store departmentss"""
 
-    sku_id = models.CharField(
-        'Sku ID',
-        max_length=10
-    )
-
+    # Filter data
     sku_name = models.CharField(
         'name sku',
         max_length=255,
         null=True,
         blank=True
     )
-
-    total_quantity = models.CharField(
-        'Quantity sku',
-        max_length=255,
-        null=True,
-        blank=True
+    sku_id = models.CharField(
+        'Sku ID',
+        max_length=10
     )
-
     is_active = models.BooleanField(
         'Active sku',
         default=False,
         null=True,
         blank=True
     )
-
-    ref_id = models.CharField(
-        'Reference id',
-        max_length=100,
+    is_inventoried = models.BooleanField(
+        default=False,
         null=True,
         blank=True
     )
-
-    packaged_height = models.CharField(
-        max_length=50,
+    total_quantity = models.CharField(
+        'Quantity sku',
+        max_length=255,
         null=True,
         blank=True
     )
-
-    packaged_length = models.CharField(
-        max_length=50,
+    is_transported = models.BooleanField(
+        default=False,
         null=True,
         blank=True
     )
-
-    packaged_width = models.CharField(
-        max_length=50,
-        null=True,
-        blank=True
-    )
-
-    packaged_weight = models.CharField(
-        'Packaged weight Kg',
-        max_length=50,
-        null=True,
-        blank=True
-    )
-
     is_kit = models.BooleanField(
         'sku is kit',
         default=False,
@@ -81,50 +56,67 @@ class Skus(ChatbootModel):
         blank=True
     )
 
+    # Relationship filter
+    product = models.ForeignKey(
+        to='products.Product',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
+    sales_channels = models.ManyToManyField("stores.SaleChannel", verbose_name=_("Sales channel's"))
+
+    # Extra data
     comercial_condition_id = models.CharField(
         max_length=100,
         null=True,
         blank=True
     )
-
     manufacter_code = models.CharField(
         max_length=100,
         null=True,
         blank=True
     )
-
+    ref_id = models.CharField(
+        'Reference id',
+        max_length=100,
+        null=True,
+        blank=True
+    )
+    packaged_height = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True
+    )
+    packaged_length = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True
+    )
+    packaged_width = models.CharField(
+        max_length=50,
+        null=True,
+        blank=True
+    )
+    packaged_weight = models.CharField(
+        'Packaged weight Kg',
+        max_length=50,
+        null=True,
+        blank=True
+    )
     reference_stock_id = models.BooleanField(
         default=False,
         null=True,
         blank=True
     )
 
-    is_inventoried = models.BooleanField(
-        default=False,
-        null=True,
-        blank=True
-    )
-
-    is_transported = models.BooleanField(
-        default=False,
-        null=True,
-        blank=True
-    )
-
-    product = models.ForeignKey(
-        to='products.Product',
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name='skus'
-    )
-
-    sku_json = models.JSONField(
+    # Raw info
+    raw_json = models.JSONField(
         'Complete sku data',
         null=True,
         blank=True
     )
 
+    # Hack to db queries
     serializer_data = models.JSONField(null=True, blank=True)
 
     def __str__(self):
@@ -138,9 +130,13 @@ class Skus(ChatbootModel):
     class Meta:
         verbose_name = "Sku"
         verbose_name_plural = "Sku's"
+        default_related_name = 'skus'
 
     @property
     def get_sku(self):
+        from chatbot_commerce.stores.models import SaleChannel, SkuSeller
+        sku_seller = SkuSeller.objects.filter(sku__pk=self.pk).values_list('serializer_data', flat=True)
+        sc = SaleChannel.objects.filter(store=self.product.store, external_id__in=self.raw_json.get('SalesChannels')).values_list('external_id', flat=True)
         sku_dict = {
             'id': self.sku_id,
             'name': self.sku_name,
@@ -148,34 +144,43 @@ class Skus(ChatbootModel):
             'is_active': self.is_active,
             'images': self.get_images,
             'attributes': self.get_attributes,
-            'price': self.get_prices
+            'price': self.get_prices,
+            'sc': list(sc),
+            'sellers': list(sku_seller)
         }
         return sku_dict
 
     @property
     def get_prices(self):
-        obj = self.price.all().order_by().first()
+        obj = self.price.all().first()
         if obj:
             return obj.serializer_data
 
     @property
     def get_attributes(self):
-        return list(self.attributes.all().order_by().values_list('serializer_data', flat=True))
+        return list(self.attributes.all().values_list('serializer_data', flat=True))
 
     @property
     def get_images(self):
-        return list(self.sku_images.all().order_by().values_list('image_url', flat=True))
+        return list(self.images.all().values_list('image_url', flat=True))
+
+
+@receiver(post_save, sender=Skus)
+def call_sku_seller_save_from_skus(sender, instance, *args, **kwargs):
+    [sku_seller.save() for sku_seller in instance.sku_seller.all()]
 
 
 class Image(ChatbootModel):
     """Image model"""
 
-    image_id = models.BigIntegerField(_("ID"), null=True, blank=True)
-    archive_id = models.BigIntegerField(_("Archive ID"), null=True, blank=True)
-    sku = models.ForeignKey("products.Skus", on_delete=models.CASCADE, related_name='sku_images')
+    # Filter data
     name = models.CharField(_("Name"), max_length=500)
-    is_main = models.BooleanField(_("Main image"), null=True)
-    label = models.CharField(_("Label"), max_length=50, null=True, blank=True)
+    image_id = models.CharField(_("Image external id"), max_length=50)
+
+    # Relationship filter
+    sku = models.ForeignKey("products.Skus", on_delete=models.CASCADE)
+
+    # Url data
     image_url = models.URLField(_("Image url"), max_length=2000, null=True, blank=True)
 
     class Meta:
@@ -183,24 +188,7 @@ class Image(ChatbootModel):
 
         verbose_name = 'Image'
         verbose_name_plural = "Image's"
-        ordering = ['sku_id', 'image_id']
-
-
-@receiver(pre_save, sender=Image)
-def create_image_url(sender, instance, *args, **kwargs):
-    try:
-        store_name = instance.sku.product.store.name
-        print(store_name)
-    except Exception as message:
-        error = {
-            'message': message,
-            'instance': instance,
-            'sku': instance.sku,
-            'product': instance.sku.product,
-            'sku_id': instance.sku.pk
-        }
-        raise Exception(error)
-    instance.image_url = f'https://{store_name}.vteximg.com.br/arquivos/ids/{instance.archive_id}/{instance.name}.jpg'
+        default_related_name = 'images'
 
 
 @receiver(post_save, sender=Image)
@@ -216,11 +204,17 @@ def call_sku_save_from_image_for_delete(sender, instance, *args, **kwargs):
 class Price(ChatbootModel):
     """Price model"""
 
-    sku = models.ForeignKey(Skus, on_delete=models.CASCADE, related_name='price')
     list_price = models.BigIntegerField(_('List price'), null=True, blank=True)
     cost_price = models.BigIntegerField(_('Cost price'), null=True, blank=True)
     markup = models.BigIntegerField(_('Mark up'), null=True, blank=True)
+
+    # Filter data
     base_price = models.BigIntegerField(_('Base price'), null=True, blank=True)
+
+    # Relationship filter
+    sku = models.ForeignKey(Skus, on_delete=models.CASCADE)
+
+    # Hack to db queries
     serializer_data = models.JSONField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
@@ -233,6 +227,7 @@ class Price(ChatbootModel):
         verbose_name = 'Price'
         verbose_name_plural = "Price's"
         ordering = ['sku', 'cost_price']
+        default_related_name = 'price'
 
     def __str__(self):
         """Return sku price."""
@@ -242,7 +237,7 @@ class Price(ChatbootModel):
     def get_price(self):
         price = {
             "base_price": self.base_price,
-            "fixed_prices": list(self.fixed_prices.all().order_by().values_list('serializer_data', flat=True))
+            "fixed_prices": list(self.fixed_prices.all().values_list('serializer_data', flat=True))
         }
         return price
 
@@ -260,7 +255,7 @@ def call_sku_save_from_price_for_delete(sender, instance, *args, **kwargs):
 class FixedPrice(ChatbootModel):
     """Fixed price model"""
 
-    price = models.ForeignKey(Price, on_delete=models.CASCADE, related_name='fixed_prices')
+    price = models.ForeignKey(Price, on_delete=models.CASCADE)
     trade_policy_id = models.CharField(_('Trade porlice ID'), max_length=50)
     value = models.BigIntegerField(_('Value'), null=True, blank=True)
     list_price = models.BigIntegerField(_('List price'), null=True, blank=True)
@@ -277,12 +272,13 @@ class FixedPrice(ChatbootModel):
         verbose_name = "Fixed price"
         verbose_name_plural = "Fixed price's"
         ordering = ['price', 'trade_policy_id']
+        default_related_name = 'fixed_prices'
 
     @property
     def get_fixed_price(self):
         fixed_price = {
             "value": self.value,
-            "date_ranges": list(self.date_ranges.all().order_by().values_list('serializer_data', flat=True))
+            "date_ranges": list(self.date_ranges.all().values_list('serializer_data', flat=True))
         }
         return fixed_price
 
@@ -300,7 +296,7 @@ def call_price_save_from_fixedprice_for_delete(sender, instance, *args, **kwargs
 class DateRange(ChatbootModel):
     """Date range model"""
 
-    fixed_price = models.ForeignKey(FixedPrice, on_delete=models.CASCADE, related_name="date_ranges")
+    fixed_price = models.ForeignKey(FixedPrice, on_delete=models.CASCADE)
     date_time_from = models.DateTimeField(_("From date time"), auto_now=False, auto_now_add=False)
     date_time_to = models.DateTimeField(_("To date time"), auto_now=False, auto_now_add=False)
     serializer_data = models.JSONField(null=True, blank=True)
@@ -315,6 +311,7 @@ class DateRange(ChatbootModel):
         verbose_name = "Date range"
         verbose_name_plural = "Date range's"
         ordering = ['fixed_price', 'date_time_from']
+        default_related_name = 'date_ranges'
 
     @property
     def get_date_range(self):
@@ -339,7 +336,7 @@ class AttributeType(ChatbootModel):
 
     store = models.ForeignKey(
         "stores.Store", verbose_name=_("Store"), on_delete=models.CASCADE,
-        related_name='attributes_type', default=None, null=True
+        default=None, null=True
     )
     name = models.CharField(max_length=255)
     slug_name = models.SlugField(max_length=255, null=True, blank=True)
@@ -351,17 +348,22 @@ class AttributeType(ChatbootModel):
         self.slug_name = slugify(self.name, separator="_")
         return super().save(*args, **kwargs)
 
+    class Meta:
+        verbose_name = 'Attribute type'
+        verbose_name_plural = "Attribute type's"
+        default_related_name = 'attributes_type'
+
 
 @receiver(post_save, sender=AttributeType)
 def call_attributes_save_from_attributetype_for_save(sender, instance, *args, **kwargs):
-    [attribute.save() for attribute in instance.attributes.all().order_by()]
+    [attribute.save() for attribute in instance.attributes.all()]
 
 
 class Attribute(ChatbootModel):
     """Attributes model"""
 
-    sku = models.ForeignKey(Skus, on_delete=models.CASCADE, related_name='attributes')
-    attribute_type = models.ForeignKey(AttributeType, on_delete=models.CASCADE, related_name='attributes')
+    sku = models.ForeignKey(Skus, on_delete=models.CASCADE)
+    attribute_type = models.ForeignKey(AttributeType, on_delete=models.CASCADE)
     value = models.CharField(max_length=255)
     serializer_data = models.JSONField(null=True, blank=True)
 
@@ -378,6 +380,7 @@ class Attribute(ChatbootModel):
         verbose_name = "Attribute"
         verbose_name_plural = "Attributes"
         unique_together = ['sku', 'attribute_type']
+        default_related_name = 'attributes'
 
     @property
     def get_attribute(self):

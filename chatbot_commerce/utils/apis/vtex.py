@@ -65,15 +65,15 @@ class VtexStores:
         )
 
     def product_unit(self, product_id):
-        uri = f'catalog_system/pvt/products/productget/{product_id}'
+        uri = f'catalog_system/pvt/products/ProductGet/{product_id}'
         method = 'get'
         return self._get_json_resource(
             uri,
             method=method
         )
 
-    def product_skus(self, product_id):
-        uri = f'catalog_system/pvt/sku/stockkeepingunitByProductId/{product_id}'
+    def get_sku_context(self, sku_id, sc):
+        uri = f'catalog_system/pvt/sku/stockkeepingunitbyid/{sku_id}?sc={sc}'
         method = 'get'
         return self._get_json_resource(
             uri,
@@ -82,6 +82,14 @@ class VtexStores:
 
     def skus_inventory(self, sku_id):
         uri = f'logistics/pvt/inventory/skus/{sku_id}'
+        method = 'get'
+        return self._get_json_resource(
+            uri,
+            method=method
+        )
+
+    def product_skus(self, product_id):
+        uri = f'catalog_system/pub/products/variations/{product_id}'
         method = 'get'
         return self._get_json_resource(
             uri,
@@ -136,13 +144,34 @@ class VtexStores:
             method=method
         )
 
-    def get_list_skus_by_storeid(self, store_id):
-        uri = f'catalog_system/pvt/sku/stockkeepingunitidsbysaleschannel?sc={store_id}&page=1&pageSize=1999999999'
+    def get_list_skus_by_storeid(self, store_id, page):
+        uri = f'catalog_system/pvt/sku/stockkeepingunitidsbysaleschannel?sc={store_id}&page={page}&pageSize=1999999999'
         method = 'get'
         return self._get_json_resource(
             uri,
             method=method
         )
+
+    def get_list_sellers_by_sc(self, sc_id):
+        uri = f'catalog_system/pvt/seller/list?sc={sc_id}&sellerType=1&isBetterScope=false'
+        method = 'get'
+        r1 = self._get_json_resource(
+            uri,
+            method=method
+        )
+        uri = f'catalog_system/pvt/seller/list?sc={sc_id}&sellerType=1&isBetterScope=true'
+        r2 = self._get_json_resource(
+            uri,
+            method=method
+        )
+        print(f'r1: {r1}, r2: {r2}')
+        if type(r2) == type(r1) == list:
+            return r2 + r1
+        if type(r2) == list:
+            return r2
+        if type(r1) == list:
+            return r1
+        return [r1, r2]
 
 
 class VtexPriceSku:

@@ -1,12 +1,13 @@
 """Product and skus views."""
 
 # Django Rest Framework
-from chatbot_commerce.products.models.skus import Attribute, AttributeType
+from django.db.models import Prefetch
+from chatbot_commerce.products.models.skus import Attribute, AttributeType, Skus
 from chatbot_commerce.products.models.products import Brand
 from rest_framework.generics import get_object_or_404
 from rest_framework import viewsets, mixins
 from rest_framework.response import Response
-from rest_framework.status import HTTP_200_OK
+from rest_framework.status import HTTP_200_OK, HTTP_404_NOT_FOUND
 
 # Serializers
 from chatbot_commerce.products.serializers import (ProductModelSerializer,
@@ -25,6 +26,9 @@ from chatbot_commerce.products.filters import products_skus
 # Models
 from chatbot_commerce.products.models import Product, Department
 from chatbot_commerce.stores.models import Store
+
+# Runtime
+from db_python import query_debugger
 
 
 class ProductViewset(mixins.RetrieveModelMixin,
@@ -46,23 +50,22 @@ class ProductViewset(mixins.RetrieveModelMixin,
     def dispatch(self, request, *args, **kwargs):
         slug_name = kwargs['store_slug_name']
         self.store = get_object_or_404(Store, slug_name=slug_name)
+
         swagger_params = ['attribute_type', 'attributes__value', 'sku_name']
-        filter_data = {
+        self.filter_data = {
             'attributes__attribute_type__name__icontains' if key == 'attribute_type' else
             'attributes__value__icontains' if key == 'attributes__value' else
             key+'__icontains': value for key, value in request.GET.items() if key in swagger_params
         }
         request.GET = {key: value for key, value in request.GET.items() if key not in swagger_params}
         request.query_params = request.GET
-        self = products_skus(self, filter_data)
+
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
         return self.queryset
 
-    def get_serializer_context(self):
-        return self.skus
-
+    @query_debugger
     def list(self, request, *args, **kwargs):
         """
         Return all products
@@ -70,27 +73,27 @@ class ProductViewset(mixins.RetrieveModelMixin,
         search = Put a keyword like name category or department to filter whith it
         example... search = jeans azul L
         """
-        if self.store.apply_filter_enable_products:
-            queryset = self.queryset.filter(skus__pk__in=self.skus.values_list('pk', flat=True)).order_by().distinct('pk')
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            paginated_data = self.get_paginated_response(serializer.data).data
-            paginated_data.pop('count')
-            response = {'num_produts': len(queryset), 'num_skus': len(self.skus)} | paginated_data
-            return Response(data=response, status=HTTP_200_OK)
+        self = products_skus(self)
+        serializer = self.get_serializer(self.paginate_queryset(self.queryset), many=True)
+        paginated_data = self.get_paginated_response(serializer.data).data
+        return Response(data=paginated_data, status=HTTP_200_OK)
 
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
-
+    @query_debugger
     def retrieve(self, request, *args, **kwargs):
         """
         Return a single product with his skus.
 
         Parameters.
         """
-        obj = Product.objects.filter(store=self.store, skus__pk__in=self.skus.values_list('pk', flat=True), pk=kwargs['pk']).order_by().first()
-        return Response(self.get_serializer(obj).data)
+        try:
+            obj = Product.objects\
+                .select_related('department', 'category', 'sub_category', 'brand')\
+                .prefetch_related(Prefetch('skus', queryset=Skus.objects.filter(**self.filter_data).distinct('pk')),)\
+                .get(store=self.store, external_id=kwargs['pk'])
+        except Exception as message:
+            print(f'error. {message}')
+            return Response({}, status=HTTP_404_NOT_FOUND)
+        return Response(self.get_serializer(obj).data, status=HTTP_200_OK)
 
 
 class DepartmentsViewset(mixins.RetrieveModelMixin,
