@@ -101,7 +101,7 @@ class Skus(BaseAbstract):
 
     def __str__(self):
         """Return sku id."""
-        return f'sku:{self.name}'
+        return f'{self.name}'
 
     def save(self, *args, **kwargs):
         self.serializer_data = self.get_sku
@@ -235,10 +235,9 @@ class FixedPrice(BaseRawAbstract):
     value = models.BigIntegerField(_('Value'), null=True, blank=True)
     list_price = models.BigIntegerField(_('List price'), null=True, blank=True)
     min_quantity = models.IntegerField(_('Minimun quantity'), null=True, blank=True)
-    
+
     # Relationship filter
     price = models.ForeignKey(Price, on_delete=models.CASCADE)
-
 
     def save(self, *args, **kwargs):
         self.serializer_data = self.get_fixed_price
@@ -277,7 +276,7 @@ class DateRange(BaseRawAbstract):
     # Filter data
     date_time_from = models.DateTimeField(_("From date time"), auto_now=False, auto_now_add=False)
     date_time_to = models.DateTimeField(_("To date time"), auto_now=False, auto_now_add=False)
-    
+
     # Relationship filter
     fixed_price = models.ForeignKey(FixedPrice, on_delete=models.CASCADE)
 

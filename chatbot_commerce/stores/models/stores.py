@@ -47,7 +47,7 @@ class Store(ChatbootModel):
 
     def __str__(self):
         """Return store name."""
-        return f'Store:{self.name}'
+        return f'{self.name}'
 
     class Meta:
         verbose_name = "Store"
@@ -185,7 +185,7 @@ class Seller(ChatbootModel):
     serializer_data = models.JSONField(null=True, blank=True)
 
     def __str__(self):
-        return self.name
+        return f'{self.store} | {self.name}'
 
     def save(self, *args, **kwargs):
         self.slug_name = slugify(self.name, separator="_")

@@ -56,7 +56,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
             'attributes__attribute_type__name__icontains' if key == 'attribute_type' else
             'attributes__value__icontains' if key == 'attributes__value' else
             'name__icontains' if key == 'sku_name' else
-             key+'__icontains' : value for key, value in request.GET.items() if key in swagger_params
+            key+'__icontains': value for key, value in request.GET.items() if key in swagger_params
         }
         request.GET = {key: value for key, value in request.GET.items() if key not in swagger_params}
         request.query_params = request.GET

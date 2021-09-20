@@ -31,11 +31,22 @@ class SellerAdmin(admin.ModelAdmin):
     inlines = [InlineSellers]
     search_fields = list_display
 
+
 @admin.register(SkuSeller)
 class SkuSellerAdmin(admin.ModelAdmin):
     """Seller model admin."""
-    list_display = ['seller', 'sku', 'is_active']
-    list_filter = ['is_active']
+    list_display = ['seller_id', 'store', 'sku_id', 'is_active']
+    list_filter = ['is_active', 'seller']
+
+    def seller_id(self, obj):
+        return obj.seller.seller_id
+
+    def sku_id(self, obj):
+        return obj.sku.external_id
+
+    def store(self, obj):
+        return obj.seller.store
+
 
 @admin.register(SaleChannel)
 class SaleChannelAdmin(admin.ModelAdmin):
@@ -43,5 +54,5 @@ class SaleChannelAdmin(admin.ModelAdmin):
     list_display = ['name', 'slug_name', 'is_active']
     exclude = ['slug_name', 'skus']
     search_fields = ['name']
-    list_filter = ['is_active']
+    list_filter = ['is_active', 'store']
     inlines = [InlineSkuAdmin, InlineSellers]

@@ -35,6 +35,7 @@ class ChatbootModel(models.Model):
         get_latest_by = 'created'
         ordering = ['-created', '-modified']
 
+
 class BaseRawAbstract(ChatbootModel):
 
     # Raw_data
@@ -47,15 +48,17 @@ class BaseRawAbstract(ChatbootModel):
         """Meta option."""
         abstract = True
 
+
 class BaseAbstract(BaseRawAbstract):
 
     # Filter data
     name = models.CharField(max_length=500, null=True, blank=True)
     external_id = models.BigIntegerField(_("External ID"))
-    
+
     class Meta:
         """Meta option."""
         abstract = True
+
 
 class AbstractCategory(BaseAbstract):
 
