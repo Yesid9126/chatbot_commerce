@@ -127,10 +127,12 @@ class SaleChannel(ChatbootModel):
     # Relationship filter
     store = models.ForeignKey("Store", verbose_name=_("Store"), on_delete=models.CASCADE)
     sellers = models.ManyToManyField("Seller", verbose_name=_("Sellers"))
-    skus = models.ManyToManyField("products.Skus", verbose_name=_("Skus"))
 
     # Raw data
     raw_json = models.JSONField(_("Raw data"))
+
+    # Hack to db queries
+    serializer_data = models.JSONField(null=True, blank=True)
 
     def __str__(self):
         """Return store name."""
@@ -138,12 +140,34 @@ class SaleChannel(ChatbootModel):
 
     def save(self, *args, **kwargs):
         self.slug_name = slugify(self.name, separator="_")
+        self.serializer_data = self.get_sale_channel
         return super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = "Sale Channel"
         verbose_name_plural = "Sales Channel"
         default_related_name = 'sales_channel'
+
+    @property
+    def get_sale_channel(self):
+        sc_dict = {
+            'id': self.external_id,
+            'name': self.name,
+            'is_active': self.is_active
+        }
+        return sc_dict
+
+
+@receiver(post_save, sender=SaleChannel)
+def call_sku_and_seller_save_from_sc_save(sender, instance, *args, **kwargs):
+    [seller.save() for seller in instance.sellers.all()]
+    [sku.save() for sku in instance.skus.all()]
+
+
+@receiver(post_delete, sender=SaleChannel)
+def call_sku_and_seller_save_from_sc_delete(sender, instance, *args, **kwargs):
+    [seller.save() for seller in instance.sellers.all()]
+    [sku.save() for sku in instance.skus.all()]
 
 
 class Seller(ChatbootModel):
@@ -156,22 +180,78 @@ class Seller(ChatbootModel):
     hibrit_payment_options = models.BooleanField(_("Various forms of payment"), default=False, null=True)
     is_active = models.BooleanField(_("Status"), default=False)
 
-    # Relateship filter
+    # Relationship filter
     store = models.ForeignKey("Store", verbose_name=_("Store"), on_delete=models.CASCADE)
 
     # Extra data
     description = models.CharField(_("Description of seller"), max_length=500)
 
     # raw data
-    raw_json_response = models.JSONField(_("Raw data"))
+    raw_json = models.JSONField(_("Raw data"))
+
+    # Hack to db queries
+    serializer_data = models.JSONField(null=True, blank=True)
 
     def __str__(self):
         return self.name
 
     def save(self, *args, **kwargs):
         self.slug_name = slugify(self.name, separator="_")
+        self.serializer_data = self.get_seller
         return super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = "Seller"
         verbose_name_plural = "Sellers"
+        default_related_name = 'sellers'
+
+    @property
+    def get_seller(self):
+        seller_dict = {
+            'id': self.seller_id,
+            'name': self.name,
+            'is_active': self.is_active,
+            'descriptiom': self.description,
+            'various_payment_iptions': self.hibrit_payment_options
+        }
+        return seller_dict
+
+
+@receiver(post_save, sender=Seller)
+def call_sku_seller_save_from_seller(sender, instance, *args, **kwargs):
+    [sku_seller.save() for sku_seller in instance.sku_seller.all()]
+
+
+class SkuSeller(ChatbootModel):
+
+    # Filter data
+    is_active = models.BooleanField(_("Status"))
+
+    # Relationship filter
+    sku = models.ForeignKey("products.Skus", verbose_name=_("Sku"), on_delete=models.CASCADE)
+    seller = models.ForeignKey("Seller", verbose_name=_("Seller"), on_delete=models.CASCADE)
+
+    # Raw data
+    raw_json = models.JSONField(_("Raw data"))
+
+    # Hack to db queries
+    serializer_data = models.JSONField(null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        self.serializer_data = self.get_sku_seller
+        return super().save(*args, **kwargs)
+
+    class Meta:
+        verbose_name = 'Sku Seller'
+        verbose_name_plural = 'Skus Sellers'
+        default_related_name = 'sku_seller'
+
+    @property
+    def get_sku_seller(self):
+        sku_seller_dict = {
+            'sc': list(self.seller.sales_channel.values_list('external_id', flat=True)),
+            'seller_id': self.seller.seller_id,
+            'sku_id': self.sku.sku_id,
+            'is_active': self.is_active
+        }
+        return sku_seller_dict

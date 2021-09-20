@@ -4,7 +4,7 @@ from slugify import slugify
 
 # Django
 from django.db import models
-from django.db.models.signals import pre_save, post_save, post_delete
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 
 
@@ -63,6 +63,7 @@ class Skus(ChatbootModel):
         null=True,
         blank=True,
     )
+    sales_channels = models.ManyToManyField("stores.SaleChannel", verbose_name=_("Sales channel's"))
 
     # Extra data
     comercial_condition_id = models.CharField(
@@ -107,7 +108,9 @@ class Skus(ChatbootModel):
         null=True,
         blank=True
     )
-    sku_json = models.JSONField(
+
+    # Raw info
+    raw_json = models.JSONField(
         'Complete sku data',
         null=True,
         blank=True
@@ -131,6 +134,9 @@ class Skus(ChatbootModel):
 
     @property
     def get_sku(self):
+        from chatbot_commerce.stores.models import SaleChannel, SkuSeller
+        sku_seller = SkuSeller.objects.filter(sku__pk=self.pk).values_list('serializer_data', flat=True)
+        sc = SaleChannel.objects.filter(store=self.product.store, external_id__in=self.raw_json.get('SalesChannels')).values_list('external_id', flat=True)
         sku_dict = {
             'id': self.sku_id,
             'name': self.sku_name,
@@ -138,23 +144,30 @@ class Skus(ChatbootModel):
             'is_active': self.is_active,
             'images': self.get_images,
             'attributes': self.get_attributes,
-            'price': self.get_prices
+            'price': self.get_prices,
+            'sc': list(sc),
+            'sellers': list(sku_seller)
         }
         return sku_dict
 
     @property
     def get_prices(self):
-        obj = self.price.all().order_by().first()
+        obj = self.price.all().first()
         if obj:
             return obj.serializer_data
 
     @property
     def get_attributes(self):
-        return list(self.attributes.all().order_by().values_list('serializer_data', flat=True))
+        return list(self.attributes.all().values_list('serializer_data', flat=True))
 
     @property
     def get_images(self):
-        return list(self.images.all().order_by().values_list('image_url', flat=True))
+        return list(self.images.all().values_list('image_url', flat=True))
+
+
+@receiver(post_save, sender=Skus)
+def call_sku_seller_save_from_skus(sender, instance, *args, **kwargs):
+    [sku_seller.save() for sku_seller in instance.sku_seller.all()]
 
 
 class Image(ChatbootModel):
@@ -162,43 +175,20 @@ class Image(ChatbootModel):
 
     # Filter data
     name = models.CharField(_("Name"), max_length=500)
-    is_main = models.BooleanField(_("Main image"), null=True)
+    image_id = models.CharField(_("Image external id"), max_length=50)
 
     # Relationship filter
     sku = models.ForeignKey("products.Skus", on_delete=models.CASCADE)
 
     # Url data
-    image_id = models.BigIntegerField(_("ID"), null=True, blank=True)
-    archive_id = models.BigIntegerField(_("Archive ID"), null=True, blank=True)
     image_url = models.URLField(_("Image url"), max_length=2000, null=True, blank=True)
-
-    # Extra data
-    label = models.CharField(_("Label"), max_length=50, null=True, blank=True)
 
     class Meta:
         """Meta class"""
 
         verbose_name = 'Image'
         verbose_name_plural = "Image's"
-        ordering = ['sku_id', 'image_id']
         default_related_name = 'images'
-
-
-@receiver(pre_save, sender=Image)
-def create_image_url(sender, instance, *args, **kwargs):
-    try:
-        store_name = instance.sku.product.store.name
-        print(store_name)
-    except Exception as message:
-        error = {
-            'message': message,
-            'instance': instance,
-            'sku': instance.sku,
-            'product': instance.sku.product,
-            'sku_id': instance.sku.pk
-        }
-        raise Exception(error)
-    instance.image_url = f'https://{store_name}.vteximg.com.br/arquivos/ids/{instance.archive_id}/{instance.name}.jpg'
 
 
 @receiver(post_save, sender=Image)
@@ -247,7 +237,7 @@ class Price(ChatbootModel):
     def get_price(self):
         price = {
             "base_price": self.base_price,
-            "fixed_prices": list(self.fixed_prices.all().order_by().values_list('serializer_data', flat=True))
+            "fixed_prices": list(self.fixed_prices.all().values_list('serializer_data', flat=True))
         }
         return price
 
@@ -288,7 +278,7 @@ class FixedPrice(ChatbootModel):
     def get_fixed_price(self):
         fixed_price = {
             "value": self.value,
-            "date_ranges": list(self.date_ranges.all().order_by().values_list('serializer_data', flat=True))
+            "date_ranges": list(self.date_ranges.all().values_list('serializer_data', flat=True))
         }
         return fixed_price
 
@@ -366,7 +356,7 @@ class AttributeType(ChatbootModel):
 
 @receiver(post_save, sender=AttributeType)
 def call_attributes_save_from_attributetype_for_save(sender, instance, *args, **kwargs):
-    [attribute.save() for attribute in instance.attributes.all().order_by()]
+    [attribute.save() for attribute in instance.attributes.all()]
 
 
 class Attribute(ChatbootModel):

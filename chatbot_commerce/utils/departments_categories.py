@@ -2,9 +2,54 @@
 
 # Models
 from chatbot_commerce.products.models import Department, Category, Subcategory, Brand
+from chatbot_commerce.stores.models import SaleChannel, Seller
 
 # Apis
 from chatbot_commerce.utils.apis.vtex import VtexStores
+
+
+def get_sc_sellers(store, task=None):
+    vtex = VtexStores(store=store)
+    sales_channel = vtex.get_sales_channel()
+    if task == 'create':
+        db_sc_ids = SaleChannel.objects.values_list('external_id', flat=True)
+    for channel in sales_channel:
+        channel_id = channel.get('Id')
+        if task == 'create':
+            if channel_id in db_sc_ids:
+                continue
+        if channel_id:
+            print(f'store_id: {channel_id}')
+            list_sellers = vtex.get_list_sellers_by_sc(sc_id=channel_id)
+            sellers = []
+            if type(list_sellers) == list:
+                for seller in list_sellers:
+                    name = seller.get('Name')
+                    if name:
+                        instance, _ = Seller.objects.update_or_create(
+                            store=store, name=name, seller_id=seller.get('SellerId'),
+                            defaults={
+                                'hibrit_payment_options': seller.get('UseHybridPaymentOptions'),
+                                'is_active': seller.get('IsActive'),
+                                'description': seller.get('Description'),
+                                'raw_json': seller
+                            }
+                        )
+                        sellers.append(instance)
+            instance_sale_channel, _ = SaleChannel.objects.update_or_create(
+                store=store, external_id=channel_id,
+                defaults={
+                    'name': channel.get('Name'),
+                    'is_active': channel.get('IsActive'),
+                    'raw_json': channel
+                }
+            )
+            if sellers:
+                instance_sale_channel.sellers.add(*sellers)
+            else:
+                print(f'no sellers: {sellers}')
+        else:
+            print(f'error: channel: {channel}, sales_channel: {sales_channel}')
 
 
 def get_departments(store):

@@ -91,6 +91,13 @@ class Product(AbstractCategory):
     description_short = models.TextField(_("Short description"), null=True, blank=True)
     meta_tag_description = models.TextField(_("Tag description"), null=True, blank=True)
 
+    # Hack to db queries
+    serializer_data = models.JSONField(null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        self.serializer_data = self.get_product
+        return super().save(*args, **kwargs)
+
     def __str__(self):
         """Return product name|id."""
         return f'name:{self.name}'
@@ -99,6 +106,17 @@ class Product(AbstractCategory):
         verbose_name = "Product"
         verbose_name_plural = "Product"
         default_related_name = 'products'
+
+    @property
+    def get_product(self):
+        product_dict = {
+            'id': self.external_id,
+            'name': self.name,
+            'keywords': self.keywords,
+            'brand': self.get_brand,
+            'tree_categories': self.category_tree
+        }
+        return product_dict
 
     @property
     def get_brand(self):

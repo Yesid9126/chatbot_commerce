@@ -2,19 +2,16 @@
 
 
 # Celery
-from chatbot_commerce.products.models.products import Product
-from celery import Celery
+from celery import Celery, group
 
 
 # Utils
-from chatbot_commerce.utils.departments_categories import get_departments
-from chatbot_commerce.utils.products import get_products_vtex_store
-from chatbot_commerce.utils.departments_categories import get_brands
+from chatbot_commerce.utils.departments_categories import get_departments, get_brands, get_sc_sellers
+from chatbot_commerce.utils.products import create_products_vtex_store, update_products_vtex_store
 from chatbot_commerce.utils.celery.tasks import create_attributes, create_images, create_price
 
 # Models
 from chatbot_commerce.stores.models.stores import Store
-# from chatbot_commerce.products.models import Skus
 
 app = Celery()
 
@@ -38,14 +35,16 @@ def principal_periodic_task(*args, **kwargs):
         store_pk = store.pk
 
         # brands, categories products and skus
+        get_sc_sellers(store=store, task='create')
         get_brands(store)
         get_departments(store)
-        skus = get_products_vtex_store(store=store)
+
+        skus = create_products_vtex_store(store=store)
 
         # skus extra components
-        create_price.s(store_pk=store_pk, skus=skus).apply_async()
-        create_images.s(store_pk=store_pk, skus=skus).apply_async()
-        create_attributes(store_pk=store_pk, skus=skus)
+        job = group(create_price.s(store_pk=store_pk, skus=skus), create_images.s(store_pk=store_pk, skus=skus), create_attributes.s(store_pk=store_pk, skus=skus))
+        job.apply_async()
+
     except Exception as message:
         print(f'error: {message}')
 
@@ -69,14 +68,14 @@ def store_begining(store, *args, **kwargs):
     store_pk = store.pk
 
     # brands, categories, products and skus
+    get_sc_sellers(store=store, task='create')
     get_brands(store)
     get_departments(store)
-    skus = get_products_vtex_store(store=store, limit=10)
+    skus = create_products_vtex_store(store=store, limit=10)
 
     # skus extra components
-    create_price.s(store_pk=store_pk, skus=skus).apply_async()
-    create_images.s(store_pk=store_pk, skus=skus).apply_async()
-    create_attributes(store_pk=store_pk, skus=skus)
+    job = group(create_price.s(store_pk=store_pk, skus=skus), create_images.s(store_pk=store_pk, skus=skus), create_attributes.s(store_pk=store_pk, skus=skus))
+    job.apply_async()
 
     store.sync_status = True
     store.save()
@@ -102,15 +101,15 @@ def update_periodic_task(*args, **kwargs):
         store_pk = store.pk
 
         # brands, categories, products and skus
+        get_sc_sellers(store=store)
         get_brands(store)
         get_departments(store)
-        products_skus = Product.objects.filter(store__pk=store.pk).order_by().values_list('external_id', flat=True).distinct('external_id')
-        get_products_vtex_store(store=store, products_skus=products_skus)
+        update_products_vtex_store(store=store)
 
         # skus extra components
-        create_price.s(store_pk=store_pk).apply_async()
-        create_images.s(store_pk=store_pk).apply_async()
-        create_attributes(store_pk=store_pk)
+        job = group(create_price.s(store_pk=store_pk), create_images.s(store_pk=store_pk), create_attributes.s(store_pk=store_pk))
+        job.apply_async()
+
     except Exception as message:
         print(f'error: {message}')
 

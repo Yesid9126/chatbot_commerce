@@ -10,7 +10,7 @@ from chatbot_commerce.stores.models import Store
 
 
 # Utils
-from chatbot_commerce.utils.apis.vtex import VtexPriceSku, VtexStores
+from chatbot_commerce.utils.apis.vtex import VtexPriceSku
 
 app = Celery()
 
@@ -20,9 +20,9 @@ def create_price(store_pk, skus=None):
     store = Store.objects.get(pk=store_pk)
     vtexprice = VtexPriceSku(store=store)
     if skus is None:
-        all_skus = Skus.objects.filter(product__store__pk=store.pk).order_by()
+        all_skus = Skus.objects.filter(product__store__pk=store.pk)
     else:
-        all_skus = Skus.objects.filter(product__store__pk=store.pk, sku_id__in=skus).order_by()
+        all_skus = Skus.objects.filter(product__store__pk=store.pk, sku_id__in=skus)
     print(f'total_skus: {len(all_skus)}')
 
     prices_created = []
@@ -72,29 +72,26 @@ def create_price(store_pk, skus=None):
 @app.task(name='create_images')
 def create_images(store_pk, skus=None):
     store = Store.objects.get(pk=store_pk)
-    vtex = VtexStores(store=store)
     if skus is None:
-        all_skus = Skus.objects.filter(product__store__pk=store.pk).order_by()
+        all_skus = Skus.objects.filter(product__store=store)
     else:
-        all_skus = Skus.objects.filter(product__store__pk=store.pk, sku_id__in=skus).order_by()
+        all_skus = Skus.objects.filter(product__store=store, sku_id__in=skus)
     images_created = []
     print(f'total_skus: {len(all_skus)}')
     for sku in all_skus:
         # Create image for sku
-        sku_id = int(sku.sku_id)
-        images_array = vtex.image_sku(sku_id=sku_id)
-        for image_dic in images_array:
-            archive_id = image_dic.get('ArchiveId')
-            if archive_id:
-                name = image_dic.get('Name')
+        sku_dict = sku.raw_json
+        images_array = sku_dict.get('Images')
+        for image_dict in images_array:
+            image_url = image_dict.get('ImageUrl')
+            if image_url:
+                name = image_dict.get('ImageName')
                 image_instance, _ = Image.objects.update_or_create(
-                    image_id=image_dic.get('Id'),
+                    image_id=image_dict.get('FileId'),
                     sku=sku,
                     defaults={
-                        'is_main': image_dic.get('IsMain'),
                         'name': name,
-                        'label': image_dic.get('Label'),
-                        'archive_id': archive_id
+                        'image_url': image_url
                     }
                 )
                 images_created.append(image_instance.pk)
@@ -106,38 +103,27 @@ def create_images(store_pk, skus=None):
 
 @app.task(name='create_attributes')
 def create_attributes(store_pk, skus=None):
+    print('create_attributes')
     store = Store.objects.get(pk=store_pk)
-    vtex = VtexStores(store=store)
     if skus is None:
-        all_skus = Skus.objects.filter(product__store__pk=store.pk).order_by('pk')
+        all_skus = Skus.objects.filter(product__store__pk=store.pk)
     else:
-        all_skus = Skus.objects.filter(product__store__pk=store.pk, sku_id__in=skus).order_by('pk')
+        all_skus = Skus.objects.filter(product__store__pk=store.pk, sku_id__in=skus)
 
-    attributes_type_created = []
-    attributes_created = []
     for sku in all_skus:
-        print(f'Hola jeje {sku}')
-        sku_id = int(sku.sku_id)
-        sku_specifications_array = vtex.get_sku_specifications(sku_id=sku_id)
-        if 'status_code' and 'message' not in sku_specifications_array:
-            for dic in sku_specifications_array:
-                field_id = dic.get('FieldId')
-                specifications_field = vtex.get_specifications_field(field_id=field_id)
-                name = specifications_field.get('Description')
-                if field_id and name:
-                    attribute_type_instance, _ = AttributeType.objects.update_or_create(
-                        store=store,
-                        name=name
-                    )
-                    attributes_type_created.append(attribute_type_instance.pk)
-                    attribute_instance, _ = Attribute.objects.update_or_create(
-                        sku=sku,
-                        attribute_type=attribute_type_instance,
-                        value=dic.get('Text')
-                    )
-                    attributes_created.append(attribute_instance.pk)
-                else:
-                    print(f'error attribute in sku_id: {sku}, sku_specification: {dic}, specification_field: {specifications_field}')
-        else:
-            print(f'error attribute in sku_id: {sku}, sku_specifications: {sku_specifications_array}')
+        sku_dict = sku.raw_json
+        sku_specifications_array = sku_dict.get('SkuSpecifications')
+        for dic in sku_specifications_array:
+            name = dic.get('FieldName')
+            attribute_type_instance, _ = AttributeType.objects.get_or_create(
+                store=store,
+                name=name
+            )
+            values = dic.get('FieldValues')
+            for value in values:
+                attribute_instance, _ = Attribute.objects.update_or_create(
+                    sku=sku,
+                    attribute_type=attribute_type_instance,
+                    value=value
+                )
     return True
