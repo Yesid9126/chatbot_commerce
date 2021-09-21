@@ -95,12 +95,12 @@ AWS_S3_CUSTOM_DOMAIN = 'chatbotapi.nyc3.digitaloceanspaces.com'
 aws_s3_domain = AWS_S3_CUSTOM_DOMAIN or f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
 # STATIC
 # ------------------------
-STATICFILES_STORAGE = "chatbot_commerce.utils.storages.StaticRootS3Boto3Storage"
+STATICFILES_STORAGE = "storages.backends.s3boto3.StaticRootS3Boto3Storage"
 COLLECTFAST_STRATEGY = "collectfast.strategies.boto3.Boto3Strategy"
-STATIC_URL = f"https://{aws_s3_domain}/qa_static/"
+STATIC_URL = f"https://{aws_s3_domain}/static/"
 # MEDIA
 # ------------------------------------------------------------------------------
-DEFAULT_FILE_STORAGE = "chatbot_commerce.utils.storages.MediaRootS3Boto3Storage"
+DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.MediaRootS3Boto3Storage"
 MEDIA_URL = 'https://{}/'.format(AWS_S3_CUSTOM_DOMAIN)
 
 # TEMPLATES
