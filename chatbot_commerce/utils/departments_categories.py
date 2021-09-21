@@ -49,7 +49,7 @@ def get_sc_sellers(store, task=None):
                 print(f'no sellers: {sellers}')
         else:
             print(f'error: channel: {channel}, sales_channel: {sales_channel}')
-        if channel_id == 1:
+        if channel_id == 1 or channel_id == '1':
             break
 
 
