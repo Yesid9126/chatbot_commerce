@@ -31,7 +31,7 @@ certificatesResolvers:
 http:
   routers:
     web-secure-router:
-      rule: "Host(`keybe-commerce.smk.agency`) || Host(`www.keybe-commerce.smk.agency`)"
+      rule: "Host(`qa.keybe-commerce.smk.agency`) || Host(`www.qa.keybe-commerce.smk.agency`)"
       entryPoints:
         - web-secure
       middlewares:
@@ -42,7 +42,7 @@ http:
         certResolver: letsencrypt
 
     flower-secure-router:
-      rule: "Host(`keybe-commerce.smk.agency`)"
+      rule: "Host(`qa.keybe-commerce.smk.agency`)"
       entryPoints:
         - flower
       service: flower

@@ -15,7 +15,7 @@ from .base import env
 # https://docs.djangoproject.com/en/dev/ref/settings/#secret-key
 SECRET_KEY = env("DJANGO_SECRET_KEY")
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["keybe-commerce.smk.agency", "www.keybe-commerce.smk.agency", "qa.keybe-commerce.smk.agency", "www.qa.keybe-commerce.smk.agency"])
+ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["keybe-commerce.smk.agency", "www.keybe-commerce.smk.agency", "qa.keybe-commerce.smk.agency"])
 
 # DATABASES
 # ------------------------------------------------------------------------------
@@ -80,7 +80,7 @@ AWS_S3_ENDPOINT_URL = 'https://nyc3.digitaloceanspaces.com'
 # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
 AWS_QUERYSTRING_AUTH = True
 AWS_DEFAULT_ACL = "public-read"
-AWS_S3_ENDPOINT_URL = "https://nyc3.digitaloceanspaces.com"
+AWS_S3_ENDPOINT_URL = 'https://nyc3.digitaloceanspaces.com'
 # DO NOT change these unless you know what you're doing.
 _AWS_EXPIRY = 60 * 60 * 24 * 7
 # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html#settings
