@@ -160,6 +160,8 @@ def create_products_vtex_store(store, limit=None):
             print(add)
             skus += add
             page += 1
+        if sc_id == 1:
+            break
     db_sku_ids = Skus.objects.filter(product__store=store).values_list('external_id', flat=True).distinct('external_id')
     db_sku_ids = [int(sku_id) for sku_id in db_sku_ids if sku_id.isnumeric()]
     skus = set(skus) - set(db_sku_ids)
