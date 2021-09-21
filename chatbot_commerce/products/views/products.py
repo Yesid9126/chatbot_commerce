@@ -28,7 +28,7 @@ from chatbot_commerce.products.models import Product, Department
 from chatbot_commerce.stores.models import Store
 
 # Runtime
-from db_python import query_debugger
+# from db_python import query_debugger
 
 
 class ProductViewset(mixins.RetrieveModelMixin,
@@ -66,7 +66,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
     def get_queryset(self):
         return self.queryset
 
-    @query_debugger
+    # @query_debugger
     def list(self, request, *args, **kwargs):
         """
         Return all products
@@ -79,7 +79,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
         paginated_data = self.get_paginated_response(serializer.data).data
         return Response(data=paginated_data, status=HTTP_200_OK)
 
-    @query_debugger
+    # @query_debugger
     def retrieve(self, request, *args, **kwargs):
         """
         Return a single product with his skus.
@@ -114,9 +114,10 @@ class DepartmentsViewset(mixins.RetrieveModelMixin,
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
-        queryset = Department.objects.filter(store=self.store)
+        queryset = Department.objects.filter(store=self.store).prefetch_related('categories__subcategories')
         return queryset
 
+    # @query_debugger
     def list(self, request, *args, **kwargs):
         """
         Return all departments with tree category
@@ -126,13 +127,14 @@ class DepartmentsViewset(mixins.RetrieveModelMixin,
         """
         return super().list(request, *args, **kwargs)
 
+    # @query_debugger
     def retrieve(self, request, *args, **kwargs):
         """
         Return a single department with tree category.
 
         Parameters.
         """
-        obj = Department.objects.filter(store=self.store, name=kwargs['department_name']).first()
+        obj = Department.objects.filter(store=self.store, name=kwargs['department_name']).prefetch_related('categories__subcategories').first()
         return Response(self.serializer_class(obj).data)
 
 
@@ -153,6 +155,7 @@ class BrandsViewset(mixins.ListModelMixin,
     def get_queryset(self):
         return self.queryset
 
+    # @query_debugger
     def list(self, request, *args, **kwargs):
         """
         Return all brands of a store.
@@ -192,6 +195,7 @@ class AttributesViewset(mixins.ListModelMixin,
     def get_serializer_context(self):
         return self.attributes
 
+    # @query_debugger
     def list(self, request, *args, **kwargs):
         """
         Return all attribute of a type.
