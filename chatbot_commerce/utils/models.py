@@ -48,7 +48,6 @@ class BaseRawAbstract(ChatbootModel):
         """Meta option."""
         abstract = True
 
-
 class BaseAbstract(BaseRawAbstract):
 
     # Filter data
@@ -58,6 +57,7 @@ class BaseAbstract(BaseRawAbstract):
     class Meta:
         """Meta option."""
         abstract = True
+        ordering = ['external_id']
 
 
 class AbstractCategory(BaseAbstract):
