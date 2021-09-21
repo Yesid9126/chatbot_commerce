@@ -57,7 +57,6 @@ class BaseAbstract(BaseRawAbstract):
     class Meta:
         """Meta option."""
         abstract = True
-        ordering = ['external_id']
 
 
 class AbstractCategory(BaseAbstract):

@@ -168,17 +168,17 @@ def products_skus(self):
                 Product.objects
                 .select_related('department', 'category', 'sub_category', 'brand')
                 .prefetch_related(Prefetch('skus', queryset=skus))
-                .filter(store=self.store, skus__in=skus).distinct('pk')
+                .filter(store=self.store, skus__in=skus).distinct('pk').order_by('pk')
             )
 
     else:
 
-        skus = Skus.objects.filter(**self.filter_data).distinct('pk')
+        skus = Skus.objects.filter(**self.filter_data).distinct('pk').order_by('pk')
         self.queryset = self.filter_queryset(
             Product.objects
             .select_related('department', 'category', 'sub_category', 'brand')
             .prefetch_related(Prefetch('skus', queryset=skus))
-            .filter(store=self.store).distinct('pk')
+            .filter(store=self.store).distinct('pk').order_by('pk')
         )
 
     self.skus = skus
