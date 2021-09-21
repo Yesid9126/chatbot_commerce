@@ -117,11 +117,11 @@ class Skus(BaseAbstract):
         from chatbot_commerce.stores.models import SkuSeller
         sku_seller = SkuSeller.objects.filter(sku__pk=self.pk).values_list('serializer_data', flat=True)
         sku_dict = {
-            'id': self.external_id,
-            'name': self.name,
+            'sku_id': self.external_id,
+            'sku_name': self.name,
             'total_quantity': self.total_quantity,
             'is_active': self.is_active,
-            'images': self.get_images,
+            'sku_images': self.get_images,
             'attributes': self.get_attributes,
             'price': self.get_prices,
             'sellers': list(sku_seller)
