@@ -45,7 +45,6 @@ class ProductViewset(mixins.RetrieveModelMixin,
         'name', 'brand__name', 'keywords', 'category__name',
         'sub_category__name', 'department__name'
     )
-    ordering_fields = ('created',)
 
     def dispatch(self, request, *args, **kwargs):
         slug_name = kwargs['store_slug_name']
@@ -75,7 +74,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
         example... search = jeans azul L
         """
         self = products_skus(self)
-        serializer = self.get_serializer(self.paginate_queryset(self.queryset), many=True)
+        serializer = self.get_serializer(self.paginate_queryset(self.queryset.order_by('-pk')), many=True)
         paginated_data = self.get_paginated_response(serializer.data).data
         return Response(data=paginated_data, status=HTTP_200_OK)
 

@@ -8,6 +8,7 @@ from django.db.models import Prefetch
 import time
 import functools
 
+from chatbot_commerce.products.serializers import ProductModelSerializer
 
 def query_debugger(func):
 
@@ -41,43 +42,44 @@ def product_list(request):
     queryset = Product.objects\
         .select_related('department', 'category', 'sub_category', 'brand')\
         .prefetch_related(Prefetch('skus', queryset=skus))\
-        .filter(store=store).distinct('pk')
+        .filter(store=store).distinct('pk').order_by('-pk')
     print(len(queryset))
-    products = []
-    for product in queryset:
-        if product.sub_category:
-            category_tree = {
-                'name': product.sub_category.name,
-                'category': {
-                    'name': product.category.name,
-                    'department': {
-                        'name': product.department.name
-                    }
-                }
-            }
-        elif product.category:
-            category_tree = {
-                'name': product.category.name,
-                'department': {
-                    'name': product.department.name
-                }
-            }
-        else:
-            category_tree = {
-                'name': product.department.name
-            }
-        response = {
-            'title': product.title,
-            'is_visible': product.is_visible,
-            'category_tree': category_tree,
-            'is_active': product.is_active,
-            'keywords': product.keywords,
-            'description_short': product.description_short,
-            'skus': product.skus.values_list('serializer_data', flat=True)
-        }
-        products.append(response)
+    # products = []
+    # for product in queryset:
+    #     if product.sub_category:
+    #         category_tree = {
+    #             'name': product.sub_category.name,
+    #             'category': {
+    #                 'name': product.category.name,
+    #                 'department': {
+    #                     'name': product.department.name
+    #                 }
+    #             }
+    #         }
+    #     elif product.category:
+    #         category_tree = {
+    #             'name': product.category.name,
+    #             'department': {
+    #                 'name': product.department.name
+    #             }
+    #         }
+    #     else:
+    #         category_tree = {
+    #             'name': product.department.name
+    #         }
+    #     response = {
+    #         'id': product.external_id,
+    #         'title': product.title,
+    #         'is_visible': product.is_visible,
+    #         'category_tree': category_tree,
+    #         'is_active': product.is_active,
+    #         'keywords': product.keywords,
+    #         'description_short': product.description_short,
+    #         'skus': product.skus.values_list('serializer_data', flat=True)
+    #     }
+    #     products.append(response)
 
-    return Response(products)
+    return Response(ProductModelSerializer(queryset, many=True).data)
 
 
 @query_debugger
