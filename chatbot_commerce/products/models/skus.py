@@ -9,24 +9,14 @@ from django.dispatch import receiver
 
 
 # utilities
-from chatbot_commerce.utils.models import ChatbootModel
+from chatbot_commerce.utils.models import ChatbootModel, BaseAbstract, BaseRawAbstract
 from django.utils.translation import gettext as _
 
 
-class Skus(ChatbootModel):
+class Skus(BaseAbstract):
     """Store departmentss"""
 
     # Filter data
-    sku_name = models.CharField(
-        'name sku',
-        max_length=255,
-        null=True,
-        blank=True
-    )
-    sku_id = models.CharField(
-        'Sku ID',
-        max_length=10
-    )
     is_active = models.BooleanField(
         'Active sku',
         default=False,
@@ -109,19 +99,9 @@ class Skus(ChatbootModel):
         blank=True
     )
 
-    # Raw info
-    raw_json = models.JSONField(
-        'Complete sku data',
-        null=True,
-        blank=True
-    )
-
-    # Hack to db queries
-    serializer_data = models.JSONField(null=True, blank=True)
-
     def __str__(self):
         """Return sku id."""
-        return f'sku:{self.sku_name}'
+        return f'{self.name}'
 
     def save(self, *args, **kwargs):
         self.serializer_data = self.get_sku
@@ -134,18 +114,16 @@ class Skus(ChatbootModel):
 
     @property
     def get_sku(self):
-        from chatbot_commerce.stores.models import SaleChannel, SkuSeller
+        from chatbot_commerce.stores.models import SkuSeller
         sku_seller = SkuSeller.objects.filter(sku__pk=self.pk).values_list('serializer_data', flat=True)
-        sc = SaleChannel.objects.filter(store=self.product.store, external_id__in=self.raw_json.get('SalesChannels')).values_list('external_id', flat=True)
         sku_dict = {
-            'id': self.sku_id,
-            'name': self.sku_name,
+            'id': self.external_id,
+            'name': self.name,
             'total_quantity': self.total_quantity,
             'is_active': self.is_active,
             'images': self.get_images,
             'attributes': self.get_attributes,
             'price': self.get_prices,
-            'sc': list(sc),
             'sellers': list(sku_seller)
         }
         return sku_dict
@@ -174,8 +152,8 @@ class Image(ChatbootModel):
     """Image model"""
 
     # Filter data
-    name = models.CharField(_("Name"), max_length=500)
-    image_id = models.CharField(_("Image external id"), max_length=50)
+    name = models.CharField(_("Name"), max_length=500, null=True, blank=True)
+    image_id = models.CharField(_("Image external id"), max_length=50, null=True, blank=True)
 
     # Relationship filter
     sku = models.ForeignKey("products.Skus", on_delete=models.CASCADE)
@@ -201,7 +179,7 @@ def call_sku_save_from_image_for_delete(sender, instance, *args, **kwargs):
     instance.sku.save()
 
 
-class Price(ChatbootModel):
+class Price(BaseRawAbstract):
     """Price model"""
 
     list_price = models.BigIntegerField(_('List price'), null=True, blank=True)
@@ -213,9 +191,6 @@ class Price(ChatbootModel):
 
     # Relationship filter
     sku = models.ForeignKey(Skus, on_delete=models.CASCADE)
-
-    # Hack to db queries
-    serializer_data = models.JSONField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
         self.serializer_data = self.get_price
@@ -252,15 +227,17 @@ def call_sku_save_from_price_for_delete(sender, instance, *args, **kwargs):
     instance.sku.save()
 
 
-class FixedPrice(ChatbootModel):
+class FixedPrice(BaseRawAbstract):
     """Fixed price model"""
 
-    price = models.ForeignKey(Price, on_delete=models.CASCADE)
+    # Filter data
     trade_policy_id = models.CharField(_('Trade porlice ID'), max_length=50)
     value = models.BigIntegerField(_('Value'), null=True, blank=True)
     list_price = models.BigIntegerField(_('List price'), null=True, blank=True)
     min_quantity = models.IntegerField(_('Minimun quantity'), null=True, blank=True)
-    serializer_data = models.JSONField(null=True, blank=True)
+
+    # Relationship filter
+    price = models.ForeignKey(Price, on_delete=models.CASCADE)
 
     def save(self, *args, **kwargs):
         self.serializer_data = self.get_fixed_price
@@ -293,13 +270,15 @@ def call_price_save_from_fixedprice_for_delete(sender, instance, *args, **kwargs
     instance.price.save()
 
 
-class DateRange(ChatbootModel):
+class DateRange(BaseRawAbstract):
     """Date range model"""
 
-    fixed_price = models.ForeignKey(FixedPrice, on_delete=models.CASCADE)
+    # Filter data
     date_time_from = models.DateTimeField(_("From date time"), auto_now=False, auto_now_add=False)
     date_time_to = models.DateTimeField(_("To date time"), auto_now=False, auto_now_add=False)
-    serializer_data = models.JSONField(null=True, blank=True)
+
+    # Relationship filter
+    fixed_price = models.ForeignKey(FixedPrice, on_delete=models.CASCADE)
 
     def save(self, *args, **kwargs):
         self.serializer_data = self.get_date_range
@@ -334,12 +313,15 @@ def call_fixedprice_save_from_daterange_for_delete(sender, instance, *args, **kw
 
 class AttributeType(ChatbootModel):
 
+    # Filter data
+    name = models.CharField(max_length=255)
+    slug_name = models.SlugField(max_length=255, null=True, blank=True)
+
+    # Relationship filter
     store = models.ForeignKey(
         "stores.Store", verbose_name=_("Store"), on_delete=models.CASCADE,
         default=None, null=True
     )
-    name = models.CharField(max_length=255)
-    slug_name = models.SlugField(max_length=255, null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -359,16 +341,18 @@ def call_attributes_save_from_attributetype_for_save(sender, instance, *args, **
     [attribute.save() for attribute in instance.attributes.all()]
 
 
-class Attribute(ChatbootModel):
+class Attribute(BaseRawAbstract):
     """Attributes model"""
 
+    # Filter data
+    value = models.CharField(max_length=255)
+
+    # Relationship filter
     sku = models.ForeignKey(Skus, on_delete=models.CASCADE)
     attribute_type = models.ForeignKey(AttributeType, on_delete=models.CASCADE)
-    value = models.CharField(max_length=255)
-    serializer_data = models.JSONField(null=True, blank=True)
 
     def __str__(self):
-        return f'{self.sku.sku_name}: {self.attribute_type}: {self.value}'
+        return f'{self.sku.name}: {self.attribute_type}: {self.value}'
 
     def save(self, *args, **kwargs):
         self.serializer_data = self.get_attribute

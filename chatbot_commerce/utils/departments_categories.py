@@ -12,7 +12,7 @@ def get_sc_sellers(store, task=None):
     vtex = VtexStores(store=store)
     sales_channel = vtex.get_sales_channel()
     if task == 'create':
-        db_sc_ids = SaleChannel.objects.values_list('external_id', flat=True)
+        db_sc_ids = SaleChannel.objects.filter(store=store).values_list('external_id', flat=True)
     for channel in sales_channel:
         channel_id = channel.get('Id')
         if task == 'create':
@@ -37,9 +37,8 @@ def get_sc_sellers(store, task=None):
                         )
                         sellers.append(instance)
             instance_sale_channel, _ = SaleChannel.objects.update_or_create(
-                store=store, external_id=channel_id,
+                store=store, external_id=channel_id, name=channel.get('Name'),
                 defaults={
-                    'name': channel.get('Name'),
                     'is_active': channel.get('IsActive'),
                     'raw_json': channel
                 }

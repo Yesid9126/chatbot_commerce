@@ -32,4 +32,4 @@ class OrderItemAdmin(admin.ModelAdmin):
 
     def sku_id(self, obj):
         """Sku id."""
-        return obj.sku_unit.sku_id
+        return obj.sku_unit.external_id
