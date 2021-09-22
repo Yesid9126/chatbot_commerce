@@ -66,9 +66,10 @@ def update_or_create_sku(product_instance, product_id, sku, sku_id, vtex, store)
     if sku_id:
         sku_inventory = vtex.skus_inventory(sku_id=sku_id)
         sku_inventory = sku_inventory.get('balance')
-        for quantity in sku_inventory:
-            quantity_sku = quantity.get('totalQuantity')
-            total_quantity += quantity_sku
+        if sku_inventory:
+            for quantity in sku_inventory:
+                quantity_sku = quantity.get('totalQuantity')
+                total_quantity += quantity_sku
     else:
         print(f'error in sku: {sku_id} line 164 utils/products.py')
 

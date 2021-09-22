@@ -28,7 +28,7 @@ from chatbot_commerce.products.models import Product, Department
 from chatbot_commerce.stores.models import Store
 
 # Runtime
-# from db_python import query_debugger
+from db_python import query_debugger
 
 
 class ProductViewset(mixins.RetrieveModelMixin,
@@ -57,15 +57,13 @@ class ProductViewset(mixins.RetrieveModelMixin,
             'name__icontains' if key == 'sku_name' else
             key+'__icontains': value for key, value in request.GET.items() if key in swagger_params
         }
-        request.GET = {key: value for key, value in request.GET.items() if key not in swagger_params}
-        request.query_params = request.GET
 
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
         return self.queryset
 
-    # @query_debugger
+    @query_debugger
     def list(self, request, *args, **kwargs):
         """
         Return all products
@@ -73,12 +71,12 @@ class ProductViewset(mixins.RetrieveModelMixin,
         search = Put a keyword like name category or department to filter whith it
         example... search = jeans azul L
         """
-        self = products_skus(self)
+        self.queryset = products_skus(self)
         serializer = self.get_serializer(self.paginate_queryset(self.queryset.order_by('-pk')), many=True)
         paginated_data = self.get_paginated_response(serializer.data).data
         return Response(data=paginated_data, status=HTTP_200_OK)
 
-    # @query_debugger
+    @query_debugger
     def retrieve(self, request, *args, **kwargs):
         """
         Return a single product with his skus.
@@ -88,7 +86,14 @@ class ProductViewset(mixins.RetrieveModelMixin,
         try:
             obj = Product.objects\
                 .select_related('department', 'category', 'sub_category', 'brand')\
-                .prefetch_related(Prefetch('skus', queryset=Skus.objects.filter(**self.filter_data).distinct('pk')),)\
+                .prefetch_related(
+                    Prefetch(
+                        'skus', 
+                        queryset=Skus.objects\
+                            .prefetch_related('price__fixed_prices', 'attributes__attribute_type')\
+                            .filter(**self.filter_data).distinct('pk')
+                    ),
+                )\
                 .get(store=self.store, external_id=kwargs['pk'])
         except Exception as message:
             print(f'error. {message}')

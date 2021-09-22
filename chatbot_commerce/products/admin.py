@@ -88,7 +88,7 @@ class SkusAdmin(admin.ModelAdmin):
     list_display = ['external_id', 'name', 'total_quantity']
     search_fields = ['external_id', 'name']
     list_filter = ['is_active', 'is_inventoried', 'reference_stock_id']
-    readonly_fields = ['raw_json', 'serializer_data']
+    readonly_fields = ['raw_json']
 
 
 @admin.register(DateRange)
@@ -96,7 +96,6 @@ class DateRangeAdmin(admin.ModelAdmin):
     """Sku's model admin."""
 
     list_display = ['fixed_price', 'date_time_from', 'date_time_to']
-    readonly_fields = ['serializer_data']
 
 
 class InlineDateRangeAdmin(admin.TabularInline):
@@ -110,7 +109,6 @@ class FixedPriceAdmin(admin.ModelAdmin):
     """Price model admin."""
 
     list_display = ['price', 'trade_policy_id', 'value']
-    readonly_fields = ['serializer_data']
     inlines = [InlineDateRangeAdmin]
 
 
@@ -125,7 +123,6 @@ class PriceAdmin(admin.ModelAdmin):
     """Price model admin."""
 
     list_display = ['sku_id', 'sku', 'base_price']
-    readonly_fields = ['serializer_data']
     inlines = [InlineFixedPriceAdmin]
 
     def sku_id(self, obj):
@@ -138,7 +135,6 @@ class AttributeAdmin(admin.ModelAdmin):
     """Price model admin."""
 
     list_display = ['sku_id', 'sku', 'attribute_type', 'value']
-    readonly_fields = ['serializer_data']
     search_fields = ['value']
 
     def sku_id(self, obj):

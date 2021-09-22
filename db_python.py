@@ -10,6 +10,7 @@ import functools
 
 from chatbot_commerce.products.serializers import ProductModelSerializer
 
+
 def query_debugger(func):
 
     @functools.wraps(func)
@@ -120,7 +121,6 @@ def queryset_products_serialzier(queryset):
             'category_tree': category_tree,
             'is_active': product.is_active,
             'description_short': product.description_short,
-            'skus': product.skus.values_list('serializer_data', flat=True)
         }
         products.append(response)
 

@@ -13,7 +13,7 @@ from django_celery_beat.models import PeriodicTask, CrontabSchedule
 from chatbot_commerce.utils.models import ChatbootModel, BaseAbstract
 from django.utils.translation import gettext as _
 from django.dispatch import receiver
-from django.db.models.signals import post_save, post_delete
+from django.db.models.signals import post_save
 import requests
 
 
@@ -109,12 +109,6 @@ def execute_task(sender, instance, *args, **kwargs):
         PeriodicTask.objects.filter(name=f'{instance.name} update', task='update_periodic_task').delete()
 
 
-@receiver(post_delete, sender=Store)
-def delete_task(sender, instance, *args, **kwargs):
-    PeriodicTask.objects.filter(name=f'{instance.name} create & new', task='principal_periodic_task').delete()
-    PeriodicTask.objects.filter(name=f'{instance.name} update', task='update_periodic_task').delete()
-
-
 class SaleChannel(BaseAbstract):
     """Trade policy model."""
 
@@ -132,34 +126,12 @@ class SaleChannel(BaseAbstract):
 
     def save(self, *args, **kwargs):
         self.slug_name = slugify(self.name, separator="_")
-        self.serializer_data = self.get_sale_channel
         return super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = "Sale Channel"
         verbose_name_plural = "Sales Channel"
         default_related_name = 'sales_channel'
-
-    @property
-    def get_sale_channel(self):
-        sc_dict = {
-            'id': self.external_id,
-            'name': self.name,
-            'is_active': self.is_active
-        }
-        return sc_dict
-
-
-@receiver(post_save, sender=SaleChannel)
-def call_sku_and_seller_save_from_sc_save(sender, instance, *args, **kwargs):
-    [seller.save() for seller in instance.sellers.all()]
-    [sku.save() for sku in instance.skus.all()]
-
-
-@receiver(post_delete, sender=SaleChannel)
-def call_sku_and_seller_save_from_sc_delete(sender, instance, *args, **kwargs):
-    [seller.save() for seller in instance.sellers.all()]
-    [sku.save() for sku in instance.skus.all()]
 
 
 class Seller(ChatbootModel):
@@ -181,37 +153,17 @@ class Seller(ChatbootModel):
     # raw data
     raw_json = models.JSONField(_("Raw data"))
 
-    # Hack to db queries
-    serializer_data = models.JSONField(null=True, blank=True)
-
     def __str__(self):
         return f'{self.store} | {self.name}'
 
     def save(self, *args, **kwargs):
         self.slug_name = slugify(self.name, separator="_")
-        self.serializer_data = self.get_seller
         return super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = "Seller"
         verbose_name_plural = "Sellers"
         default_related_name = 'sellers'
-
-    @property
-    def get_seller(self):
-        seller_dict = {
-            'id': self.seller_id,
-            'name': self.name,
-            'is_active': self.is_active,
-            'descriptiom': self.description,
-            'various_payment_iptions': self.hibrit_payment_options
-        }
-        return seller_dict
-
-
-@receiver(post_save, sender=Seller)
-def call_sku_seller_save_from_seller(sender, instance, *args, **kwargs):
-    [sku_seller.save() for sku_seller in instance.sku_seller.all()]
 
 
 class SkuSeller(ChatbootModel):
@@ -226,22 +178,7 @@ class SkuSeller(ChatbootModel):
     # Raw data
     raw_json = models.JSONField(_("Raw data"))
 
-    # Hack to db queries
-    serializer_data = models.JSONField(null=True, blank=True)
-
-    def save(self, *args, **kwargs):
-        self.serializer_data = self.get_sku_seller
-        return super().save(*args, **kwargs)
-
     class Meta:
         verbose_name = 'Sku Seller'
         verbose_name_plural = 'Skus Sellers'
         default_related_name = 'sku_seller'
-
-    @property
-    def get_sku_seller(self):
-        sku_seller_dict = {
-            'seller_id': self.seller.seller_id,
-            'is_active': self.is_active
-        }
-        return sku_seller_dict

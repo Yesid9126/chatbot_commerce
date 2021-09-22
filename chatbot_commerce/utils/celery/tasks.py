@@ -71,10 +71,7 @@ def create_price(store_pk, skus=None):
                     dateranges_created.append(daterange_instance.pk)
     return True
 
-
-@app.task(name='create_images')
-def create_images(store_pk, skus=None):
-    store = Store.objects.get(pk=store_pk)
+def create_images(store, skus=None):
     if skus is None:
         all_skus = Skus.objects.filter(product__store=store)
     else:
@@ -103,11 +100,8 @@ def create_images(store_pk, skus=None):
                 break
     return True
 
-
-@app.task(name='create_attributes')
-def create_attributes(store_pk, skus=None):
+def create_attributes(store, skus=None):
     print('create_attributes')
-    store = Store.objects.get(pk=store_pk)
     if skus is None:
         all_skus = Skus.objects.filter(product__store=store)
     else:

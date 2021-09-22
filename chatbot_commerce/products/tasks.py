@@ -2,7 +2,7 @@
 
 
 # Celery
-from celery import Celery, group
+from celery import Celery
 
 
 # Utils
@@ -42,8 +42,9 @@ def principal_periodic_task(*args, **kwargs):
         skus = create_products_vtex_store(store=store)
 
         # skus extra components
-        job = group(create_price.s(store_pk=store_pk, skus=skus), create_images.s(store_pk=store_pk, skus=skus), create_attributes.s(store_pk=store_pk, skus=skus))
-        job.apply_async()
+        create_price.s(store_pk=store_pk, skus=skus).apply_async()
+        create_images(store=store, skus=skus)
+        create_attributes(store=store, skus=skus)
 
     except Exception as message:
         print(f'error: {message}')
@@ -74,8 +75,9 @@ def store_begining(store, *args, **kwargs):
     skus = create_products_vtex_store(store=store, limit=10)
 
     # skus extra components
-    job = group(create_price.s(store_pk=store_pk, skus=skus), create_images.s(store_pk=store_pk, skus=skus), create_attributes.s(store_pk=store_pk, skus=skus))
-    job.apply_async()
+    create_price.s(store_pk=store_pk, skus=skus).apply_async()
+    create_images(store=store, skus=skus)
+    create_attributes(store=store, skus=skus)
 
     store.sync_status = True
     store.save()
@@ -107,8 +109,9 @@ def update_periodic_task(*args, **kwargs):
         update_products_vtex_store(store=store)
 
         # skus extra components
-        job = group(create_price.s(store_pk=store_pk), create_images.s(store_pk=store_pk), create_attributes.s(store_pk=store_pk))
-        job.apply_async()
+        create_price.s(store_pk=store_pk).apply_async()
+        create_images(store=store)
+        create_attributes(store=store)
 
     except Exception as message:
         print(f'error: {message}')
