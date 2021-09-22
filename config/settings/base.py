@@ -2,8 +2,9 @@
 Base settings to build other settings files upon.
 """
 from pathlib import Path
-from django.urls import reverse_lazy
+
 import environ
+from django.urls import reverse_lazy
 
 ROOT_DIR = Path(__file__).resolve(strict=True).parent.parent.parent
 # chatbot_commerce/
@@ -67,18 +68,18 @@ THIRD_PARTY_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     "corsheaders",
-    'django_filters',
-    'coreapi',
-    'cython',
-    'drf_yasg',
+    "django_filters",
+    "coreapi",
+    "cython",
+    "drf_yasg",
     "rest_framework_api_key",
 ]
 
 LOCAL_APPS = [
     "chatbot_commerce.products.apps.ProductConfig",
     "chatbot_commerce.stores.apps.StoresConfig",
-    "chatbot_commerce.orders.apps.OrdersConfig"
-
+    "chatbot_commerce.orders.apps.OrdersConfig",
+    "chatbot_commerce.vehicles.apps.VehiclesConfig"
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -284,16 +285,14 @@ CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
 # -------------------------------------------------------------------------------
 # django-rest-framework - https://www.django-rest-framework.org/api-guide/settings/
 REST_FRAMEWORK = {
-    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
-    'DEFAULT_RENDERER_CLASSES': (
-        'rest_framework.renderers.JSONRenderer',
-    ),
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.TokenAuthentication',
+    "DEFAULT_SCHEMA_CLASS": "rest_framework.schemas.coreapi.AutoSchema",
+    "DEFAULT_RENDERER_CLASSES": ("rest_framework.renderers.JSONRenderer",),
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework.authentication.TokenAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ),
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-    'PAGE_SIZE': 50
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
+    "PAGE_SIZE": 50,
 }
 CORS_ALLOW_ALL_ORIGINS = True
 APPEND_SLASH = True
@@ -303,14 +302,14 @@ STORE_NAME = env("STORE_NAME")
 ENVIROMENT_VTEX = env("ENVIROMENT_VTEX")
 PRICESKU_VTEX = env("PRICESKU_VTEX")
 
-URL_VTEX = f'https://{STORE_NAME}.{ENVIROMENT_VTEX}'
-URL_PRICESKU_VTEX = f'https://{PRICESKU_VTEX}/{STORE_NAME}'
+URL_VTEX = f"https://{STORE_NAME}.{ENVIROMENT_VTEX}"
+URL_PRICESKU_VTEX = f"https://{PRICESKU_VTEX}/{STORE_NAME}"
 
 
 SWAGGER_SETTINGS = {
-    'USE_SESSION_AUTH': True,
-    'LOGOUT_URL': reverse_lazy('admin:logout'),
-    'LOGIN_URL': reverse_lazy('admin:login'),
+    "USE_SESSION_AUTH": True,
+    "LOGOUT_URL": reverse_lazy("admin:logout"),
+    "LOGIN_URL": reverse_lazy("admin:login"),
 }
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
