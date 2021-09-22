@@ -87,7 +87,7 @@ class Product(AbstractCategory):
 
     def __str__(self):
         """Return product name|id."""
-        return f'name:{self.name}'
+        return f'{self.name}'
 
     class Meta:
         verbose_name = "Product"
