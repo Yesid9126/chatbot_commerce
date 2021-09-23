@@ -125,7 +125,7 @@ class Vehicle(models.Model):
     date_sale = models.DateField(
         _("Date sale"), auto_now=False, auto_now_add=False, null=True, blank=True
     )
-    fecha_obligatorio = models.DateField(  # TODO pregutar qué es.
+    fecha_obligatorio = models.DateField(  # pregutar qué es.
         ("Fecha obligatorio"),
         auto_now=False,
         auto_now_add=False,
@@ -140,44 +140,109 @@ class Vehicle(models.Model):
         blank=True,
     )
     insurance_nit = models.CharField(
-        _("insurance Nit"), max_length=500, null=True, blank=True
+        _("insurance Nit"),
+        max_length=500,
+        null=True,
+        blank=True,
     )
-    user_nit = models.CharField(_("User nit"), max_length=500, null=True, blank=True)
-    # TODO car features
-    doors = models.FloatField(_("Car doors"), null=True, blank=True)
+    user_nit = models.CharField(
+        _("User nit"),
+        max_length=500,
+        null=True,
+        blank=True,
+    )
+    doors = models.FloatField(
+        _("Car doors"),
+        null=True,
+        blank=True,
+    )
     year = models.IntegerField(  # TODO preguntar qué es.
-        _("year"), null=True, blank=True
+        _("year"),
+        null=True,
+        blank=True,
     )
-    model = models.CharField(_("Model"), max_length=500, null=True, blank=True)
-    model_id = models.CharField(_("Model id"), max_length=500, null=True, blank=True)
-    brand = models.CharField(_("Brand"), max_length=500, null=True, blank=True)
+    model = models.CharField(
+        _("Model"),
+        max_length=500,
+        null=True,
+        blank=True,
+    )
+    model_id = models.CharField(
+        _("Model id"),
+        max_length=500,
+        null=True,
+        blank=True,
+    )
+    brand = models.CharField(
+        _("Brand"),
+        max_length=500,
+        null=True,
+        blank=True,
+    )
     modelo_desc = models.CharField(
-        _("Model description"), max_length=500, null=True, blank=True
+        _("Model description"),
+        max_length=500,
+        null=True,
+        blank=True,
     )
-    brand_desc = models.CharField(  # TODO preguntar qué es.
-        _("Brand description"), max_length=500, null=True, blank=True
+    brand_desc = models.CharField(
+        _("Brand description"),
+        max_length=500,
+        null=True,
+        blank=True,
     )
-    color_desc = models.CharField(  # TODO preguntar qué es.
-        _("Color description"), max_length=500, null=True, blank=True
+    color_desc = models.CharField(
+        _("Color description"),
+        max_length=500,
+        null=True,
+        blank=True,
     )
-    color = models.CharField(_("color"), max_length=500, null=True, blank=True)
-    unit_value = models.FloatField(_("Unit value"), null=True, blank=True)
-    fuel = models.CharField(_("Fuel"), max_length=500, null=True, blank=True)
-    fuel_description = models.CharField(  # TODO preguntar qué es.
-        _("Fuel description"), max_length=500, null=True, blank=True
+    color = models.CharField(
+        _("color"),
+        max_length=500,
+        null=True,
+        blank=True,
+    )
+    unit_value = models.FloatField(
+        _("Unit value"),
+        null=True,
+        blank=True,
+    )
+    fuel = models.CharField(
+        _("Fuel"),
+        max_length=500,
+        null=True,
+        blank=True,
+    )
+    fuel_description = models.CharField(
+        _("Fuel description"),
+        max_length=500,
+        null=True,
+        blank=True,
     )
     date_last_entry = models.DateField(
-        _("Date last entry"), auto_now=False, auto_now_add=False, null=True, blank=True
+        _("Date last entry"),
+        auto_now=False,
+        auto_now_add=False,
+        null=True,
+        blank=True,
     )
-    usado_comprado = models.FloatField(  # usado_comprado
-        ("Usado comprado"), null=True, blank=True
+    usado_comprado = models.FloatField(("Usado comprado"), null=True, blank=True)
+    usado_retomado = models.FloatField(
+        ("Usado retomado"),
+        null=True,
+        blank=True,
     )
-    usado_retomado = models.FloatField(  # usado_comprado
-        ("Usado retomado"), null=True, blank=True
+    es_flota = models.IntegerField(
+        ("Es flota"),
+        null=True,
+        blank=True,
     )
-    es_flota = models.IntegerField(("Es flota"), null=True, blank=True)
-    transaction_id = models.CharField(  # TODO preguntar qué es.
-        _("Transaction id"), max_length=500, null=True, blank=True
+    transaction_id = models.CharField(
+        _("Transaction id"),
+        max_length=500,
+        null=True,
+        blank=True,
     )
 
     class Meta:
