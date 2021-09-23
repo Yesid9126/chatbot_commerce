@@ -246,6 +246,10 @@ class Vehicle(models.Model):
         blank=True,
     )
 
+    def __str__(self):
+        """Return vehicle"""
+        return f"{self.brand}-{self.model}-{self.model_year}"
+
     class Meta:
         verbose_name = "Vehicle"
         verbose_name_plural = "Vehicles"
