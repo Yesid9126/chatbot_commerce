@@ -3,7 +3,8 @@ from django.utils.translation import gettext as _
 
 
 class Vehicle(models.Model):
-    # TODO no agregue fechas de creacion
+    # TODO check the following fields:
+    #   (kilometraje, fecha_obligatorio, usado_comprado, usado_retomado, es_flota)
 
     description = models.TextField(_("Description"), blank=True, null=True)
     engine_displacement = models.FloatField(
