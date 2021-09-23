@@ -17,19 +17,19 @@ class Vehicle(models.Model):
         blank=True,
     )
     capacity_unit = models.CharField(
-        _("Engine displacement"),
+        _("Capacity unit"),
         max_length=500,
         null=True,
         blank=True,
     )
     capacity_unit_desc = models.CharField(
-        _("Des und capacity"),
+        _("Capacity unit description"),
         max_length=500,
         null=True,
         blank=True,
     )
     created_date = models.DateTimeField(
-        "created at",
+        ("Created at"),
         auto_now_add=True,
         null=True,
         blank=True,
@@ -70,7 +70,7 @@ class Vehicle(models.Model):
         blank=True,
     )
     article_nit = models.CharField(  # nit prenda
-        _("Nit article"),
+        _("Article nit"),
         max_length=500,
         null=True,
         blank=True,
@@ -81,7 +81,7 @@ class Vehicle(models.Model):
         null=True,
     )
     license_plate = models.CharField(
-        _("Nit"),
+        _("License plate"),
         max_length=500,
         null=True,
         blank=True,
@@ -100,7 +100,7 @@ class Vehicle(models.Model):
         blank=True,
     )
     customer_nit = models.CharField(
-        _("Buyer nit"),
+        _("Customer nit"),
         max_length=500,
         null=True,
         blank=True,
@@ -109,7 +109,7 @@ class Vehicle(models.Model):
         _("Sales type"), max_length=500, null=True, blank=True
     )
     sales_type_desc = models.CharField(
-        _("Des sales type "),
+        _("Sales type description"),
         max_length=500,
         blank=True,
         null=True,
@@ -140,7 +140,7 @@ class Vehicle(models.Model):
         blank=True,
     )
     insurance_nit = models.CharField(
-        _("insurance Nit"),
+        _("insurance nit"),
         max_length=500,
         null=True,
         blank=True,
@@ -191,14 +191,14 @@ class Vehicle(models.Model):
         null=True,
         blank=True,
     )
-    color_desc = models.CharField(
-        _("Color description"),
+    color = models.CharField(
+        _("color"),
         max_length=500,
         null=True,
         blank=True,
     )
-    color = models.CharField(
-        _("color"),
+    color_desc = models.CharField(
+        _("Color description"),
         max_length=500,
         null=True,
         blank=True,
@@ -233,7 +233,7 @@ class Vehicle(models.Model):
         null=True,
         blank=True,
     )
-    es_flota = models.IntegerField(
+    es_flota = models.BooleanField(
         ("Es flota"),
         null=True,
         blank=True,
