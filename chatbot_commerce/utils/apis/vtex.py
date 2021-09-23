@@ -65,6 +65,7 @@ class VtexStores:
         )
 
     def product_unit(self, product_id):
+        print(f'product_id: {product_id}..')
         uri = f'catalog_system/pvt/products/ProductGet/{product_id}'
         method = 'get'
         return self._get_json_resource(
@@ -73,12 +74,26 @@ class VtexStores:
         )
 
     def get_sku_context(self, sku_id, sc):
+        print(f'sku_id: {sku_id}..')
+        # Quantity in warehouses
+        total_quantity = 0
+        if sku_id:
+            sku_inventory = self.skus_inventory(sku_id=sku_id)
+            sku_inventory = sku_inventory.get('balance')
+            if sku_inventory:
+                for quantity in sku_inventory:
+                    quantity_sku = quantity.get('totalQuantity')
+                    total_quantity += quantity_sku
+        else:
+            print(f'error in sku: {sku_id} line 164 utils/products.py')
+
         uri = f'catalog_system/pvt/sku/stockkeepingunitbyid/{sku_id}?sc={sc}'
         method = 'get'
+
         return self._get_json_resource(
             uri,
             method=method
-        )
+        ) | {'total_quantity': total_quantity}
 
     def skus_inventory(self, sku_id):
         uri = f'logistics/pvt/inventory/skus/{sku_id}'

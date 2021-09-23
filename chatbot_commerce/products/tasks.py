@@ -9,6 +9,7 @@ from celery import Celery
 from chatbot_commerce.utils.departments_categories import get_departments, get_brands, get_sc_sellers
 from chatbot_commerce.utils.products import create_products_vtex_store, update_products_vtex_store
 from chatbot_commerce.utils.celery.tasks import create_attributes, create_images, create_price
+import threading
 
 # Models
 from chatbot_commerce.stores.models.stores import Store
