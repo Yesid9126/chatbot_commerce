@@ -230,6 +230,16 @@ class SkuVehicle(models.Model):
     fuel_description = models.CharField(
         _("Fuel description"), max_length=500, null=True, blank=True
     )
+    usado_comprado = models.FloatField(
+        ("Usado comprado"),
+        null=True,
+        blank=True,
+    )
+    usado_retomado = models.FloatField(
+        ("Usado retomado"),
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         verbose_name = "SkuVehicle"
