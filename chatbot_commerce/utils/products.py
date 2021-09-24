@@ -166,7 +166,6 @@ def update_or_create_sku(product_instance, product_id, sku, vtex, store):
                 )
                 fixed_prices = price.get('fixedPrices')
                 if fixed_prices:
-                    print(fixed_prices)
                     for fixedprice_dic in fixed_prices:
                         fixedprice_instance, _ = FixedPrice.objects.update_or_create(
                             price=price_instance,
@@ -180,6 +179,7 @@ def update_or_create_sku(product_instance, product_id, sku, vtex, store):
                         )
                         daterange_dic = fixedprice_dic.get('dateRange')
                         if daterange_dic:
+                            print(daterange_dic)
                             daterange_instance, _ = DateRange.objects.update_or_create(
                                 fixed_price=fixedprice_instance,
                                 defaults={
