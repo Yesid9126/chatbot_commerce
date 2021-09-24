@@ -236,5 +236,4 @@ class Attribute(BaseRawAbstract):
 
         verbose_name = "Attribute"
         verbose_name_plural = "Attributes"
-        unique_together = ['sku', 'attribute_type']
         default_related_name = 'attributes'
