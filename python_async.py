@@ -6,7 +6,7 @@ def menssage(delay):
     print(delay)
     return delay
 
-loop = asyncio.get_event_loop()
+loop = asyncio.new_event_loop()
 async def hola(loop):
     start = time.time()
     asynciofunctions = [loop.run_in_executor(None, menssage, i) for i in list(range(100))[::-1]]
@@ -17,4 +17,5 @@ async def hola(loop):
     return result, result2
 
 result = loop.run_until_complete(hola(loop=loop))
+loop.close()
 print('mi resultado',result)

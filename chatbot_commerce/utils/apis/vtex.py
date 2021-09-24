@@ -9,6 +9,7 @@ class VtexStores:
 
     def __init__(self, store):
         self.store = store
+        self.vtexprice = VtexPriceSku(store=store)
 
     def _get_resources(self, uri, **kwargs):
         """Get resources for store."""
@@ -77,8 +78,13 @@ class VtexStores:
         print(f'sku_id: {sku_id}..')
         # Quantity in warehouses
         total_quantity = 0
+        price_dic = None
         if sku_id:
             sku_inventory = self.skus_inventory(sku_id=sku_id)
+            sku_price= self.vtexprice.price_sku(sku_id=sku_id)
+            listprice = sku_price.get('listPrice')
+            if listprice:
+                price_dic = sku_price
             sku_inventory = sku_inventory.get('balance')
             if sku_inventory:
                 for quantity in sku_inventory:
@@ -93,7 +99,7 @@ class VtexStores:
         return self._get_json_resource(
             uri,
             method=method
-        ) | {'total_quantity': total_quantity}
+        ) | {'total_quantity': total_quantity, 'price': price_dic}
 
     def skus_inventory(self, sku_id):
         uri = f'logistics/pvt/inventory/skus/{sku_id}'

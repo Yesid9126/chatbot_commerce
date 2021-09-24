@@ -28,15 +28,13 @@ class Store(ChatbootModel):
 
     # Task manage
     sync_status = models.BooleanField(_("Task begun Finish"), default=False)
-    updating_elements_status = models.BooleanField(_("Task updating store elements"), default=False)
-    creating_elements_status = models.BooleanField(_("Task creating store elments"), default=False)
+    creating_updating_elements_status = models.BooleanField(_("Task principal store elments"), default=False)
 
     # Request information
     domain = models.CharField(_("Domain of store"), max_length=500, blank=True, null=True)
     status = models.BooleanField(_("Valid connection"), default=False)
     api_key = models.CharField(max_length=500)
     api_token = models.CharField(max_length=500)
-    last_page = models.BigIntegerField(_("Last page get of skus"), default=0, blank=True, null=True)
 
     # Filter manage
     disable_filters = models.BooleanField(_("Disable filters"), default=False)
@@ -98,15 +96,12 @@ def execute_task(sender, instance, *args, **kwargs):
     if instance.sync_status is True:
         try:
             every_1, _ = CrontabSchedule.objects.get_or_create(day_of_week='*', hour=1, minute=0)
-            every_1_30, _ = CrontabSchedule.objects.get_or_create(day_of_week='*', hour=1, minute=30)
-            task_instance, _ = PeriodicTask.objects.get_or_create(name=f'{instance.name} create & new', task='principal_periodic_task', defaults=dict(crontab=every_1, kwargs='{"store": "%s"}' % (instance.pk)))
-            task_instance, _ = PeriodicTask.objects.get_or_create(name=f'{instance.name} update', task='update_periodic_task', defaults=dict(crontab=every_1_30, kwargs='{"store": "%s"}' % (instance.pk)))
+            task_instance, _ = PeriodicTask.objects.get_or_create(name=f'{instance.name} create & update', task='principal_periodic_task', defaults=dict(crontab=every_1, kwargs='{"store": "%s"}' % (instance.pk)))
         except Exception as message:
             print(message)
 
     if instance.status is False or instance.sync_status is False:
-        PeriodicTask.objects.filter(name=f'{instance.name} create & new', task='principal_periodic_task').delete()
-        PeriodicTask.objects.filter(name=f'{instance.name} update', task='update_periodic_task').delete()
+        PeriodicTask.objects.filter(name=f'{instance.name} create & update', task='principal_periodic_task').delete()
 
 
 class SaleChannel(BaseAbstract):
