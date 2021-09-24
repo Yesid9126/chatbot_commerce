@@ -14,6 +14,7 @@ from chatbot_commerce.utils.apis.vtex import VtexStores
 
 # Utils
 import asyncio
+import gc
 
 
 def update_or_create_product(store, product, product_id, vtex):
@@ -60,164 +61,160 @@ def update_or_create_product(store, product, product_id, vtex):
 def update_or_create_sku(product_instance, product_id, sku, vtex, store):
 
     # Create or update sku
-    # try:
-    # Get instance
-    sku_instance, _ = Skus.objects.update_or_create(
-        external_id=sku.get('Id'),
-        product=product_instance,
-        defaults={
-            'name': sku.get('NameComplete'),
-            'is_active': sku.get('IsActive'),
-            'ref_id': sku.get('RefId'),
-            'packaged_height': sku.get('Height'),
-            'packaged_length': sku.get('Length'),
-            'packaged_width': sku.get('Width'),
-            'packaged_weight': sku.get('WeightKg'),
-            'is_kit': sku.get('IsKit'),
-            'comercial_condition_id': sku.get('CommercialConditionId'),
-            'manufacter_code': sku.get('ManufacturerCode'),
-            'reference_stock_id': sku.get('ReferenceStockKeepingUnitId'),
-            'is_inventoried': sku.get('IsInventoried'),
-            'is_transported': sku.get('IsTransported'),
-            'total_quantity': sku.get('total_quantity'),
-            'raw_json': sku
-        }
-    )
-    # Get Sales channels of sku
-    sc_ids = sku.get('SalesChannels')
-    sc = SaleChannel.objects.filter(store=store, external_id__in=sc_ids)
-    sc_ids.clear()
-    sku_instance.sales_channels.add(*sc)
-
-    # Get Sellers of sku
-    sellers_array = sku.get('SkuSellers')
-    for seller_dict in sellers_array:
-        seller_instance = Seller.objects.filter(store=store, seller_id=seller_dict.get('SellerId')).first()
-        if seller_instance:
-            SkuSeller.objects.update_or_create(
-                sku=sku_instance, seller=seller_instance,
-                defaults={
-                    'is_active': seller_dict.get('IsActive'),
-                    'raw_json': seller_dict
-                }
-
-            )
-    sellers_array.clear()
-    price = sku.get('price')
-    images_array = sku.get('Images')
-    sku_specifications_array = sku.get('SkuSpecifications')
-    sku.clear()
-
-    # Create image for sku
     try:
-        if images_array:
-            for image_dict in images_array:
-                image_url = image_dict.get('ImageUrl')
-                if image_url:
-                    name = image_dict.get('ImageName')
-                    image_instance, _ = Image.objects.update_or_create(
-                        image_id=image_dict.get('FileId'),
-                        sku=sku_instance,
-                        defaults={
-                            'name': name,
-                            'image_url': image_url
-                        }
-                    )
-                else:
-                    print(f'error: {images_array}')
-            images_array.clear()
-    except Exception as message:
-        print(f'message: {message} imagenes')
-    # Create attributes for sku
-    try:
-        if sku_specifications_array:
-            for dic in sku_specifications_array:
-                name = dic.get('FieldName')
-                attribute_type_instance, _ = AttributeType.objects.get_or_create(
-                    store=store,
-                    name=name
+        # Get instance
+        sku_instance, _ = Skus.objects.update_or_create(
+            external_id=sku.get('Id'),
+            product=product_instance,
+            defaults={
+                'name': sku.get('NameComplete'),
+                'is_active': sku.get('IsActive'),
+                'ref_id': sku.get('RefId'),
+                'packaged_height': sku.get('Height'),
+                'packaged_length': sku.get('Length'),
+                'packaged_width': sku.get('Width'),
+                'packaged_weight': sku.get('WeightKg'),
+                'is_kit': sku.get('IsKit'),
+                'comercial_condition_id': sku.get('CommercialConditionId'),
+                'manufacter_code': sku.get('ManufacturerCode'),
+                'reference_stock_id': sku.get('ReferenceStockKeepingUnitId'),
+                'is_inventoried': sku.get('IsInventoried'),
+                'is_transported': sku.get('IsTransported'),
+                'total_quantity': sku.get('total_quantity'),
+                'raw_json': sku
+            }
+        )
+        # Get Sales channels of sku
+        sc_ids = sku.get('SalesChannels')
+        sc = SaleChannel.objects.filter(store=store, external_id__in=sc_ids)
+        sc_ids.clear()
+        sku_instance.sales_channels.add(*sc)
+
+        # Get Sellers of sku
+        sellers_array = sku.get('SkuSellers')
+        for seller_dict in sellers_array:
+            seller_instance = Seller.objects.filter(store=store, seller_id=seller_dict.get('SellerId')).first()
+            if seller_instance:
+                SkuSeller.objects.update_or_create(
+                    sku=sku_instance, seller=seller_instance,
+                    defaults={
+                        'is_active': seller_dict.get('IsActive'),
+                        'raw_json': seller_dict
+                    }
+
                 )
-                values = dic.get('FieldValues')
-                print(values)
-                if values:
-                    for value in values:
-                        attribute_instance, _ = Attribute.objects.update_or_create(
-                            sku=sku_instance,
-                            attribute_type=attribute_type_instance,
-                            value=value,
-                        )
-            sku_specifications_array.clear()
-            values.clear()
-    except Exception as message:
-        print(f'message: {message} specificaciones')
+        sellers_array.clear()
+        price = sku.get('price')
+        images_array = sku.get('Images')
+        sku_specifications_array = sku.get('SkuSpecifications')
+        sku.clear()
 
-    # Create price for sku
-    try:
-        if price:
-            price_instance, _ = Price.objects.update_or_create(
-                sku=sku_instance,
-                defaults={
-                    "list_price": price.get('listPrice'),
-                    "cost_price": price.get('costPrice'),
-                    "markup": price.get('markup'),
-                    "base_price": price.get('basePrice'),
-                    "raw_json": price
-                }
-            )
-            fixed_prices = price.get('fixedPrices')
-            if fixed_prices:
-                for fixedprice_dic in fixed_prices:
-                    fixedprice_instance, _ = FixedPrice.objects.update_or_create(
-                        price=price_instance,
-                        trade_policy_id=fixedprice_dic["tradePolicyId"],
-                        defaults={
-                            "value": fixedprice_dic["value"],
-                            "list_price": fixedprice_dic["listPrice"],
-                            "min_quantity": fixedprice_dic["minQuantity"],
-                            "raw_json": fixedprice_dic
-                        }
-                    )
-                    daterange_dic = fixedprice_dic.get('dateRange')
-                    if daterange_dic:
-                        daterange_instance, _ = DateRange.objects.update_or_create(
-                            fixed_price=fixedprice_instance,
+        # Create image for sku
+        try:
+            if images_array:
+                for image_dict in images_array:
+                    image_url = image_dict.get('ImageUrl')
+                    if image_url:
+                        name = image_dict.get('ImageName')
+                        image_instance, _ = Image.objects.update_or_create(
+                            image_id=image_dict.get('FileId'),
+                            sku=sku_instance,
                             defaults={
-                                'date_time_from': daterange_dic.get('from'),
-                                'date_time_to': daterange_dic.get('to'),
-                                "raw_json": daterange_dic
+                                'name': name,
+                                'image_url': image_url
                             }
                         )
-            price.clear()
-            fixed_prices.clear()
-    except Exception as message:
-        print(f'message: {message} precios')
-    # except Exception as e:
-    #     error = {
-    #         'message': e,
-    #         'product_id': product_id,
-    #         'sku_id': sku.get('Id'),
-    #     }
-    #     print(error)
-    #     sku_instance = None
+                    else:
+                        print(f'error: {images_array}')
+                images_array.clear()
+        except Exception as message:
+            print(f'message: {message} imagenes')
+        # Create attributes for sku
+        try:
+            if sku_specifications_array:
+                for dic in sku_specifications_array:
+                    name = dic.get('FieldName')
+                    attribute_type_instance, _ = AttributeType.objects.get_or_create(
+                        store=store,
+                        name=name
+                    )
+                    values = dic.get('FieldValues')
+                    if values:
+                        for value in values:
+                            attribute_instance, _ = Attribute.objects.update_or_create(
+                                sku=sku_instance,
+                                attribute_type=attribute_type_instance,
+                                value=value,
+                            )
+                sku_specifications_array.clear()
+                values.clear()
+        except Exception as message:
+            print(f'message: {message} specificaciones')
+
+        # Create price for sku
+        try:
+            if price:
+                price_instance, _ = Price.objects.update_or_create(
+                    sku=sku_instance,
+                    defaults={
+                        "list_price": price.get('listPrice'),
+                        "cost_price": price.get('costPrice'),
+                        "markup": price.get('markup'),
+                        "base_price": price.get('basePrice'),
+                        "raw_json": price
+                    }
+                )
+                fixed_prices = price.get('fixedPrices')
+                if fixed_prices:
+                    print(fixed_prices)
+                    for fixedprice_dic in fixed_prices:
+                        fixedprice_instance, _ = FixedPrice.objects.update_or_create(
+                            price=price_instance,
+                            trade_policy_id=fixedprice_dic["tradePolicyId"],
+                            defaults={
+                                "value": fixedprice_dic["value"],
+                                "list_price": fixedprice_dic["listPrice"],
+                                "min_quantity": fixedprice_dic["minQuantity"],
+                                "raw_json": fixedprice_dic
+                            }
+                        )
+                        daterange_dic = fixedprice_dic.get('dateRange')
+                        if daterange_dic:
+                            daterange_instance, _ = DateRange.objects.update_or_create(
+                                fixed_price=fixedprice_instance,
+                                defaults={
+                                    'date_time_from': daterange_dic.get('from'),
+                                    'date_time_to': daterange_dic.get('to'),
+                                    "raw_json": daterange_dic
+                                }
+                            )
+                price.clear()
+                fixed_prices.clear()
+        except Exception as message:
+            print(f'message: {message} precios')
+    except Exception as e:
+        error = {
+            'message': e,
+            'product_id': product_id,
+            'sku_id': sku.get('Id'),
+        }
+        print(error)
     return None
 
 
 async def get_skus_and_products_dicts(sc, loop, vtex, skus=[], products_created=[]):
-    print('inicio')
-    print('aaaaaa')
     # Get dicts skus
     asynciofunctions_skus = [loop.run_in_executor(None, vtex.get_sku_context, sku_id, sc_id) for sc_id in sc if sc_id in ['1', 1] for sku_id in skus]
     skus_dicts = [await asynciofunction_sku for asynciofunction_sku in asynciofunctions_skus]
-    print('final aaaaaa')
     asynciofunctions_skus.clear()
+
     # Get dicts products
     product_ids = set([sku_dict.get('ProductId') for sku_dict in skus_dicts if sku_dict.get('ProductId') and sku_dict.get('ProductId') not in products_created])
-    print('bbbbb')
     asynciofunctions_products = [loop.run_in_executor(None, vtex.product_unit, product_id) for product_id in product_ids]
     product_ids.clear()
     products_dicts = [await asynciofunction_product for asynciofunction_product in asynciofunctions_products]
     asynciofunctions_products.clear()
-    print('final bbbbb')
+
     # Returning values
     return skus_dicts, products_dicts
 
@@ -245,10 +242,14 @@ def create_products_vtex_store(store, limit=False):
     sub_skus_ids = [skus_ids[i:i+10000] for i in range(0, len(skus_ids), 10000)]
     skus_ids.clear()
     products_created = []
+    gc.collect()
     for ids in sub_skus_ids:
         loop = asyncio.new_event_loop()
         skus, products = loop.run_until_complete(get_skus_and_products_dicts(loop=loop, vtex=vtex, sc=sc, skus=ids, products_created=products_created))
         loop.close()
+        del loop
+        gc.collect()
+        print(f'round: skus = {len(skus)}, products = {len(products)}')
         if products:
             for product in products:
                 product_id = product.get('Id')
@@ -281,4 +282,5 @@ def create_products_vtex_store(store, limit=False):
     sub_skus_ids.clear()
     # Delete skus that don't have a product
     Skus.objects.filter(product=None).delete()
+    gc.collect()
     return True

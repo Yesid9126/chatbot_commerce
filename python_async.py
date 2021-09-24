@@ -1,6 +1,6 @@
 import asyncio
 import time
-
+import gc
 
 def menssage(delay):
     time.sleep(1)
@@ -21,5 +21,6 @@ async def hola(loop):
     return result, result2
 
 result = loop.run_until_complete(hola(loop=loop))
-loop.close()
+del loop
+gc.collect()
 print('mi resultado', result)

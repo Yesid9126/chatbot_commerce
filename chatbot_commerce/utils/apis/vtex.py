@@ -66,7 +66,6 @@ class VtexStores:
         )
 
     def product_unit(self, product_id):
-        print(f'product_id: {product_id}..')
         uri = f'catalog_system/pvt/products/ProductGet/{product_id}'
         method = 'get'
         return self._get_json_resource(
@@ -75,7 +74,6 @@ class VtexStores:
         )
 
     def get_sku_context(self, sku_id, sc):
-        print(f'sku_id: {sku_id}..')
         # Quantity in warehouses
         total_quantity = 0
         price_dic = None
