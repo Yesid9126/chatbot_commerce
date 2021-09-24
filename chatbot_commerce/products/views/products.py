@@ -57,6 +57,8 @@ class ProductViewset(mixins.RetrieveModelMixin,
             'name__icontains' if key == 'sku_name' else
             key+'__icontains': value for key, value in request.GET.items() if key in swagger_params
         }
+        request.GET = {key: value for key, value in request.GET.items() if key not in swagger_params}
+        request.query_params = request.GET
 
         return super().dispatch(request, *args, **kwargs)
 
@@ -88,10 +90,10 @@ class ProductViewset(mixins.RetrieveModelMixin,
                 .select_related('department', 'category', 'sub_category', 'brand')\
                 .prefetch_related(
                     Prefetch(
-                        'skus', 
-                        queryset=Skus.objects\
-                            .prefetch_related('price__fixed_prices', 'attributes__attribute_type')\
-                            .filter(**self.filter_data).distinct('pk')
+                        'skus',
+                        queryset=Skus.objects
+                        .prefetch_related('price__fixed_prices', 'attributes__attribute_type')
+                        .filter(**self.filter_data).distinct('pk')
                     ),
                 )\
                 .get(store=self.store, external_id=kwargs['pk'])

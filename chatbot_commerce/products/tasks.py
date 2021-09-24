@@ -14,6 +14,7 @@ from chatbot_commerce.stores.models.stores import Store
 
 app = Celery()
 
+
 @app.task(name='store_begining')
 def store_begining(store, *args, **kwargs):
     """Create Products, Skus, Categories and Brands."""
@@ -37,7 +38,7 @@ def store_begining(store, *args, **kwargs):
     return True
 
 
-@app.task(name='update_periodic_task')
+@app.task(name='principal_periodic_task')
 def principal_periodic_task(*args, **kwargs):
     """Update Products, Skus, Categories and Brands."""
 
@@ -53,7 +54,6 @@ def principal_periodic_task(*args, **kwargs):
     store.creating_updating_elements_status = True
     store.save()
     try:
-        store_pk = store.pk
 
         # brands, categories, products and skus
         get_sc_sellers(store=store)

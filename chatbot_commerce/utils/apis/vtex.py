@@ -81,7 +81,7 @@ class VtexStores:
         price_dic = None
         if sku_id:
             sku_inventory = self.skus_inventory(sku_id=sku_id)
-            sku_price= self.vtexprice.price_sku(sku_id=sku_id)
+            sku_price = self.vtexprice.price_sku(sku_id=sku_id)
             listprice = sku_price.get('listPrice')
             if listprice:
                 price_dic = sku_price

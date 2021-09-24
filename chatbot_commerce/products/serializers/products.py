@@ -6,7 +6,8 @@ from chatbot_commerce.products.models import Brand
 from rest_framework import serializers
 
 # Model
-from chatbot_commerce.products.models import Product, DateRange, FixedPrice, Price, Attribute, Image, Skus
+from chatbot_commerce.products.models import Product, FixedPrice, Price, Attribute, Skus
+
 
 class BrandsModelSerializer(serializers.ModelSerializer):
     """Brand model serializer"""
@@ -62,7 +63,6 @@ class AttributeModelSerializer(serializers.ModelSerializer):
         )
 
 
-
 class SkuModelSerializer(serializers.ModelSerializer):
     """Sku model serializer"""
 
@@ -85,6 +85,7 @@ class SkuModelSerializer(serializers.ModelSerializer):
 
     def get_images(self, obj):
         return obj.images.values_list('image_url', flat=True)
+
 
 class ProductModelSerializer(serializers.ModelSerializer):
     """Product model serializer."""

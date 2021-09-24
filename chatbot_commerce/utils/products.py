@@ -1,7 +1,6 @@
 """list of product with their skus."""
 
 # Models
-import asgiref
 from chatbot_commerce.stores.models.stores import SkuSeller
 from chatbot_commerce.products.models import (
     Skus, Product, Price, FixedPrice, DateRange,
@@ -55,10 +54,6 @@ def update_or_create_product(store, product, product_id, vtex):
                 'product_id': product_id,
             }
             print(error)
-            product_instance = None
-    else:
-        print(f'product not found try to get it from db: {product}')
-        product_instance = Product.objects.filter(external_id=product_id).first()
     return None
 
 
@@ -235,7 +230,7 @@ def create_products_vtex_store(store, limit=False):
 
     # Get Sales channels in db
     sc = list(SaleChannel.objects.filter(store=store).values_list('external_id', flat=True))
-    skus_ids=[]
+    skus_ids = []
     for sc_id in sc:
         page = 1
         while 1:
@@ -247,7 +242,7 @@ def create_products_vtex_store(store, limit=False):
             page += 1
         if sc_id == 1:
             break
-    sub_skus_ids = [skus_ids[i:i+10000] for i in range(0,len(skus_ids),10000)]
+    sub_skus_ids = [skus_ids[i:i+10000] for i in range(0, len(skus_ids), 10000)]
     skus_ids.clear()
     products_created = []
     for ids in sub_skus_ids:
