@@ -36,6 +36,7 @@ def store_begining(store, *args, **kwargs):
     get_departments(store)
     gc.collect()
     create_products_vtex_store(store=store, limit=True)
+    gc.collect()
 
     store.sync_status = True
     store.save()
@@ -68,7 +69,7 @@ def principal_periodic_task(*args, **kwargs):
         gc.collect()
         create_products_vtex_store(store=store)
         gc.collect()
-        
+
     except Exception as message:
         print(f'error: {message}')
 
