@@ -239,6 +239,7 @@ def create_products_vtex_store(store, limit=False):
             page += 1
         if sc_id == 1:
             break
+    skus_ids = set(skus_ids)
     sub_skus_ids = [skus_ids[i:i+10000] for i in range(0, len(skus_ids), 10000)]
     skus_ids.clear()
     products_created = []
