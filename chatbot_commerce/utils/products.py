@@ -59,7 +59,7 @@ def update_or_create_product(store, product, product_id, vtex):
     else:
         print(f'product not found try to get it from db: {product}')
         product_instance = Product.objects.filter(external_id=product_id).first()
-    return product_instance
+    return None
 
 
 def update_or_create_sku(product_instance, product_id, sku, vtex, store):
@@ -122,7 +122,7 @@ def update_or_create_sku(product_instance, product_id, sku, vtex, store):
                     name = image_dict.get('ImageName')
                     image_instance, _ = Image.objects.update_or_create(
                         image_id=image_dict.get('FileId'),
-                        sku=sku,
+                        sku=sku_instance,
                         defaults={
                             'name': name,
                             'image_url': image_url
@@ -147,7 +147,7 @@ def update_or_create_sku(product_instance, product_id, sku, vtex, store):
                 if values:
                     for value in values:
                         attribute_instance, _ = Attribute.objects.update_or_create(
-                            sku=sku,
+                            sku=sku_instance,
                             attribute_type=attribute_type_instance,
                             value=value,
                         )
@@ -160,7 +160,7 @@ def update_or_create_sku(product_instance, product_id, sku, vtex, store):
     try:
         if price:
             price_instance, _ = Price.objects.update_or_create(
-                sku=sku,
+                sku=sku_instance,
                 defaults={
                     "list_price": price.get('listPrice'),
                     "cost_price": price.get('costPrice'),
@@ -204,7 +204,7 @@ def update_or_create_sku(product_instance, product_id, sku, vtex, store):
     #     }
     #     print(error)
     #     sku_instance = None
-    return sku_instance
+    return None
 
 
 async def get_skus_and_products_dicts(sc, loop, vtex, skus=[], products_created=[]):
