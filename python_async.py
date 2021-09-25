@@ -2,6 +2,7 @@ import asyncio
 import time
 import gc
 
+
 def menssage(delay):
     time.sleep(1)
     print(delay)

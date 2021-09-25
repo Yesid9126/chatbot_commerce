@@ -53,7 +53,6 @@ def get_sc_sellers(store, task=None):
             sales_channel.clear()
             break
     sales_channel.clear()
-    
 
 
 def get_departments(store):
@@ -97,6 +96,7 @@ def get_departments(store):
                         }
                     )
     departments.clear()
+
 
 def get_brands(store):
     """Creation departments and categories."""

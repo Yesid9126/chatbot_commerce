@@ -17,7 +17,7 @@ import asyncio
 import gc
 
 
-def update_or_create_product(store, product, product_id, vtex):
+def update_or_create_product(store, product, product_id):
     name = product.get('Name')
     if name:
         department = Department.objects.filter(external_id=product.get('DepartmentId'), store=store).last()
@@ -58,7 +58,7 @@ def update_or_create_product(store, product, product_id, vtex):
     return None
 
 
-def update_or_create_sku(product_instance, product_id, sku, vtex, store):
+def update_or_create_sku(product_instance, product_id, sku, store):
 
     # Create or update sku
     try:
@@ -255,7 +255,7 @@ def create_products_vtex_store(store, limit=False):
             for product in products:
                 product_id = product.get('Id')
                 if product_id:
-                    update_or_create_product(store=store, product=product, product_id=product_id, vtex=vtex)
+                    update_or_create_product(store=store, product=product, product_id=product_id)
                     if product_id not in products_created:
                         products_created.append(product_id)
         products.clear()
@@ -275,7 +275,7 @@ def create_products_vtex_store(store, limit=False):
                         product_instance = Product.objects.filter(store=store, external_id=product_id).last()
 
                     # Update sku
-                    update_or_create_sku(product_instance=product_instance, product_id=product_id, sku=sku_dict, vtex=vtex, store=store)
+                    update_or_create_sku(product_instance=product_instance, product_id=product_id, sku=sku_dict, store=store)
         skus.clear()
         if limit:
             break
