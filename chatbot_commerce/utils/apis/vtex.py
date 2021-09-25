@@ -200,11 +200,11 @@ class VtexPriceSku:
 
     def __init__(self, store):
         self.store = store
-        self.http = urllib3.PoolManager()
+        self.http = urllib3.PoolManager(headers=self.store.headers)
 
     def _get_resource(self, uri, **kwargs):
         url = '{}/{}'.format(self.store.urls['base_price_url'], uri)
-        r = self.http.request(method='GET', url=url, headers=self.store.headers)
+        r = self.http.request(method='GET', url=url)
         return r
 
     def _get_json_resource(self, uri, **kwargs):
