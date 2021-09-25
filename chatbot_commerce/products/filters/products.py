@@ -49,8 +49,8 @@ def products_skus(self):
                     queryset=skus
                 )
             )
-            .filter(skus__in=skus, store=self.store, is_active=True).distinct('pk')
-        )
+            .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True)
+        ).distinct('pk')
 
     elif self.store.apply_filter_enable_products or self.store.apply_filter_enable_skus or self.store.apply_filter_image or self.store.apply_filter_price:
         if self.store.apply_filter_enable_products:
@@ -68,8 +68,8 @@ def products_skus(self):
                                 queryset=skus
                             )
                         )
-                        .filter(skus__in=skus, store=self.store, is_active=True).distinct('pk')
-                    )
+                        .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True)
+                    ).distinct('pk')
                 elif self.store.apply_filter_price:
                     skus = Skus.objects\
                         .prefetch_related('price__fixed_prices', 'attributes__attribute_type')\
@@ -83,8 +83,8 @@ def products_skus(self):
                                 queryset=skus
                             )
                         )
-                        .filter(skus__in=skus, store=self.store, is_active=True).distinct('pk')
-                    )
+                        .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True)
+                    ).distinct('pk')
                 else:
                     skus = Skus.objects\
                         .prefetch_related('price__fixed_prices', 'attributes__attribute_type')\
@@ -98,8 +98,8 @@ def products_skus(self):
                                 queryset=skus
                             )
                         )
-                        .filter(skus__in=skus, store=self.store, is_active=True).distinct('pk')
-                    )
+                        .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True)
+                    ).distinct('pk')
             elif self.store.apply_filter_image:
                 if self.store.apply_filter_price:
                     skus = Skus.objects\
@@ -114,8 +114,8 @@ def products_skus(self):
                                 queryset=skus
                             )
                         )
-                        .filter(skus__in=skus, store=self.store, is_active=True).distinct('pk')
-                    )
+                        .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True)
+                    ).distinct('pk')
                 else:
                     skus = Skus.objects\
                         .prefetch_related('price__fixed_prices', 'attributes__attribute_type')\
@@ -129,8 +129,8 @@ def products_skus(self):
                                 queryset=skus
                             )
                         )
-                        .filter(skus__in=skus, store=self.store, is_active=True).distinct('pk')
-                    )
+                        .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True)
+                    ).distinct('pk')
             elif self.store.apply_filter_price:
                 skus = Skus.objects\
                     .prefetch_related('price__fixed_prices', 'attributes__attribute_type')\
@@ -144,8 +144,8 @@ def products_skus(self):
                             queryset=skus
                         )
                     )
-                    .filter(skus__in=skus, store=self.store, is_active=True).distinct('pk')
-                )
+                    .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True)
+                ).distinct('pk')
             else:
                 skus = Skus.objects\
                     .prefetch_related('price__fixed_prices', 'attributes__attribute_type')\
@@ -159,8 +159,8 @@ def products_skus(self):
                             queryset=skus
                         )
                     )
-                    .filter(skus__in=skus, store=self.store, is_active=True).distinct('pk')
-                )
+                    .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True)
+                ).distinct('pk')
         elif self.store.apply_filter_enable_skus:
             if self.store.apply_filter_image:
                 if self.store.apply_filter_price:
@@ -176,8 +176,8 @@ def products_skus(self):
                                 queryset=skus
                             )
                         )
-                        .filter(skus__in=skus, store=self.store).distinct('pk')
-                    )
+                        .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store)
+                    ).distinct('pk')
                 else:
                     skus = Skus.objects\
                         .prefetch_related('price__fixed_prices', 'attributes__attribute_type')\
@@ -191,8 +191,8 @@ def products_skus(self):
                                 queryset=skus
                             )
                         )
-                        .filter(skus__in=skus, store=self.store).distinct('pk')
-                    )
+                        .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store)
+                    ).distinct('pk')
             elif self.store.apply_filter_price:
                 skus = Skus.objects\
                     .prefetch_related('price__fixed_prices', 'attributes__attribute_type')\
@@ -206,8 +206,8 @@ def products_skus(self):
                             queryset=skus
                         )
                     )
-                    .filter(skus__in=skus, store=self.store).distinct('pk')
-                )
+                    .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store)
+                ).distinct('pk')
             else:
                 skus = Skus.objects\
                     .prefetch_related('price__fixed_prices', 'attributes__attribute_type')\
@@ -221,8 +221,8 @@ def products_skus(self):
                             queryset=skus
                         )
                     )
-                    .filter(skus__in=skus, store=self.store).distinct('pk')
-                )
+                    .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store)
+                ).distinct('pk')
         elif self.store.apply_filter_image:
             if self.store.apply_filter_price:
                 skus = Skus.objects\
@@ -237,8 +237,8 @@ def products_skus(self):
                             queryset=skus
                         )
                     )
-                    .filter(skus__in=skus, store=self.store).distinct('pk')
-                )
+                    .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store)
+                ).distinct('pk')
 
             else:
                 skus = Skus.objects\
@@ -253,8 +253,8 @@ def products_skus(self):
                             queryset=skus
                         )
                     )
-                    .filter(skus__in=skus, store=self.store).distinct('pk')
-                )
+                    .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store)
+                ).distinct('pk')
 
         else:
             skus = Skus.objects\
@@ -269,8 +269,8 @@ def products_skus(self):
                         queryset=skus
                     )
                 )
-                .filter(skus__in=skus, store=self.store).distinct('pk')
-            )
+                .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store)
+            ).distinct('pk')
 
     else:
 
@@ -285,7 +285,7 @@ def products_skus(self):
                     .filter(**self.filter_data).distinct('pk')
                 )
             )
-            .filter(store=self.store).distinct('pk')
-        )
+            .filter(store=self.store)
+        ).distinct('pk')
 
     return queryset

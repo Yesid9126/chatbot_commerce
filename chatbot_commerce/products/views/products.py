@@ -51,8 +51,8 @@ class ProductViewset(mixins.RetrieveModelMixin,
         self.store = get_object_or_404(Store, slug_name=slug_name)
 
         swagger_params = [
-            'attribute_type', 'skus__attributes__attribute_type__name', 
-            'attributes__value', 'skus__attributes__value', 
+            'attribute_type', 'skus__attributes__attribute_type__name',
+            'attributes__value', 'skus__attributes__value',
             'sku_name', 'name', 'skus__sku_name', 'skus__name'
         ]
         self.filter_data = {
