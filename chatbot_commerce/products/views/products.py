@@ -63,6 +63,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
         }
         request.GET = {key: value for key, value in request.GET.items() if key in ['limit', 'offset', 'search']}
         request.query_params = request.GET
+        print(request.query_params)
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
@@ -76,8 +77,8 @@ class ProductViewset(mixins.RetrieveModelMixin,
         search = Put a keyword like name category or department to filter whith it
         example... search = jeans azul L
         """
-        self.queryset = products_skus(self)
-        serializer = self.get_serializer(self.paginate_queryset(self.queryset.order_by('-pk')), many=True)
+        self.queryset = products_skus(self).order_by('-pk').distinct('pk')
+        serializer = self.get_serializer(self.paginate_queryset(self.queryset), many=True)
         paginated_data = self.get_paginated_response(serializer.data).data
         return Response(data=paginated_data, status=HTTP_200_OK)
 
