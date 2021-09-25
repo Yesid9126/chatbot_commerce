@@ -63,9 +63,9 @@ class Store(ChatbootModel):
     def urls(self):
         if self.store_type == 'Vtex':
             urls = {
-                "base_url": f'https://{self.name}.{self.url_enviroment}',
+                "base_url": f'https://{self.name}.{self.url_enviroment}/api',
                 "base_price_url": f'https://api.vtex.com/{self.name}',
-                "status_url": f'https://{self.name}.{self.url_enviroment}/catalog_system/pvt/brand/list'
+                "status_url": f'https://{self.name}.{self.url_enviroment}/api/catalog_system/pvt/brand/list'
             }
         return urls
 
