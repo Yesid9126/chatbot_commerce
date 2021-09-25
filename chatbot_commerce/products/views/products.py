@@ -77,7 +77,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
         example... search = jeans azul L
         """
         self.queryset = products_skus(self)
-        serializer = self.get_serializer(self.paginate_queryset(self.queryset.order_by('-pk')), many=True)
+        serializer = self.get_serializer(self.paginate_queryset(self.queryset.order_by('-external_id')), many=True)
         paginated_data = self.get_paginated_response(serializer.data).data
         return Response(data=paginated_data, status=HTTP_200_OK)
 
