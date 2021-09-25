@@ -2,6 +2,8 @@
 
 # Utilities
 import requests
+import urllib3
+import json
 
 
 class VtexStores:
@@ -10,11 +12,12 @@ class VtexStores:
     def __init__(self, store):
         self.store = store
         self.vtexprice = VtexPriceSku(store=store)
+        self.http = urllib3.PoolManager(headers=self.store.headers)
 
     def _get_resources(self, uri, **kwargs):
         """Get resources for store."""
         url = "{}/{}".format(self.store.urls['base_url'], uri)
-        r = requests.get(url, headers=self.store.headers, timeout=1000)
+        r = self.http.request(method='GET', url=url)
         return r
 
     def _get_json_resource(self, uri, **kwargs):
@@ -25,21 +28,21 @@ class VtexStores:
                 response = self._get_resources(uri, **kwargs)
             else:
                 pass
-            if response.status_code in [requests.codes.ok]:
+            if response.status in [requests.codes.ok]:
                 try:
-                    response_json = response.json()
+                    response_json = json.loads(response.data.decode('utf-8'))
                 except ValueError as e:
                     response_json = {
-                        "status_code": response.status_code,
+                        "status_code": response.status,
                         "message": e,
                     }
                     return response_json
-        except requests.ConnectTimeout as i:
+        except urllib3.exceptions.ConnectTimeoutError as i:
             response_json = {
                 "status_code": 504,
                 "message": f'TIMEOUT: {str(i)}',
             }
-        except requests.exceptions.RequestException as e:
+        except urllib3.exceptions.RequestError as e:
             status_code = getattr(e.response, "status_code", 406)
             reason = getattr(e.response, "reason", str(e))
             response_json = {
@@ -197,10 +200,11 @@ class VtexPriceSku:
 
     def __init__(self, store):
         self.store = store
+        self.http = urllib3.PoolManager()
 
     def _get_resource(self, uri, **kwargs):
         url = '{}/{}'.format(self.store.urls['base_price_url'], uri)
-        r = requests.get(url, headers=self.store.headers, timeout=1000)
+        r = self.http.request(method='GET', url=url, headers=self.store.headers)
         return r
 
     def _get_json_resource(self, uri, **kwargs):
@@ -211,21 +215,21 @@ class VtexPriceSku:
                 response = self._get_resource(uri, **kwargs)
             else:
                 pass
-            if response.status_code in [requests.codes.ok]:
+            if response.status in [requests.codes.ok]:
                 try:
-                    response_json = response.json()
+                    response_json = json.loads(response.data.decode('utf-8'))
                 except ValueError as e:
                     response_json = {
-                        "status_code": response.status_code,
+                        "status_code": response.status,
                         "message": e
                     }
                     return response_json
-        except requests.ConnectionError as i:
+        except urllib3.exceptions.ConnectTimeoutError as i:
             response_json = {
                 "status_code": 504,
                 "message": f"TIMEOUT: {str(i)}"
             }
-        except requests.exceptions.RequestException as e:
+        except urllib3.exceptions.RequestError as e:
             status_code = getattr(e.response, "status_code", 406)
             reason = getattr(e.response, "resaon", str(e))
             response_json = {
