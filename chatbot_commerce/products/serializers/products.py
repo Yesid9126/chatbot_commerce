@@ -34,6 +34,7 @@ class FixedPriceModelSerializer(serializers.ModelSerializer):
         """Meta class"""
         model = FixedPrice
         fields = ['value', 'date_ranges']
+        read_only_fields = fields
 
     def get_date_rages(self, obj):
         return obj.date_ranges.values('date_time_from', 'date_time_to')
@@ -48,6 +49,7 @@ class PriceModelSerializer(serializers.ModelSerializer):
         """Meta class"""
         model = Price
         fields = ['base_price', 'fixed_prices']
+        read_only_fields = fields
 
 
 class AttributeModelSerializer(serializers.ModelSerializer):
@@ -61,6 +63,7 @@ class AttributeModelSerializer(serializers.ModelSerializer):
         fields = (
             'attribute_name', 'value'
         )
+        read_only_fields = fields
 
 
 class SkuModelSerializer(serializers.ModelSerializer):
@@ -79,6 +82,7 @@ class SkuModelSerializer(serializers.ModelSerializer):
         fields = (
             'sku_id', 'seller_id', 'sku_name', 'total_quantity', 'images', 'price', 'attributes', 'is_active',
         )
+        read_only_fields = fields
 
     def get_seller_id(self, obj):
         return list(obj.sku_seller.values_list('seller__seller_id', flat=True))[0]

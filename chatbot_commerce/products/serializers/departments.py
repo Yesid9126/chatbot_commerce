@@ -17,6 +17,7 @@ class DepartmentModelSerializer(serializers.ModelSerializer):
         fields = (
             'name',
         )
+        read_only_fields = fields
 
 
 class CategoryModelSerializer(serializers.ModelSerializer):
@@ -28,6 +29,7 @@ class CategoryModelSerializer(serializers.ModelSerializer):
             'name',
             'department',
         )
+        read_only_fields = fields
 
 
 class SubcategoryModelSerializer(serializers.ModelSerializer):
@@ -39,6 +41,7 @@ class SubcategoryModelSerializer(serializers.ModelSerializer):
             'name',
             'category',
         )
+        read_only_fields = fields
 
 
 class SubcategoryTreeModelSerializer(serializers.ModelSerializer):
@@ -48,6 +51,7 @@ class SubcategoryTreeModelSerializer(serializers.ModelSerializer):
         fields = (
             'name',
         )
+        read_only_fields = fields
 
 
 class CategoryTreeModelSerializer(serializers.ModelSerializer):
@@ -61,6 +65,7 @@ class CategoryTreeModelSerializer(serializers.ModelSerializer):
             'name',
             'subcategories'
         )
+        read_only_fields = fields
 
 
 class DepartmentTreeModelSerializer(serializers.ModelSerializer):
@@ -74,3 +79,4 @@ class DepartmentTreeModelSerializer(serializers.ModelSerializer):
             'name',
             'categories'
         )
+        read_only_fields = fields
