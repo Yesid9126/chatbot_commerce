@@ -10,7 +10,7 @@ from django.db.models import Q, Prefetch
 
 class ProductFilterSet(FilterSet):
     skus__attributes__attribute_type__name__icontains = filters.CharFilter(
-        field_name='sku_name',
+        field_name='skus__attributes__attribute_type__name',
         lookup_expr='icontains',
         label='Type of attribute',
     )
@@ -27,7 +27,7 @@ class ProductFilterSet(FilterSet):
 
     class Meta:
         model = Product
-        fields = ('skus__sku_name__icontains', 'skus__attributes__attribute_type__name__icontains', 'skus__attributes__value__icontains')
+        fields = ('skus__name__icontains', 'skus__attributes__attribute_type__name__icontains', 'skus__attributes__value__icontains')
 
 
 def products_skus(self):
