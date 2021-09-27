@@ -18,7 +18,8 @@ class CreateOrderSerializer(serializers.Serializer):
         """Order create."""
         sku_ids = data.get('sku_ids')
         customer = data.get('customer')
-        order = Order.objects.create(customer=customer, hook_data=data)
+        store = data.get('store')
+        order = Order.objects.create(customer=customer, hook_data=data, store=store)
         for item in sku_ids:
             sku_id = item.get('sku_id')
             sku = Skus.objects.filter(external_id=sku_id).get()
