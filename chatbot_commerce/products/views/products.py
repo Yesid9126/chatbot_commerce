@@ -50,17 +50,12 @@ class ProductViewset(mixins.RetrieveModelMixin,
     def dispatch(self, request, *args, **kwargs):
         slug_name = kwargs['store_slug_name']
         self.store = get_object_or_404(Store, slug_name=slug_name)
-
-        swagger_params = [
-            'attribute_type', 'skus__attributes__attribute_type__name',
-            'attributes__value', 'skus__attributes__value',
-            'sku_name', 'name', 'skus__sku_name', 'skus__name'
-        ]
+        exclude_fields = ('limit', 'search', 'offset')
         self.filter_data = {
-            'attributes__attribute_type__name__icontains' if key in ['attribute_type', 'skus__attributes__attribute_type__name'] else
-            'attributes__value__icontains' if key in ['attributes__value', 'skus__attributes__value'] else
-            'name__icontains' if key in ['sku_name', 'name', 'skus__sku_name', 'skus__name'] else
-            key+'__icontains': value for key, value in request.GET.items() if key in swagger_params
+            key.removepreffix('skus__'): value for key, value in request.GET.items() if key not in exclude_fields
+        }
+        request.GET = {
+            key: value for key, value in request.GET.items() if key in exclude_fields
         }
         return super().dispatch(request, *args, **kwargs)
 
