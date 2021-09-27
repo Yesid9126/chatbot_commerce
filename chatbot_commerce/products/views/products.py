@@ -39,24 +39,17 @@ class ProductViewset(mixins.RetrieveModelMixin,
     serializer_class = ProductModelSerializer
     lookup_field = 'pk'
     permission_classes = [HasAPIKey | IsAdminUser]
-    filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
-    filterset_class = ProductFilterSet
+    filter_backends = (SearchFilter, DjangoFilterBackend, OrderingFilter)
+    filter_class = ProductFilterSet
     search_fields = (
-        'name', 'brand__name', 'keywords', 'category__name',
-        'sub_category__name', 'department__name'
+        'name', '^brand__name', 'keywords', '^category__name',
+        '^sub_category__name', '^department__name', 'skus__name', '^skus__attributes__value'
     )
-
+    
     # @query_debugger
     def dispatch(self, request, *args, **kwargs):
         slug_name = kwargs['store_slug_name']
         self.store = get_object_or_404(Store, slug_name=slug_name)
-        exclude_fields = ('limit', 'search', 'offset')
-        self.filter_data = {
-            key.removeprefix('skus__'): value for key, value in request.GET.items() if key not in exclude_fields
-        }
-        request.GET = {
-            key: value for key, value in request.GET.items() if key in exclude_fields
-        }
         return super().dispatch(request, *args, **kwargs)
 
     # @query_debugger

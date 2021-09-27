@@ -84,6 +84,7 @@ def update_or_create_sku(product_instance, product_id, sku, store):
                 'raw_json': sku
             }
         )
+        
         # Get Sales channels of sku
         sc_ids = sku.get('SalesChannels')
         sc = SaleChannel.objects.filter(store=store, external_id__in=sc_ids)
@@ -129,6 +130,7 @@ def update_or_create_sku(product_instance, product_id, sku, store):
                 images_array.clear()
         except Exception as message:
             print(f'message: {message} imagenes')
+
         # Create attributes for sku
         try:
             if sku_specifications_array:

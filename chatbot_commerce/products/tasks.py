@@ -27,7 +27,9 @@ def store_begining(store, *args, **kwargs):
         return f'error: store no match, message_error: {message}'
     if store.sync_status:
         return 'sync_status already runed'
-
+    store.sync_status = True
+    store.save()
+    
     # brands, categories, products and skus
     get_sc_sellers(store=store, task='create')
     gc.collect()
@@ -38,8 +40,6 @@ def store_begining(store, *args, **kwargs):
     create_products_vtex_store(store=store, limit=True)
     gc.collect()
 
-    store.sync_status = True
-    store.save()
     return True
 
 
