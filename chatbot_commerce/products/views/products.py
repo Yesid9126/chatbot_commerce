@@ -28,7 +28,7 @@ from chatbot_commerce.products.models import Product, Department
 from chatbot_commerce.stores.models import Store
 
 # Runtime
-# from db_python import query_debugger
+from db_python import query_debugger
 
 
 class ProductViewset(mixins.RetrieveModelMixin,
@@ -46,6 +46,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
         'sub_category__name', 'department__name'
     )
 
+    @query_debugger
     def dispatch(self, request, *args, **kwargs):
         slug_name = kwargs['store_slug_name']
         self.store = get_object_or_404(Store, slug_name=slug_name)
@@ -61,14 +62,9 @@ class ProductViewset(mixins.RetrieveModelMixin,
             'name__icontains' if key in ['sku_name', 'name', 'skus__sku_name', 'skus__name'] else
             key+'__icontains': value for key, value in request.GET.items() if key in swagger_params
         }
-        request.GET = {key: value for key, value in request.GET.items() if key in ['limit', 'offset', 'search']}
-        request.query_params = request.GET
         return super().dispatch(request, *args, **kwargs)
 
-    def get_queryset(self):
-        return self.queryset
-
-    # @query_debugger
+    @query_debugger
     def list(self, request, *args, **kwargs):
         """
         Return all products
@@ -81,7 +77,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
         paginated_data = self.get_paginated_response(serializer.data).data
         return Response(data=paginated_data, status=HTTP_200_OK)
 
-    # @query_debugger
+    @query_debugger
     def retrieve(self, request, *args, **kwargs):
         """
         Return a single product with his skus.
@@ -89,21 +85,25 @@ class ProductViewset(mixins.RetrieveModelMixin,
         Parameters.
         """
         try:
-            obj = Product.objects\
-                .select_related('department', 'category', 'sub_category', 'brand')\
-                .prefetch_related(
-                    Prefetch(
-                        'skus',
-                        queryset=Skus.objects
-                        .prefetch_related('price__fixed_prices', 'attributes__attribute_type')
-                        .filter(**self.filter_data).distinct('pk')
-                    ),
-                )\
-                .get(store=self.store, external_id=kwargs['pk'])
+            return Response(
+                self.get_serializer(
+                    Product.objects\
+                    .select_related('department', 'category', 'sub_category', 'brand')\
+                    .prefetch_related(
+                        Prefetch(
+                            'skus',
+                            queryset=Skus.objects
+                            .prefetch_related('price__fixed_prices')
+                            .filter(**self.filter_data).distinct('pk')
+                        ),
+                    )\
+                    .get(store=self.store, external_id=kwargs['pk'])
+                ).data, 
+                status=HTTP_200_OK
+            )
         except Exception as message:
             print(f'error. {message}')
             return Response({}, status=HTTP_404_NOT_FOUND)
-        return Response(self.get_serializer(obj).data, status=HTTP_200_OK)
 
 
 class DepartmentsViewset(mixins.RetrieveModelMixin,

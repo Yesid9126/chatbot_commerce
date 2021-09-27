@@ -10,7 +10,7 @@ from django.db.models import Q, Prefetch
 
 class ProductFilterSet(FilterSet):
     attribute_type = filters.CharFilter(
-        field_name='skus__attributes__attribute_type__name',
+        field_name='sku_name',
         lookup_expr='icontains',
         label='Type of attribute',
     )
@@ -38,7 +38,7 @@ def products_skus(self):
     # Apply filter products
     if self.store.apply_filter_enable_products and self.store.apply_filter_enable_skus and self.store.apply_filter_image and self.store.apply_filter_price:
         skus = Skus.objects\
-            .prefetch_related('price__fixed_prices', 'attributes__attribute_type')\
+            .prefetch_related('price__fixed_prices')\
             .filter(~Q(images=None), ~Q(price=None), price__base_price__gt=0, total_quantity__gt=0, is_active=True, **self.filter_data).distinct('pk')
         queryset = self.filter_queryset(
             Product.objects
@@ -57,7 +57,7 @@ def products_skus(self):
             if self.store.apply_filter_enable_skus:
                 if self.store.apply_filter_image:
                     skus = Skus.objects\
-                        .prefetch_related('price__fixed_prices', 'attributes__attribute_type')\
+                        .prefetch_related('price__fixed_prices')\
                         .filter(~Q(images=None), total_quantity__gt=0, is_active=True, **self.filter_data).distinct('pk')
                     queryset = self.filter_queryset(
                         Product.objects
@@ -72,7 +72,7 @@ def products_skus(self):
                     ).distinct('pk')
                 elif self.store.apply_filter_price:
                     skus = Skus.objects\
-                        .prefetch_related('price__fixed_prices', 'attributes__attribute_type')\
+                        .prefetch_related('price__fixed_prices')\
                         .filter(~Q(price=None), price__base_price__gt=0, total_quantity__gt=0, is_active=True, **self.filter_data).distinct('pk')
                     queryset = self.filter_queryset(
                         Product.objects
@@ -87,7 +87,7 @@ def products_skus(self):
                     ).distinct('external_id')
                 else:
                     skus = Skus.objects\
-                        .prefetch_related('price__fixed_prices', 'attributes__attribute_type')\
+                        .prefetch_related('price__fixed_prices')\
                         .filter(total_quantity__gt=0, is_active=True, **self.filter_data).distinct('pk')
                     queryset = self.filter_queryset(
                         Product.objects
@@ -103,7 +103,7 @@ def products_skus(self):
             elif self.store.apply_filter_image:
                 if self.store.apply_filter_price:
                     skus = Skus.objects\
-                        .prefetch_related('price__fixed_prices', 'attributes__attribute_type')\
+                        .prefetch_related('price__fixed_prices')\
                         .filter(~Q(images=None), ~Q(price=None), price__base_price__gt=0, **self.filter_data).distinct('pk')
                     queryset = self.filter_queryset(
                         Product.objects
@@ -118,7 +118,7 @@ def products_skus(self):
                     ).distinct('external_id')
                 else:
                     skus = Skus.objects\
-                        .prefetch_related('price__fixed_prices', 'attributes__attribute_type')\
+                        .prefetch_related('price__fixed_prices')\
                         .filter(~Q(images=None), **self.filter_data).distinct('pk')
                     queryset = self.filter_queryset(
                         Product.objects
@@ -133,7 +133,7 @@ def products_skus(self):
                     ).distinct('external_id')
             elif self.store.apply_filter_price:
                 skus = Skus.objects\
-                    .prefetch_related('price__fixed_prices', 'attributes__attribute_type')\
+                    .prefetch_related('price__fixed_prices')\
                     .filter(~Q(price=None), price__base_price__gt=0, **self.filter_data).distinct('pk')
                 queryset = self.filter_queryset(
                     Product.objects
@@ -148,7 +148,7 @@ def products_skus(self):
                 ).distinct('external_id')
             else:
                 skus = Skus.objects\
-                    .prefetch_related('price__fixed_prices', 'attributes__attribute_type')\
+                    .prefetch_related('price__fixed_prices')\
                     .filter(**self.filter_data).distinct('pk')
                 queryset = self.filter_queryset(
                     Product.objects
@@ -165,7 +165,7 @@ def products_skus(self):
             if self.store.apply_filter_image:
                 if self.store.apply_filter_price:
                     skus = Skus.objects\
-                        .prefetch_related('price__fixed_prices', 'attributes__attribute_type')\
+                        .prefetch_related('price__fixed_prices')\
                         .filter(~Q(images=None), ~Q(price=None), price__base_price__gt=0, total_quantity__gt=0, is_active=True, **self.filter_data).distinct('pk')
                     queryset = self.filter_queryset(
                         Product.objects
@@ -180,7 +180,7 @@ def products_skus(self):
                     ).distinct('external_id')
                 else:
                     skus = Skus.objects\
-                        .prefetch_related('price__fixed_prices', 'attributes__attribute_type')\
+                        .prefetch_related('price__fixed_prices')\
                         .filter(~Q(images=None), total_quantity__gt=0, is_active=True, **self.filter_data).distinct('pk')
                     queryset = self.filter_queryset(
                         Product.objects
@@ -195,7 +195,7 @@ def products_skus(self):
                     ).distinct('external_id')
             elif self.store.apply_filter_price:
                 skus = Skus.objects\
-                    .prefetch_related('price__fixed_prices', 'attributes__attribute_type')\
+                    .prefetch_related('price__fixed_prices')\
                     .filter(~Q(price=None), price__base_price__gt=0, total_quantity__gt=0, is_active=True, **self.filter_data).distinct('pk')
                 queryset = self.filter_queryset(
                     Product.objects
@@ -210,7 +210,7 @@ def products_skus(self):
                 ).distinct('external_id')
             else:
                 skus = Skus.objects\
-                    .prefetch_related('price__fixed_prices', 'attributes__attribute_type')\
+                    .prefetch_related('price__fixed_prices')\
                     .filter(total_quantity__gt=0, is_active=True, **self.filter_data).distinct('pk')
                 queryset = self.filter_queryset(
                     Product.objects
@@ -226,7 +226,7 @@ def products_skus(self):
         elif self.store.apply_filter_image:
             if self.store.apply_filter_price:
                 skus = Skus.objects\
-                    .prefetch_related('price__fixed_prices', 'attributes__attribute_type')\
+                    .prefetch_related('price__fixed_prices')\
                     .filter(~Q(images=None), ~Q(price=None), price__base_price__gt=0, **self.filter_data).distinct('pk')
                 queryset = self.filter_queryset(
                     Product.objects
@@ -242,7 +242,7 @@ def products_skus(self):
 
             else:
                 skus = Skus.objects\
-                    .prefetch_related('price__fixed_prices', 'attributes__attribute_type')\
+                    .prefetch_related('price__fixed_prices')\
                     .filter(~Q(images=None), **self.filter_data).distinct('pk')
                 queryset = self.filter_queryset(
                     Product.objects
@@ -258,7 +258,7 @@ def products_skus(self):
 
         else:
             skus = Skus.objects\
-                .prefetch_related('price__fixed_prices', 'attributes__attribute_type')\
+                .prefetch_related('price__fixed_prices')\
                 .filter(~Q(price=None), price__base_price__gt=0, **self.filter_data).distinct('pk')
             queryset = self.filter_queryset(
                 Product.objects
@@ -281,7 +281,7 @@ def products_skus(self):
                 Prefetch(
                     'skus',
                     queryset=Skus.objects
-                    .prefetch_related('price__fixed_prices', 'attributes__attribute_type')
+                    .prefetch_related('price__fixed_prices')
                     .filter(**self.filter_data).distinct('pk')
                 )
             )

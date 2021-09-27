@@ -7,6 +7,7 @@ from rest_framework import serializers
 
 # Model
 from chatbot_commerce.products.models import Product, FixedPrice, Price, Attribute, Skus
+from django.db.models import F
 
 
 class BrandsModelSerializer(serializers.ModelSerializer):
@@ -52,26 +53,12 @@ class PriceModelSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
-class AttributeModelSerializer(serializers.ModelSerializer):
-    """Attribute model serializer"""
-
-    attribute_name = serializers.CharField(source='attribute_type')
-
-    class Meta:
-        """Meta class"""
-        model = Attribute
-        fields = (
-            'attribute_name', 'value'
-        )
-        read_only_fields = fields
-
-
 class SkuModelSerializer(serializers.ModelSerializer):
     """Sku model serializer"""
 
     price = PriceModelSerializer(many=True)
     images = serializers.SerializerMethodField(method_name='get_images')
-    attributes = AttributeModelSerializer(many=True)
+    attributes = serializers.SerializerMethodField(method_name='get_attributes')
     sku_id = serializers.IntegerField(source='external_id')
     sku_name = serializers.CharField(source='name')
     seller_id = serializers.SerializerMethodField(method_name='get_seller_id')
@@ -89,6 +76,9 @@ class SkuModelSerializer(serializers.ModelSerializer):
 
     def get_images(self, obj):
         return obj.images.values_list('image_url', flat=True)
+    
+    def get_attributes(self, obj):
+        return obj.attributes.values('value', attribute_name=F('attribute_type__name'))
 
 
 class ProductModelSerializer(serializers.ModelSerializer):
