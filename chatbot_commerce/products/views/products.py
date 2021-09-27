@@ -52,7 +52,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
         self.store = get_object_or_404(Store, slug_name=slug_name)
         exclude_fields = ('limit', 'search', 'offset')
         self.filter_data = {
-            key.removepreffix('skus__'): value for key, value in request.GET.items() if key not in exclude_fields
+            key.removeprefix('skus__'): value for key, value in request.GET.items() if key not in exclude_fields
         }
         request.GET = {
             key: value for key, value in request.GET.items() if key in exclude_fields
