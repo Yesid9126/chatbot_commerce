@@ -11,7 +11,12 @@ class ProductFilterSet(FilterSet):
 
     class Meta:
         model = Product
-        fields = ('skus__total_quantity',)
+        fields = {
+            'name': ['icontains'],
+            'brand__name': ['icontains'],
+            'skus__name': ['icontains'],
+            'skus__total_quantity': ['exact'],
+        }
 
 def products_skus(self):
     """
