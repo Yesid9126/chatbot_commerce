@@ -39,11 +39,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
     serializer_class = ProductModelSerializer
     lookup_field = 'pk'
     permission_classes = [HasAPIKey | IsAdminUser]
-    filter_backends = (SearchFilter, DjangoFilterBackend, OrderingFilter)
     filter_class = ProductFilterSet
-    search_fields = (
-        'skus__attributes__value',
-    )
     
     # @query_debugger
     def dispatch(self, request, *args, **kwargs):

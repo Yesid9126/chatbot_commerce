@@ -29,9 +29,10 @@ class SubcategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Category)
 class CategoriesAdmin(admin.ModelAdmin):
-    list_display = ['name', 'slug_name', 'department']
+    list_display = ('name', 'slug_name', 'department',)
     search_fields = ['name', 'slug_name']
     list_filter = ['department']
+    readonly_fields = list_display
 
 
 @admin.register(Department)
@@ -49,52 +50,54 @@ class BrandAdmin(admin.ModelAdmin):
 class InlineSkus(admin.TabularInline):
     model = Skus
     extra = 0
-    fields = ['external_id', 'name', 'total_quantity']
+    fields = ('external_id', 'name', 'total_quantity',)
+    readonly_fields = fields
 
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     """Product model admin."""
 
-    list_display = ['external_id', 'name', 'store', 'sub_category', 'department', 'category', 'brand']
+    list_display = ('external_id', 'name', 'store', 'sub_category', 'department', 'category', 'brand',)
     search_fields = ['name', 'external_id']
     list_filter = ['is_active']
+    readonly_fields = list_display
     inlines = [InlineSkus]
 
 
 @admin.register(Image)
 class ImagesAdmin(admin.ModelAdmin):
-    list_display = ['sku', 'image_url']
-    readonly_fields = ['image_url']
-
+    list_display = ('sku', 'image_url',)
+    readonly_fields = list_display
 
 class InlineImageAdmin(admin.TabularInline):
     model = Image
     extra = 0
-    fields = ['archive_id', 'name', 'image_url']
-    readonly_fields = ['image_url']
+    fields = ('image_id', 'name', 'image_url',)
+    readonly_fields = fields
 
 
 class InlinePriceAdmin(admin.TabularInline):
     model = Price
     extra = 0
     fields = ['base_price', 'price']
+    readonly_fields = ('price',)
 
 
 @admin.register(Skus)
 class SkusAdmin(admin.ModelAdmin):
     """Sku's model admin."""
 
+    readonly_fields = ('raw_json', 'product',)
     list_display = ['external_id', 'name', 'total_quantity']
     search_fields = ['external_id', 'name']
     list_filter = ['is_active', 'is_inventoried', 'reference_stock_id']
-    readonly_fields = ['raw_json']
 
 
 @admin.register(DateRange)
 class DateRangeAdmin(admin.ModelAdmin):
     """Sku's model admin."""
-
+    readonly_fields = ('fixed_price',)
     list_display = ['fixed_price', 'date_time_from', 'date_time_to']
 
 
@@ -107,7 +110,7 @@ class InlineDateRangeAdmin(admin.TabularInline):
 @admin.register(FixedPrice)
 class FixedPriceAdmin(admin.ModelAdmin):
     """Price model admin."""
-
+    readonly_fields = ('price',)
     list_display = ['price', 'trade_policy_id', 'value']
     inlines = [InlineDateRangeAdmin]
 
@@ -121,7 +124,7 @@ class InlineFixedPriceAdmin(admin.TabularInline):
 @admin.register(Price)
 class PriceAdmin(admin.ModelAdmin):
     """Price model admin."""
-
+    readonly_fields = ('sku',)
     list_display = ['sku_id', 'sku', 'base_price']
     inlines = [InlineFixedPriceAdmin]
 
@@ -134,6 +137,7 @@ class PriceAdmin(admin.ModelAdmin):
 class AttributeAdmin(admin.ModelAdmin):
     """Price model admin."""
 
+    readonly_fields = ('sku', 'attribute_type',)
     list_display = ['sku_id', 'sku', 'attribute_type', 'value']
     search_fields = ['value']
 
