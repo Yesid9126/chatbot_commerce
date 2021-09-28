@@ -21,7 +21,7 @@ from rest_framework.permissions import IsAdminUser
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from chatbot_commerce.products.filters import ProductFilterSet
-from chatbot_commerce.products.filters import products_skus
+from chatbot_commerce.products.filters import products_skus, filter_data_products, filter_data_skus
 
 # Models
 from chatbot_commerce.products.models import Product, Department
@@ -40,11 +40,12 @@ class ProductViewset(mixins.RetrieveModelMixin,
     lookup_field = 'pk'
     permission_classes = [HasAPIKey | IsAdminUser]
     filter_class = ProductFilterSet
-    
+
     # @query_debugger
     def dispatch(self, request, *args, **kwargs):
         slug_name = kwargs['store_slug_name']
         self.store = get_object_or_404(Store, slug_name=slug_name)
+        self.data = {key: value for key, value in self.request.GET.items()}
         return super().dispatch(request, *args, **kwargs)
 
     # @query_debugger
@@ -55,6 +56,8 @@ class ProductViewset(mixins.RetrieveModelMixin,
         search = Put a keyword like name category or department to filter whith it
         example... search = jeans azul L
         """
+        self.products_filter_data = filter_data_products(self)
+        self.skus_filter_data = filter_data_skus(self)
         self.queryset = products_skus(self)
         serializer = self.get_serializer(self.paginate_queryset(self.queryset.order_by('-external_id')), many=True)
         paginated_data = self.get_paginated_response(serializer.data).data
@@ -68,20 +71,21 @@ class ProductViewset(mixins.RetrieveModelMixin,
         Parameters.
         """
         try:
+            skus_filter_data = filter_data_skus(self)
             return Response(
                 self.get_serializer(
-                    Product.objects\
-                    .select_related('department', 'category', 'sub_category', 'brand')\
+                    Product.objects
+                    .select_related('department', 'category', 'sub_category', 'brand')
                     .prefetch_related(
                         Prefetch(
                             'skus',
                             queryset=Skus.objects
                             .prefetch_related('price__fixed_prices')
-                            .filter(**self.filter_data).distinct('pk')
+                            .filter(skus_filter_data[1], **skus_filter_data[0]).distinct('pk')
                         ),
-                    )\
+                    )
                     .get(store=self.store, external_id=kwargs['pk'])
-                ).data, 
+                ).data,
                 status=HTTP_200_OK
             )
         except Exception as message:
