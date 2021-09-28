@@ -286,7 +286,7 @@ def filter_data_products(self):
         category=category.split(',')
         for cat in category:
             if cat:
-                q &= Q(department__name__icontains=cat)|Q(category__name__icontains=cat)|Q(sub_category__name__icontains=cat)
+                q &= Q(Q(department__name__icontains=cat)|Q(category__name__icontains=cat)|Q(sub_category__name__icontains=cat))
         products_filter_data.append(q)
     else:
         products_filter_data.append(Q())
