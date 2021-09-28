@@ -42,7 +42,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
     filter_backends = (SearchFilter, DjangoFilterBackend, OrderingFilter)
     filter_class = ProductFilterSet
     search_fields = (
-        'skus__name',
+        'name',
     )
     
     # @query_debugger
