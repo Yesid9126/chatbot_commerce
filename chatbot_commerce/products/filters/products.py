@@ -254,7 +254,7 @@ def filter_data_skus(self):
         skus_filter_data[0] |= {'total_quantity': total_quantity}
     name = self.data.get('search__name')
     if name:
-        skus_filter_data[0] |= {'skus__name__icontains': name}
+        skus_filter_data[0] |= {'name__icontains': name}
     attributes = self.data.get('attributes')
     if attributes:
         attributes = attributes.split('-')
@@ -276,7 +276,7 @@ def filter_data_products(self):
     products_filter_data = [{}]
     name = self.data.get('search__name')
     if name:
-        products_filter_data[0] |= {'name__icontains': name}
+        products_filter_data[0] |= {'skus__name__icontains': name}
     brand = self.data.get('brand')
     if brand:
         products_filter_data[0] |= {'brand__name__icontains': brand}
@@ -286,7 +286,7 @@ def filter_data_products(self):
         category=category.split(',')
         for cat in category:
             if cat:
-                q &= Q(Q(department__name__icontains=cat)|Q(category__name__icontains=cat)|Q(sub_category__name__icontains=cat))
+                q &= Q(department__name__icontains=cat)|Q(category__name__icontains=cat)|Q(sub_category__name__icontains=cat)
         products_filter_data.append(q)
     else:
         products_filter_data.append(Q())
