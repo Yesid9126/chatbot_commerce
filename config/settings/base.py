@@ -60,6 +60,7 @@ DJANGO_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.admin",
+    "django.contrib.postgres",
     "django.forms",
 ]
 THIRD_PARTY_APPS = [

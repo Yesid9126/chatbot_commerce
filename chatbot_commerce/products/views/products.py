@@ -21,7 +21,7 @@ from rest_framework.permissions import IsAdminUser
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from chatbot_commerce.products.filters import ProductFilterSet
-from chatbot_commerce.products.filters import products_skus, filter_data_products, filter_data_skus
+from chatbot_commerce.products.filters import products_skus, filter_data_skus
 
 # Models
 from chatbot_commerce.products.models import Product, Department
@@ -56,7 +56,6 @@ class ProductViewset(mixins.RetrieveModelMixin,
         search = Put a keyword like name category or department to filter whith it
         example... search = jeans azul L
         """
-        self.products_filter_data = filter_data_products(self)
         self.skus_filter_data = filter_data_skus(self)
         self.queryset = products_skus(self)
         serializer = self.get_serializer(self.paginate_queryset(self.queryset.order_by('-external_id')), many=True)

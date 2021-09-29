@@ -4,6 +4,8 @@ from slugify import slugify
 
 # Django
 from django.db import models
+from django.dispatch import receiver
+from django.db.models.signals import post_save
 
 # utilities
 from chatbot_commerce.utils.models import ChatbootModel, BaseAbstract, BaseRawAbstract
@@ -31,6 +33,8 @@ class Skus(BaseAbstract):
         null=True,
         blank=True
     )
+    search_attributes = models.TextField(_("Attributes search"), blank=True, null=True)
+    search = models.TextField(_("Search"), blank=True, null=True)
     is_transported = models.BooleanField(
         default=False,
         null=True,
@@ -99,6 +103,32 @@ class Skus(BaseAbstract):
     def __str__(self):
         """Return sku id."""
         return f'{self.name}'
+    
+    def save(self, *args, **kwargs):
+
+        array_sku_seller = list(self.sku_seller.values_list('seller__seller_id', flat=True))
+        if array_sku_seller:
+            seller = array_sku_seller[0]
+        else:
+            seller = None
+
+        price = self.price.first()
+        if price:
+            price = price.serializer_data
+        else:
+            price=None
+
+        self.serializer_data = {
+            'sku_id': self.external_id,
+            'seller_id': seller,
+            'sku_name': self.name,
+            'total_quantity': self.total_quantity,
+            'images': list(self.images.values_list('image_url', flat=True)),
+            'price': price,
+            'attributes': list(self.attributes.values('value', attribute_name=models.F('attribute_type__name'))),
+            'is_active': self.is_active
+        }
+        return super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = "Sku"
@@ -148,9 +178,21 @@ class Price(BaseRawAbstract):
         ordering = ['sku', 'cost_price']
         default_related_name = 'price'
 
+    def save(self, *args, **kwargs):
+        self.serializer_data = {
+            'base_price': self.base_price,
+            'fixed_prices': list(self.fixed_prices.values_list('serializer_data', flat=True))
+        }
+        return super().save(*args, **kwargs)
+
     def __str__(self):
         """Return sku price."""
         return f'sku:{self.base_price}'
+
+@receiver(post_save, sender=Price)
+def _post_save_price(sender, instance, *args, **kwargs):
+    instance.sku.save()
+    
 
 
 class FixedPrice(BaseRawAbstract):
@@ -164,6 +206,13 @@ class FixedPrice(BaseRawAbstract):
 
     # Relationship filter
     price = models.ForeignKey(Price, on_delete=models.CASCADE)
+
+    def save(self, *args, **kwargs):
+        self.serializer_data = {
+            'value': self.value,
+            'date_ranges': list(self.date_ranges.values('date_time_from', 'date_time_to'))
+        }
+        return super().save(*args, **kwargs)
 
     class Meta:
         """Meta class"""

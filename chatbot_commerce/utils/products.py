@@ -23,6 +23,7 @@ def update_or_create_product(store, product, product_id):
         department = Department.objects.filter(external_id=product.get('DepartmentId'), store=store).last()
         category = Category.objects.filter(external_id=product.get('CategoryId'), department__store=store).last()
         sub_category = Subcategory.objects.filter(external_id=product.get('CategoryId'), category__department__store=store).last()
+        brand = Brand.objects.filter(external_id=product.get('BrandId')).last()
         if not category:
             if sub_category:
                 category = sub_category.category
@@ -35,7 +36,8 @@ def update_or_create_product(store, product, product_id):
                     'department': department,
                     'sub_category': sub_category,
                     'category': category,
-                    'brand': Brand.objects.filter(external_id=product.get('BrandId')).last(),
+                    'brand': brand,
+                    'search': ' '.join([name, *[cat.name for cat in [department, category, sub_category, brand] if cat]]),
                     'link_id': product.get('LinkId'),
                     'reference_id': product.get('RefId'),
                     'is_visible': product.get('IsVisible'),
@@ -63,11 +65,12 @@ def update_or_create_sku(product_instance, product_id, sku, store):
     # Create or update sku
     try:
         # Get instance
+        sku_name = sku.get('NameComplete')
         sku_instance, _ = Skus.objects.update_or_create(
             external_id=sku.get('Id'),
             product=product_instance,
             defaults={
-                'name': sku.get('NameComplete'),
+                'name': sku_name,
                 'is_active': sku.get('IsActive'),
                 'ref_id': sku.get('RefId'),
                 'packaged_height': sku.get('Height'),
@@ -132,6 +135,7 @@ def update_or_create_sku(product_instance, product_id, sku, store):
             print(f'message: {message} imagenes')
 
         # Create attributes for sku
+        s = []
         try:
             if sku_specifications_array:
                 for dic in sku_specifications_array:
@@ -148,6 +152,11 @@ def update_or_create_sku(product_instance, product_id, sku, store):
                                 attribute_type=attribute_type_instance,
                                 value=value,
                             )
+                            s.append(value)
+                s = ' '.join(s)
+                sku_instance.search_attributes = s
+                sku_instance.search = ' '.join([product_instance.search, sku_name, s])
+                sku_instance.save()
                 sku_specifications_array.clear()
                 values.clear()
         except Exception as message:

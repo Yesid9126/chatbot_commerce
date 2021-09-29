@@ -84,7 +84,7 @@ class SkuModelSerializer(serializers.ModelSerializer):
 class ProductModelSerializer(serializers.ModelSerializer):
     """Product model serializer."""
 
-    skus = SkuModelSerializer(many=True)
+    skus = serializers.SerializerMethodField(method_name='get_skus')
     brand = serializers.SerializerMethodField('get_brand')
     tree_categories = serializers.SerializerMethodField('get_tree_categories')
     product_id = serializers.CharField(source='external_id')
@@ -102,6 +102,9 @@ class ProductModelSerializer(serializers.ModelSerializer):
             'skus',
         ]
         read_only_fields = fields
+
+    def get_skus(self, obj):
+        return obj.skus.values_list('serializer_data', flat=True)
 
     def get_tree_categories(self, obj):
         if obj.sub_category:
