@@ -5,13 +5,12 @@
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.generics import get_object_or_404
 
 # Serializer
 from chatbot_commerce.orders.serializers import CreateOrderSerializer
 
 # Utils
-from chatbot_commerce.utils.payment_url import cart_url
+from chatbot_commerce.utils.payment_url import kart_url
 
 # Models
 from chatbot_commerce.stores.models import Store
@@ -19,12 +18,6 @@ from chatbot_commerce.stores.models import Store
 class OrderViewSet(viewsets.GenericViewSet):
     """Web hook view set."""
 
-    def dispatch(self, request, *args, **kwargs):
-        import ipdb ; ipdb.set_trace()
-        slug_name = kwargs['store_slug_name']
-        self.store = get_object_or_404(Store, slug_name=slug_name)
-        import ipdb ; ipdb.set_trace()
-        return super().dispatch(request, *args, **kwargs)
 
     def get_serializer_class(self):
         """Return serializer based on action."""
@@ -40,8 +33,8 @@ class OrderViewSet(viewsets.GenericViewSet):
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
-
         data = request.data
         list_sku = data['sku_ids']
-        url = cart_url(list_sku)
+        store = Store.objects.filter(slug_name=data.get('store')).get()
+        url = kart_url(store, list_sku)
         return Response(request.data, status=status.HTTP_200_OK)
