@@ -79,8 +79,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
                         Prefetch(
                             'skus',
                             queryset=Skus.objects
-                            .prefetch_related('price__fixed_prices')
-                            .filter(skus_filter_data[1], **skus_filter_data[0]).distinct('pk')
+                            .filter(**skus_filter_data)
                         ),
                     )
                     .get(store=self.store, external_id=kwargs['pk'])

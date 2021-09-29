@@ -37,7 +37,7 @@ def products_skus(self):
                     queryset=skus
                 )
             )\
-            .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True).distinct('external_id')
+            .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True).distinct('external_id').order_by('-external_id')
 
     elif self.store.apply_filter_enable_products or self.store.apply_filter_enable_skus or self.store.apply_filter_image or self.store.apply_filter_price:
         if self.store.apply_filter_enable_products:
@@ -53,7 +53,7 @@ def products_skus(self):
                                 queryset=skus
                             )
                         )\
-                        .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True).distinct('pk')
+                        .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True).distinct('external_id').order_by('-external_id')
                 elif self.store.apply_filter_price:
                     skus = Skus.objects\
                     .filter(~Q(price=None), price__base_price__gt=0, total_quantity__gt=0, is_active=True, **self.skus_filter_data).distinct('pk')
@@ -65,7 +65,7 @@ def products_skus(self):
                                 queryset=skus
                             )
                         )\
-                        .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True).distinct('external_id')
+                        .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True).distinct('external_id').order_by('-external_id')
                 else:
                     skus = Skus.objects\
                     .filter(total_quantity__gt=0, is_active=True, **self.skus_filter_data).distinct('pk')
@@ -77,7 +77,7 @@ def products_skus(self):
                                 queryset=skus
                             )
                         )\
-                        .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True).distinct('external_id')
+                        .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True).distinct('external_id').order_by('-external_id')
             elif self.store.apply_filter_image:
                 if self.store.apply_filter_price:
                     skus = Skus.objects\
@@ -90,7 +90,7 @@ def products_skus(self):
                                 queryset=skus
                             )
                         )\
-                        .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True).distinct('external_id')
+                        .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True).distinct('external_id').order_by('-external_id')
                 else:
                     skus = Skus.objects\
                     .filter(~Q(images=None), **self.skus_filter_data).distinct('pk')
@@ -102,7 +102,7 @@ def products_skus(self):
                                 queryset=skus
                             )
                         )\
-                        .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True).distinct('external_id')
+                        .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True).distinct('external_id').order_by('-external_id')
             elif self.store.apply_filter_price:
                 skus = Skus.objects\
                 .filter(~Q(price=None), price__base_price__gt=0, **self.skus_filter_data).distinct('pk')
@@ -114,10 +114,10 @@ def products_skus(self):
                             queryset=skus
                         )
                     )\
-                    .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True).distinct('external_id')
+                    .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True).distinct('external_id').order_by('-external_id')
             else:
                 skus = Skus.objects\
-                .filter(**self.skus_filter_data).distinct('pk')
+                .filter(**self.skus_filter_data)
                 queryset = Product.objects\
                     .select_related('department', 'category', 'sub_category', 'brand')\
                     .prefetch_related(
@@ -126,7 +126,7 @@ def products_skus(self):
                             queryset=skus
                         )
                     )\
-                    .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True).distinct('external_id')
+                    .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True).distinct('external_id').order_by('-external_id')
         elif self.store.apply_filter_enable_skus:
             if self.store.apply_filter_image:
                 if self.store.apply_filter_price:
@@ -140,7 +140,7 @@ def products_skus(self):
                                 queryset=skus
                             )
                         )\
-                        .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store).distinct('external_id')
+                        .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store).distinct('external_id').order_by('-external_id')
                 else:
                     skus = Skus.objects\
                     .filter(~Q(images=None), total_quantity__gt=0, is_active=True, **self.skus_filter_data).distinct('pk')
@@ -152,7 +152,7 @@ def products_skus(self):
                                 queryset=skus
                             )
                         )\
-                        .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store).distinct('external_id')
+                        .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store).distinct('external_id').order_by('-external_id')
             elif self.store.apply_filter_price:
                 skus = Skus.objects\
                 .filter(~Q(price=None), price__base_price__gt=0, total_quantity__gt=0, is_active=True, **self.skus_filter_data).distinct('pk')
@@ -164,7 +164,7 @@ def products_skus(self):
                             queryset=skus
                         )
                     )\
-                    .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store).distinct('external_id')
+                    .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store).distinct('external_id').order_by('-external_id')
             else:
                 skus = Skus.objects\
                 .filter(total_quantity__gt=0, is_active=True, **self.skus_filter_data).distinct('pk')
@@ -176,7 +176,7 @@ def products_skus(self):
                             queryset=skus
                         )
                     )\
-                    .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store).distinct('external_id')
+                    .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store).distinct('external_id').order_by('-external_id')
         elif self.store.apply_filter_image:
             if self.store.apply_filter_price:
                 skus = Skus.objects\
@@ -189,7 +189,7 @@ def products_skus(self):
                             queryset=skus
                         )
                     )\
-                    .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store).distinct('external_id')
+                    .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store).distinct('external_id').order_by('-external_id')
 
             else:
                 skus = Skus.objects\
@@ -202,7 +202,7 @@ def products_skus(self):
                             queryset=skus
                         )
                     )\
-                    .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store).distinct('external_id')
+                    .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store).distinct('external_id').order_by('-external_id')
 
         else:
             skus = Skus.objects\
@@ -215,7 +215,7 @@ def products_skus(self):
                         queryset=skus
                     )
                 )\
-                .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store).distinct('external_id')
+                .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store).distinct('external_id').order_by('-external_id')
 
     else:
 
@@ -224,11 +224,10 @@ def products_skus(self):
             .prefetch_related(
                 Prefetch(
                     'skus',
-                    queryset=Skus.objects.filter(**self.skus_filter_data).distinct('pk')
-                    .prefetch_related('price__fixed_prices')
+                    queryset=Skus.objects.filter(**self.skus_filter_data)
                 )
             )\
-            .filter(store=self.store).distinct('external_id')
+            .filter(store=self.store).order_by('-external_id')
 
     return queryset
 
