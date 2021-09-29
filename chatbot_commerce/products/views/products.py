@@ -58,7 +58,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
         """
         self.skus_filter_data = filter_data_skus(self)
         self.queryset = products_skus(self)
-        serializer = self.get_serializer(self.paginate_queryset(self.queryset.order_by('-external_id')), many=True)
+        serializer = self.get_serializer(self.paginate_queryset(self.queryset), many=True)
         paginated_data = self.get_paginated_response(serializer.data).data
         return Response(data=paginated_data, status=HTTP_200_OK)
 
