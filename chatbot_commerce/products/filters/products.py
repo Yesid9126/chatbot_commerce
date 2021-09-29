@@ -239,6 +239,7 @@ def filter_data_skus(self):
         skus_filter_data |= {'total_quantity': total_quantity}
     search = self.data.get('search')
     if search:
+        search = search.replace(',', ' ')
         skus_filter_data |= {'search__search': search}
     attributes = self.data.get('attributes')
     if attributes:

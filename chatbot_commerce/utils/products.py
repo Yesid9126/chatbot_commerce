@@ -246,12 +246,13 @@ def create_products_vtex_store(store, limit=False):
             add = vtex.get_list_skus_by_storeid(store_id=sc_id, page=page)
             if add == {} or add == []:
                 break
-            print(add)
             skus_ids += add
             page += 1
         if sc_id == 1:
             break
     skus_ids = list(set(skus_ids))
+    skus_ids.reverse()
+    print(skus_ids)
     sub_skus_ids = [skus_ids[i:i+1000] for i in range(0, len(skus_ids), 1000)]
     skus_ids.clear()
     products_created = []
