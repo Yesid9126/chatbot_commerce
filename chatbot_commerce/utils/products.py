@@ -195,7 +195,7 @@ def update_or_create_sku(product_instance, product_id, sku, store):
                                 value=value,
                             )
                             s.append(value)
-                if sku_instance:
+                if sku_instance and product_instance:
                     s = ' '.join(s)
                     sku_instance.search_attributes = s
                     sku_instance.search = ' '.join([product_instance.search, sku_name, s])
