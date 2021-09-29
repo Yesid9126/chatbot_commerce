@@ -4,8 +4,6 @@ from slugify import slugify
 
 # Django
 from django.db import models
-from django.dispatch import receiver
-from django.db.models.signals import post_save
 
 # utilities
 from chatbot_commerce.utils.models import ChatbootModel, BaseAbstract, BaseRawAbstract
@@ -103,7 +101,7 @@ class Skus(BaseAbstract):
     def __str__(self):
         """Return sku id."""
         return f'{self.name}'
-    
+
     def save(self, *args, **kwargs):
 
         array_sku_seller = list(self.sku_seller.values_list('seller__seller_id', flat=True))
@@ -116,7 +114,7 @@ class Skus(BaseAbstract):
         if price:
             price = price.serializer_data
         else:
-            price=None
+            price = None
 
         self.serializer_data = {
             'sku_id': self.external_id,
@@ -188,11 +186,6 @@ class Price(BaseRawAbstract):
     def __str__(self):
         """Return sku price."""
         return f'sku:{self.base_price}'
-
-@receiver(post_save, sender=Price)
-def _post_save_price(sender, instance, *args, **kwargs):
-    instance.sku.save()
-    
 
 
 class FixedPrice(BaseRawAbstract):

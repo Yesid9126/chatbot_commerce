@@ -29,7 +29,7 @@ def store_begining(store, *args, **kwargs):
         return 'sync_status already runed'
     store.sync_status = True
     store.save()
-    
+
     # brands, categories, products and skus
     get_sc_sellers(store=store, task='create')
     gc.collect()

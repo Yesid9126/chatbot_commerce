@@ -87,7 +87,7 @@ def update_or_create_sku(product_instance, product_id, sku, store):
                 'raw_json': sku
             }
         )
-        
+
         # Get Sales channels of sku
         sc_ids = sku.get('SalesChannels')
         sc = SaleChannel.objects.filter(store=store, external_id__in=sc_ids)
@@ -134,34 +134,6 @@ def update_or_create_sku(product_instance, product_id, sku, store):
         except Exception as message:
             print(f'message: {message} imagenes')
 
-        # Create attributes for sku
-        s = []
-        try:
-            if sku_specifications_array:
-                for dic in sku_specifications_array:
-                    name = dic.get('FieldName')
-                    attribute_type_instance, _ = AttributeType.objects.get_or_create(
-                        store=store,
-                        name=name
-                    )
-                    values = dic.get('FieldValues')
-                    if values:
-                        for value in values:
-                            attribute_instance, _ = Attribute.objects.update_or_create(
-                                sku=sku_instance,
-                                attribute_type=attribute_type_instance,
-                                value=value,
-                            )
-                            s.append(value)
-                s = ' '.join(s)
-                sku_instance.search_attributes = s
-                sku_instance.search = ' '.join([product_instance.search, sku_name, s])
-                sku_instance.save()
-                sku_specifications_array.clear()
-                values.clear()
-        except Exception as message:
-            print(f'message: {message} specificaciones')
-
         # Create price for sku
         try:
             if price:
@@ -203,6 +175,35 @@ def update_or_create_sku(product_instance, product_id, sku, store):
                 fixed_prices.clear()
         except Exception as message:
             print(f'message: {message} precios')
+
+        # Create attributes for sku
+        s = []
+        try:
+            if sku_specifications_array:
+                for dic in sku_specifications_array:
+                    name = dic.get('FieldName')
+                    attribute_type_instance, _ = AttributeType.objects.get_or_create(
+                        store=store,
+                        name=name
+                    )
+                    values = dic.get('FieldValues')
+                    if values:
+                        for value in values:
+                            attribute_instance, _ = Attribute.objects.update_or_create(
+                                sku=sku_instance,
+                                attribute_type=attribute_type_instance,
+                                value=value,
+                            )
+                            s.append(value)
+                s = ' '.join(s)
+                sku_instance.search_attributes = s
+                sku_instance.search = ' '.join([product_instance.search, sku_name, s])
+                sku_instance.save()
+                sku_specifications_array.clear()
+                values.clear()
+        except Exception as message:
+            print(f'message: {message} specificaciones')
+
     except Exception as e:
         error = {
             'message': e,

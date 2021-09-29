@@ -1,4 +1,3 @@
-from re import search
 from django_filters.rest_framework import FilterSet
 from django_filters import filters
 
@@ -20,6 +19,7 @@ class ProductFilterSet(FilterSet):
             'search', 'attributes', 'stock_quantity'
         ]
 
+
 def products_skus(self):
     """
     Plane function of apply_filters of model Store.
@@ -31,14 +31,14 @@ def products_skus(self):
             .prefetch_related('price__fixed_prices')\
             .filter(~Q(images=None), ~Q(price=None), price__base_price__gt=0, total_quantity__gt=0, is_active=True, **self.skus_filter_data).distinct('pk')
         queryset = Product.objects\
-                    .select_related('department', 'category', 'sub_category', 'brand')\
-                    .prefetch_related(
-                        Prefetch(
-                            'skus',
-                            queryset=skus
-                        )
-                    )\
-                    .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True).distinct('external_id')
+            .select_related('department', 'category', 'sub_category', 'brand')\
+            .prefetch_related(
+                Prefetch(
+                    'skus',
+                    queryset=skus
+                )
+            )\
+            .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True).distinct('external_id')
 
     elif self.store.apply_filter_enable_products or self.store.apply_filter_enable_skus or self.store.apply_filter_image or self.store.apply_filter_price:
         if self.store.apply_filter_enable_products:
@@ -247,6 +247,7 @@ def products_skus(self):
 
     return queryset
 
+
 def filter_data_skus(self):
     skus_filter_data = {}
     total_quantity = self.data.get('stock_quantity')
@@ -259,5 +260,5 @@ def filter_data_skus(self):
     if attributes:
         attributes = attributes.replace('-', ' ')
         skus_filter_data |= {'search_attributes__search': attributes}
-        
+
     return skus_filter_data

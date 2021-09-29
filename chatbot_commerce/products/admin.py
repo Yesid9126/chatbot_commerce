@@ -70,6 +70,7 @@ class ImagesAdmin(admin.ModelAdmin):
     list_display = ('sku', 'image_url',)
     readonly_fields = list_display
 
+
 class InlineImageAdmin(admin.TabularInline):
     model = Image
     extra = 0
