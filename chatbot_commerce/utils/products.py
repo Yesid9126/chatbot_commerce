@@ -148,7 +148,7 @@ def update_or_create_sku(product_instance, product_id, sku, store):
                     }
                 )
                 fixed_prices = price.get('fixedPrices')
-                if fixed_prices:
+                if fixed_prices and price_instance:
                     for fixedprice_dic in fixed_prices:
                         fixedprice_instance, _ = FixedPrice.objects.update_or_create(
                             price=price_instance,
@@ -161,7 +161,7 @@ def update_or_create_sku(product_instance, product_id, sku, store):
                             }
                         )
                         daterange_dic = fixedprice_dic.get('dateRange')
-                        if daterange_dic:
+                        if daterange_dic and fixedprice_instance:
                             print(daterange_dic)
                             daterange_instance, _ = DateRange.objects.update_or_create(
                                 fixed_price=fixedprice_instance,
@@ -170,7 +170,10 @@ def update_or_create_sku(product_instance, product_id, sku, store):
                                     'date_time_to': daterange_dic.get('to'),
                                     "raw_json": daterange_dic
                                 }
-                            )
+                            )            
+                            fixedprice_instance.save()
+                    price_instance.save()    
+
                 price.clear()
                 fixed_prices.clear()
         except Exception as message:
