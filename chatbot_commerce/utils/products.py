@@ -195,12 +195,13 @@ def update_or_create_sku(product_instance, product_id, sku, store):
                                 value=value,
                             )
                             s.append(value)
-                s = ' '.join(s)
-                sku_instance.search_attributes = s
-                sku_instance.search = ' '.join([product_instance.search, sku_name, s])
-                sku_instance.save()
-                sku_specifications_array.clear()
-                values.clear()
+                if sku_instance:
+                    s = ' '.join(s)
+                    sku_instance.search_attributes = s
+                    sku_instance.search = ' '.join([product_instance.search, sku_name, s])
+                    sku_instance.save()
+                    sku_specifications_array.clear()
+                    values.clear()
         except Exception as message:
             print(f'message: {message} specificaciones')
 
