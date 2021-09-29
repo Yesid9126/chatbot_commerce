@@ -15,11 +15,13 @@ class CreateOrderSerializer(serializers.Serializer):
     customer = serializers.CharField(required=True)
     store = serializers.CharField(required=True)
     sku_ids = serializers.ListField(required=True)
+    url = serializers.CharField()
 
     def create(self, data):
         """Order create."""
         sku_ids = data.get('sku_ids')
         customer = data.get('customer')
+        url = data.get('url')
         store = Store.objects.filter(slug_name=data.get('store')).get()
         order = Order.objects.create(customer=customer, hook_data=data, store=store)
         for item in sku_ids:
@@ -44,7 +46,8 @@ class CreateOrderSerializer(serializers.Serializer):
         order = Order.objects.update_or_create(
             id=order.id,
             defaults={
-                'price': price_order
+                'price': price_order,
+                'url': url
             }
         )
         return order
