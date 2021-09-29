@@ -23,6 +23,7 @@ def update_or_create_product(store, product, product_id):
         department = Department.objects.filter(external_id=product.get('DepartmentId'), store=store).last()
         category = Category.objects.filter(external_id=product.get('CategoryId'), department__store=store).last()
         sub_category = Subcategory.objects.filter(external_id=product.get('CategoryId'), category__department__store=store).last()
+        brand = Brand.objects.filter(external_id=product.get('BrandId')).last()
         if not category:
             if sub_category:
                 category = sub_category.category
@@ -35,7 +36,8 @@ def update_or_create_product(store, product, product_id):
                     'department': department,
                     'sub_category': sub_category,
                     'category': category,
-                    'brand': Brand.objects.filter(external_id=product.get('BrandId')).last(),
+                    'brand': brand,
+                    'search': ' '.join([name, *[cat.name for cat in [department, category, sub_category, brand] if cat]]),
                     'link_id': product.get('LinkId'),
                     'reference_id': product.get('RefId'),
                     'is_visible': product.get('IsVisible'),
@@ -63,11 +65,12 @@ def update_or_create_sku(product_instance, product_id, sku, store):
     # Create or update sku
     try:
         # Get instance
+        sku_name = sku.get('NameComplete')
         sku_instance, _ = Skus.objects.update_or_create(
             external_id=sku.get('Id'),
             product=product_instance,
             defaults={
-                'name': sku.get('NameComplete'),
+                'name': sku_name,
                 'is_active': sku.get('IsActive'),
                 'ref_id': sku.get('RefId'),
                 'packaged_height': sku.get('Height'),
@@ -84,6 +87,7 @@ def update_or_create_sku(product_instance, product_id, sku, store):
                 'raw_json': sku
             }
         )
+
         # Get Sales channels of sku
         sc_ids = sku.get('SalesChannels')
         sc = SaleChannel.objects.filter(store=store, external_id__in=sc_ids)
@@ -129,27 +133,6 @@ def update_or_create_sku(product_instance, product_id, sku, store):
                 images_array.clear()
         except Exception as message:
             print(f'message: {message} imagenes')
-        # Create attributes for sku
-        try:
-            if sku_specifications_array:
-                for dic in sku_specifications_array:
-                    name = dic.get('FieldName')
-                    attribute_type_instance, _ = AttributeType.objects.get_or_create(
-                        store=store,
-                        name=name
-                    )
-                    values = dic.get('FieldValues')
-                    if values:
-                        for value in values:
-                            attribute_instance, _ = Attribute.objects.update_or_create(
-                                sku=sku_instance,
-                                attribute_type=attribute_type_instance,
-                                value=value,
-                            )
-                sku_specifications_array.clear()
-                values.clear()
-        except Exception as message:
-            print(f'message: {message} specificaciones')
 
         # Create price for sku
         try:
@@ -192,6 +175,35 @@ def update_or_create_sku(product_instance, product_id, sku, store):
                 fixed_prices.clear()
         except Exception as message:
             print(f'message: {message} precios')
+
+        # Create attributes for sku
+        s = []
+        try:
+            if sku_specifications_array:
+                for dic in sku_specifications_array:
+                    name = dic.get('FieldName')
+                    attribute_type_instance, _ = AttributeType.objects.get_or_create(
+                        store=store,
+                        name=name
+                    )
+                    values = dic.get('FieldValues')
+                    if values:
+                        for value in values:
+                            attribute_instance, _ = Attribute.objects.update_or_create(
+                                sku=sku_instance,
+                                attribute_type=attribute_type_instance,
+                                value=value,
+                            )
+                            s.append(value)
+                s = ' '.join(s)
+                sku_instance.search_attributes = s
+                sku_instance.search = ' '.join([product_instance.search, sku_name, s])
+                sku_instance.save()
+                sku_specifications_array.clear()
+                values.clear()
+        except Exception as message:
+            print(f'message: {message} specificaciones')
+
     except Exception as e:
         error = {
             'message': e,
@@ -234,12 +246,15 @@ def create_products_vtex_store(store, limit=False):
             add = vtex.get_list_skus_by_storeid(store_id=sc_id, page=page)
             if add == {} or add == []:
                 break
-            print(add)
             skus_ids += add
             page += 1
         if sc_id == 1:
             break
+
+    # Order by new-old
     skus_ids = list(set(skus_ids))
+    skus_ids.reverse()
+
     sub_skus_ids = [skus_ids[i:i+1000] for i in range(0, len(skus_ids), 1000)]
     skus_ids.clear()
     products_created = []

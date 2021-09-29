@@ -38,6 +38,7 @@ class Product(AbstractCategory):
 
     # Extra filter data
     keywords = models.TextField(_("Keywords"), blank=True, null=True)
+    search = models.TextField(_("Search"), blank=True, null=True)
 
     # Relationship filter
     store = models.ForeignKey(

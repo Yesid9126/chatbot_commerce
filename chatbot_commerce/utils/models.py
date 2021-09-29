@@ -39,7 +39,10 @@ class ChatbootModel(models.Model):
 class BaseRawAbstract(ChatbootModel):
 
     # Raw_data
-    raw_json = models.JSONField(null=True, blank=True)
+    raw_json = models.JSONField(_("Raw data"), null=True, blank=True)
+
+    # Hack to db
+    serializer_data = models.JSONField(null=True, blank=True)
 
     class Meta:
         """Meta option."""
