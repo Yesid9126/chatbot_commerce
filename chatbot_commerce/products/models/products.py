@@ -38,6 +38,7 @@ class Product(AbstractCategory):
 
     # Extra filter data
     keywords = models.TextField(_("Keywords"), blank=True, null=True)
+    search = models.TextField(_("Search"), blank=True, null=True)
 
     # Relationship filter
     store = models.ForeignKey(
@@ -85,61 +86,11 @@ class Product(AbstractCategory):
     description_short = models.TextField(_("Short description"), null=True, blank=True)
     meta_tag_description = models.TextField(_("Tag description"), null=True, blank=True)
 
-    def save(self, *args, **kwargs):
-        self.serializer_data = self.get_product
-        return super().save(*args, **kwargs)
-
     def __str__(self):
         """Return product name|id."""
-        return f'name:{self.name}'
+        return f'{self.name}'
 
     class Meta:
         verbose_name = "Product"
         verbose_name_plural = "Product"
         default_related_name = 'products'
-
-    @property
-    def get_product(self):
-        product_dict = {
-            'id': self.external_id,
-            'name': self.name,
-            'keywords': self.keywords,
-            'brand': self.get_brand,
-            'tree_categories': self.category_tree
-        }
-        return product_dict
-
-    @property
-    def get_brand(self):
-        brand_dict = {
-            'name': self.brand.name,
-            'slug_name': self.brand.slug_name
-        }
-        return brand_dict
-
-    @property
-    def category_tree(self):
-        if self.sub_category:
-            category_tree_dict = {
-                'name': self.sub_category.name,
-                'category': {
-                    'name': self.category.name,
-                    'department': {
-                        'name': self.department.name
-                    }
-                }
-            }
-        elif self.category:
-            category_tree_dict = {
-                'name': self.category.name,
-                'department': {
-                    'name': self.department.name
-                }
-            }
-        elif self.department:
-            category_tree_dict = {
-                'name': self.department.name
-            }
-        else:
-            category_tree_dict = {}
-        return category_tree_dict

@@ -10,17 +10,18 @@ from chatbot_commerce.orders.models import Order, OrderItem
 class InlineOrderItemAdmin(admin.TabularInline):
     model = OrderItem
     extra = 0
-    fields = ['sku_unit', 'price', 'quantity']
+    fields = ('sku_unit', 'price', 'quantity',)
+    readonly_fields = fields
 
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     """Order model admin."""
 
-    list_display = ['id', 'customer', 'status', 'price']
+    list_display = ['id', 'customer', 'status', 'price', 'store']
     search_fields = ['id', 'customer']
     inlines = [InlineOrderItemAdmin]
-    readonly_fields = ['hook_data']
+    readonly_fields = ('hook_data', 'price',)
 
 
 @admin.register(OrderItem)
@@ -29,6 +30,7 @@ class OrderItemAdmin(admin.ModelAdmin):
 
     list_display = ['sku_id', 'order', 'sku_unit', 'price', 'id']
     search_fields = ['order__customer', ]
+    readonly_fields = ('order', 'price', 'sku_unit',)
 
     def sku_id(self, obj):
         """Sku id."""

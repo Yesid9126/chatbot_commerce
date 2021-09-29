@@ -37,6 +37,7 @@ class SkuSellerAdmin(admin.ModelAdmin):
     """Seller model admin."""
     list_display = ['seller_id', 'store', 'sku_id', 'is_active']
     list_filter = ['is_active', 'seller']
+    search_fields = ['seller', 'store', 'sku', 'is_active']
 
     def seller_id(self, obj):
         return obj.seller.seller_id

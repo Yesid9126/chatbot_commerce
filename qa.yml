@@ -1,0 +1,72 @@
+version: '3'
+
+volumes:
+  production_postgres_data: {}
+  production_postgres_data_backups: {}
+  production_traefik: {}
+
+services:
+  django: &django
+    build:
+      context: .
+      dockerfile: ./compose/qa/django/Dockerfile
+    image: chatbot_commerce_production_django
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - ./.envs/.qa/.django
+      - ./.envs/.qa/.postgres
+    command: /start
+
+  postgres:
+    build:
+      context: .
+      dockerfile: ./compose/qa/postgres/Dockerfile
+    image: chatbot_commerce_production_postgres
+    volumes:
+      - production_postgres_data:/var/lib/postgresql/data:Z
+      - production_postgres_data_backups:/backups:z
+    env_file:
+      - ./.envs/.qa/.postgres
+
+  traefik:
+    build:
+      context: .
+      dockerfile: ./compose/qa/traefik/Dockerfile
+    image: chatbot_commerce_production_traefik
+    depends_on:
+      - django
+    volumes:
+      - production_traefik:/etc/traefik/acme:z
+    ports:
+      - "0.0.0.0:80:80"
+      - "0.0.0.0:443:443"
+      - "0.0.0.0:5555:5555"
+
+  redis:
+    image: redis:5.0
+
+  celeryworker:
+    <<: *django
+    image: chatbot_commerce_production_celeryworker
+    command: /start-celeryworker
+
+  celerybeat:
+    <<: *django
+    image: chatbot_commerce_production_celerybeat
+    command: /start-celerybeat
+
+  flower:
+    <<: *django
+    image: chatbot_commerce_production_flower
+    command: /start-flower
+
+  awscli:
+    build:
+      context: .
+      dockerfile: ./compose/qa/aws/Dockerfile
+    env_file:
+      - ./.envs/.qa/.django
+    volumes:
+      - production_postgres_data_backups:/backups:z

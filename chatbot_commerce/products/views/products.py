@@ -21,7 +21,7 @@ from rest_framework.permissions import IsAdminUser
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from chatbot_commerce.products.filters import ProductFilterSet
-from chatbot_commerce.products.filters import products_skus
+from chatbot_commerce.products.filters import products_skus, filter_data_skus
 
 # Models
 from chatbot_commerce.products.models import Product, Department
@@ -39,32 +39,14 @@ class ProductViewset(mixins.RetrieveModelMixin,
     serializer_class = ProductModelSerializer
     lookup_field = 'pk'
     permission_classes = [HasAPIKey | IsAdminUser]
-    filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
-    filterset_class = ProductFilterSet
-    search_fields = (
-        'name', 'brand__name', 'keywords', 'category__name',
-        'sub_category__name', 'department__name'
-    )
-    ordering_fields = ('created',)
+    filter_class = ProductFilterSet
 
+    # @query_debugger
     def dispatch(self, request, *args, **kwargs):
         slug_name = kwargs['store_slug_name']
         self.store = get_object_or_404(Store, slug_name=slug_name)
-
-        swagger_params = ['attribute_type', 'attributes__value', 'sku_name']
-        self.filter_data = {
-            'attributes__attribute_type__name__icontains' if key == 'attribute_type' else
-            'attributes__value__icontains' if key == 'attributes__value' else
-            'name__icontains' if key == 'sku_name' else
-            key+'__icontains': value for key, value in request.GET.items() if key in swagger_params
-        }
-        request.GET = {key: value for key, value in request.GET.items() if key not in swagger_params}
-        request.query_params = request.GET
-
+        self.data = {key: value for key, value in self.request.GET.items()}
         return super().dispatch(request, *args, **kwargs)
-
-    def get_queryset(self):
-        return self.queryset
 
     # @query_debugger
     def list(self, request, *args, **kwargs):
@@ -74,7 +56,8 @@ class ProductViewset(mixins.RetrieveModelMixin,
         search = Put a keyword like name category or department to filter whith it
         example... search = jeans azul L
         """
-        self = products_skus(self)
+        self.skus_filter_data = filter_data_skus(self)
+        self.queryset = products_skus(self)
         serializer = self.get_serializer(self.paginate_queryset(self.queryset), many=True)
         paginated_data = self.get_paginated_response(serializer.data).data
         return Response(data=paginated_data, status=HTTP_200_OK)
@@ -87,14 +70,25 @@ class ProductViewset(mixins.RetrieveModelMixin,
         Parameters.
         """
         try:
-            obj = Product.objects\
-                .select_related('department', 'category', 'sub_category', 'brand')\
-                .prefetch_related(Prefetch('skus', queryset=Skus.objects.filter(**self.filter_data).distinct('pk')),)\
-                .get(store=self.store, external_id=kwargs['pk'])
+            skus_filter_data = filter_data_skus(self)
+            return Response(
+                self.get_serializer(
+                    Product.objects
+                    .select_related('department', 'category', 'sub_category', 'brand')
+                    .prefetch_related(
+                        Prefetch(
+                            'skus',
+                            queryset=Skus.objects
+                            .filter(**skus_filter_data)
+                        ),
+                    )
+                    .get(store=self.store, external_id=kwargs['pk'])
+                ).data,
+                status=HTTP_200_OK
+            )
         except Exception as message:
             print(f'error. {message}')
             return Response({}, status=HTTP_404_NOT_FOUND)
-        return Response(self.get_serializer(obj).data, status=HTTP_200_OK)
 
 
 class DepartmentsViewset(mixins.RetrieveModelMixin,

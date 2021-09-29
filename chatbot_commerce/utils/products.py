@@ -3,23 +3,27 @@
 # Models
 from chatbot_commerce.stores.models.stores import SkuSeller
 from chatbot_commerce.products.models import (
-    Skus, Product,
+    Skus, Product, Price, FixedPrice, DateRange,
     Brand, Category, Department,
-    Subcategory
+    Subcategory, Image, Attribute, AttributeType
 )
 from chatbot_commerce.stores.models import SaleChannel, Seller
 
 # Apis
 from chatbot_commerce.utils.apis.vtex import VtexStores
 
+# Utils
+import asyncio
+import gc
 
-def update_or_create_product(store, product_id, vtex):
-    product = vtex.product_unit(product_id=product_id)
+
+def update_or_create_product(store, product, product_id):
     name = product.get('Name')
     if name:
         department = Department.objects.filter(external_id=product.get('DepartmentId'), store=store).last()
         category = Category.objects.filter(external_id=product.get('CategoryId'), department__store=store).last()
         sub_category = Subcategory.objects.filter(external_id=product.get('CategoryId'), category__department__store=store).last()
+        brand = Brand.objects.filter(external_id=product.get('BrandId')).last()
         if not category:
             if sub_category:
                 category = sub_category.category
@@ -32,7 +36,8 @@ def update_or_create_product(store, product_id, vtex):
                     'department': department,
                     'sub_category': sub_category,
                     'category': category,
-                    'brand': Brand.objects.filter(external_id=product.get('BrandId')).last(),
+                    'brand': brand,
+                    'search': ' '.join([name, *[cat.name for cat in [department, category, sub_category, brand] if cat]]),
                     'link_id': product.get('LinkId'),
                     'reference_id': product.get('RefId'),
                     'is_visible': product.get('IsVisible'),
@@ -52,34 +57,20 @@ def update_or_create_product(store, product_id, vtex):
                 'product_id': product_id,
             }
             print(error)
-            product_instance = None
-    else:
-        print(f'product not found try to get it from db: {product}')
-        product_instance = Product.objects.filter(external_id=product_id).first()
-    return product_instance
+    return None
 
 
-def update_or_create_sku(product_instance, product_id, sku, sku_id, vtex, store):
-
-    # Quantity in warehouses
-    total_quantity = 0
-    if sku_id:
-        sku_inventory = vtex.skus_inventory(sku_id=sku_id)
-        sku_inventory = sku_inventory.get('balance')
-        for quantity in sku_inventory:
-            quantity_sku = quantity.get('totalQuantity')
-            total_quantity += quantity_sku
-    else:
-        print(f'error in sku: {sku_id} line 164 utils/products.py')
+def update_or_create_sku(product_instance, product_id, sku, store):
 
     # Create or update sku
     try:
         # Get instance
+        sku_name = sku.get('NameComplete')
         sku_instance, _ = Skus.objects.update_or_create(
-            external_id=sku_id,
+            external_id=sku.get('Id'),
             product=product_instance,
             defaults={
-                'name': sku.get('NameComplete'),
+                'name': sku_name,
                 'is_active': sku.get('IsActive'),
                 'ref_id': sku.get('RefId'),
                 'packaged_height': sku.get('Height'),
@@ -92,16 +83,18 @@ def update_or_create_sku(product_instance, product_id, sku, sku_id, vtex, store)
                 'reference_stock_id': sku.get('ReferenceStockKeepingUnitId'),
                 'is_inventoried': sku.get('IsInventoried'),
                 'is_transported': sku.get('IsTransported'),
-                'total_quantity': total_quantity,
+                'total_quantity': sku.get('total_quantity'),
                 'raw_json': sku
             }
         )
+
         # Get Sales channels of sku
         sc_ids = sku.get('SalesChannels')
         sc = SaleChannel.objects.filter(store=store, external_id__in=sc_ids)
+        sc_ids.clear()
         sku_instance.sales_channels.add(*sc)
 
-        # Get Sellets of sku
+        # Get Sellers of sku
         sellers_array = sku.get('SkuSellers')
         for seller_dict in sellers_array:
             seller_instance = Seller.objects.filter(store=store, seller_id=seller_dict.get('SellerId')).first()
@@ -114,6 +107,102 @@ def update_or_create_sku(product_instance, product_id, sku, sku_id, vtex, store)
                     }
 
                 )
+        sellers_array.clear()
+        price = sku.get('price')
+        images_array = sku.get('Images')
+        sku_specifications_array = sku.get('SkuSpecifications')
+        sku.clear()
+
+        # Create image for sku
+        try:
+            if images_array:
+                for image_dict in images_array:
+                    image_url = image_dict.get('ImageUrl')
+                    if image_url:
+                        name = image_dict.get('ImageName')
+                        image_instance, _ = Image.objects.update_or_create(
+                            image_id=image_dict.get('FileId'),
+                            sku=sku_instance,
+                            defaults={
+                                'name': name,
+                                'image_url': image_url
+                            }
+                        )
+                    else:
+                        print(f'error: {images_array}')
+                images_array.clear()
+        except Exception as message:
+            print(f'message: {message} imagenes')
+
+        # Create price for sku
+        try:
+            if price:
+                price_instance, _ = Price.objects.update_or_create(
+                    sku=sku_instance,
+                    defaults={
+                        "list_price": price.get('listPrice'),
+                        "cost_price": price.get('costPrice'),
+                        "markup": price.get('markup'),
+                        "base_price": price.get('basePrice'),
+                        "raw_json": price
+                    }
+                )
+                fixed_prices = price.get('fixedPrices')
+                if fixed_prices:
+                    for fixedprice_dic in fixed_prices:
+                        fixedprice_instance, _ = FixedPrice.objects.update_or_create(
+                            price=price_instance,
+                            trade_policy_id=fixedprice_dic["tradePolicyId"],
+                            defaults={
+                                "value": fixedprice_dic["value"],
+                                "list_price": fixedprice_dic["listPrice"],
+                                "min_quantity": fixedprice_dic["minQuantity"],
+                                "raw_json": fixedprice_dic
+                            }
+                        )
+                        daterange_dic = fixedprice_dic.get('dateRange')
+                        if daterange_dic:
+                            print(daterange_dic)
+                            daterange_instance, _ = DateRange.objects.update_or_create(
+                                fixed_price=fixedprice_instance,
+                                defaults={
+                                    'date_time_from': daterange_dic.get('from'),
+                                    'date_time_to': daterange_dic.get('to'),
+                                    "raw_json": daterange_dic
+                                }
+                            )
+                price.clear()
+                fixed_prices.clear()
+        except Exception as message:
+            print(f'message: {message} precios')
+
+        # Create attributes for sku
+        s = []
+        try:
+            if sku_specifications_array:
+                for dic in sku_specifications_array:
+                    name = dic.get('FieldName')
+                    attribute_type_instance, _ = AttributeType.objects.get_or_create(
+                        store=store,
+                        name=name
+                    )
+                    values = dic.get('FieldValues')
+                    if values:
+                        for value in values:
+                            attribute_instance, _ = Attribute.objects.update_or_create(
+                                sku=sku_instance,
+                                attribute_type=attribute_type_instance,
+                                value=value,
+                            )
+                            s.append(value)
+                s = ' '.join(s)
+                sku_instance.search_attributes = s
+                sku_instance.search = ' '.join([product_instance.search, sku_name, s])
+                sku_instance.save()
+                sku_specifications_array.clear()
+                values.clear()
+        except Exception as message:
+            print(f'message: {message} specificaciones')
 
     except Exception as e:
         error = {
@@ -122,192 +211,92 @@ def update_or_create_sku(product_instance, product_id, sku, sku_id, vtex, store)
             'sku_id': sku.get('Id'),
         }
         print(error)
-        sku_instance = None
-    return sku_instance
+    return None
 
 
-def create_products_vtex_store(store, limit=None):
+async def get_skus_and_products_dicts(sc, loop, vtex, skus=[], products_created=[]):
+    # Get dicts skus
+    asynciofunctions_skus = [loop.run_in_executor(None, vtex.get_sku_context, sku_id, sc_id) for sc_id in sc if sc_id in ['1', 1] for sku_id in skus]
+    skus_dicts = [await asynciofunction_sku for asynciofunction_sku in asynciofunctions_skus]
+    asynciofunctions_skus.clear()
+
+    # Get dicts products
+    product_ids = set([sku_dict.get('ProductId') for sku_dict in skus_dicts if sku_dict.get('ProductId') and sku_dict.get('ProductId') not in products_created])
+    asynciofunctions_products = [loop.run_in_executor(None, vtex.product_unit, product_id) for product_id in product_ids]
+    product_ids.clear()
+    products_dicts = [await asynciofunction_product for asynciofunction_product in asynciofunctions_products]
+    asynciofunctions_products.clear()
+
+    # Returning values
+    return skus_dicts, products_dicts
+
+
+def create_products_vtex_store(store, limit=False):
     """Creation of product available in the store."""
-
-    # Skus that will be created
-    skus = []
-
-    # Products that were successfuly updated
-    products_created = []
-
-    # Products that return a bad status code in the request
-    products_not_found = []
-
-    # Skus recently created
-    skus_created = []
-
-    # Skus that return a bad status code in the request
-    skus_not_found = []
 
     # Set up request class
     vtex = VtexStores(store=store)
 
     # Get Sales channels in db
-    sc = SaleChannel.objects.filter(store=store).values_list('external_id', flat=True)
-
-    # Get skus to create
+    sc = list(SaleChannel.objects.filter(store=store).values_list('external_id', flat=True))
+    skus_ids = []
     for sc_id in sc:
         page = 1
         while 1:
             add = vtex.get_list_skus_by_storeid(store_id=sc_id, page=page)
             if add == {} or add == []:
                 break
-            print(add)
-            skus += add
+            skus_ids += add
             page += 1
         if sc_id == 1:
             break
-    db_sku_ids = Skus.objects.filter(product__store=store).values_list('external_id', flat=True).distinct('external_id')
-    db_sku_ids = [int(sku_id) for sku_id in db_sku_ids if sku_id.isnumeric()]
-    skus = set(skus) - set(db_sku_ids)
 
-    if skus:
-        product_instance = None
-        for sku_id in skus:
-            print(f'sku_id: {sku_id}')
+    # Order by new-old
+    skus_ids = list(set(skus_ids))
+    skus_ids.reverse()
 
-            # Get info sku
-            for sc_id in sc:
-                sku = vtex.get_sku_context(sku_id=sku_id, sc=sc_id)
-                product_id = sku.get('ProductId')
-                if product_id is not None:
-                    break
+    sub_skus_ids = [skus_ids[i:i+1000] for i in range(0, len(skus_ids), 1000)]
+    skus_ids.clear()
+    products_created = []
+    gc.collect()
+    for ids in sub_skus_ids:
+        loop = asyncio.new_event_loop()
+        skus, products = loop.run_until_complete(get_skus_and_products_dicts(loop=loop, vtex=vtex, sc=sc, skus=ids, products_created=products_created))
+        loop.close()
+        del loop
+        gc.collect()
+        print(f'round: skus = {len(skus)}, products = {len(products)}')
+        if products:
+            for product in products:
+                product_id = product.get('Id')
+                if product_id:
+                    update_or_create_product(store=store, product=product, product_id=product_id)
+                    if product_id not in products_created:
+                        products_created.append(product_id)
+        products.clear()
+        if skus:
+            product_instance = None
+            for sku_dict in skus:
+                product_id = sku_dict.get('ProductId')
+                # Get product instance
+                if product_id:
 
-            # Get product instance
-            if product_id:
-
-                # Reduce runtime for useless request
-                if product_id in products_not_found:
-                    product_instance = None
-
-                # Getting a product instance if there's not one already
-                elif not product_instance:
-                    product_instance = update_or_create_product(store=store, product_id=product_id, vtex=vtex)
-
-                    # Collection products with a bad request
+                    # Getting a product instance if there's not one already
                     if not product_instance:
-                        products_not_found.append(product_id)
+                        product_instance = Product.objects.filter(store=store, external_id=product_id).last()
 
-                    # Collection products with a good request
-                    elif product_id not in products_created:
-                        products_created.append(product_id)
+                    # Changing product instance
+                    elif product_id != product_instance.external_id:
+                        product_instance = Product.objects.filter(store=store, external_id=product_id).last()
 
-                # Changing product instance
-                elif product_id != product_instance.external_id:
-                    product_instance = update_or_create_product(store=store, product_id=product_id, vtex=vtex)
-
-                    # Collection products with a bad request
-                    if not product_instance and product_id not in [*products_created, *products_not_found]:
-                        products_not_found.append(product_id)
-
-                    # Collection products with a good request
-                    elif product_id not in [*products_created, *products_not_found]:
-                        products_created.append(product_id)
-
-                # Create sku
-                sku_instance = update_or_create_sku(product_instance=product_instance, product_id=product_id, sku=sku, sku_id=sku_id, vtex=vtex, store=store)
-
-                # Collection skus with a good request
-                if sku_instance and int(sku_id) not in [*skus_created, *skus_not_found]:
-                    skus_created.append(int(sku_id))
-
-                # Collection skus with a bad request
-                elif int(sku_id) not in [*skus_created, *skus_not_found]:
-                    skus_not_found.append(int(sku_id))
-
-                # Break creation if there's a limit
-                if len(products_created) == limit:
-                    break
-
+                    # Update sku
+                    update_or_create_sku(product_instance=product_instance, product_id=product_id, sku=sku_dict, store=store)
+        skus.clear()
+        if limit:
+            break
+    sc.clear()
+    sub_skus_ids.clear()
     # Delete skus that don't have a product
     Skus.objects.filter(product=None).delete()
-
-    print('Not found')
-    print(f'products: {products_not_found}, skus: {skus_not_found}')
-
-    # Return skus that will be used in other tasks
-    return skus_created
-
-
-def update_products_vtex_store(store):
-    """Creation of product available in the store."""
-
-    # Get list of skus in db
-    skus = Skus.objects.filter(product__store=store).values_list('external_id', flat=True)
-
-    # Products that were successfuly updated
-    products_updated = []
-
-    # Product that return a bad status code in the request
-    products_not_found = []
-
-    # Skus that return a bad status code in the request
-    skus_not_found = []
-
-    # Set up request class
-    vtex = VtexStores(store=store)
-
-    # Get Sales channels in db
-    sc = SaleChannel.objects.filter(store=store).values_list('external_id', flat=True)
-
-    if skus:
-        product_instance = None
-        for sku_id in skus:
-            print(f'sku_id: {sku_id}')
-
-            # Get info sku
-            for sc_id in sc:
-                sku = vtex.get_sku_context(sku_id=sku_id, sc=sc_id)
-                product_id = sku.get('ProductId')
-                if product_id is not None:
-                    break
-
-            # Get product instance
-            if product_id:
-
-                # Reduce runtime for useless request
-                if product_id in products_not_found:
-                    product_instance = None
-
-                # Getting a product instance if there's not one already
-                elif not product_instance:
-                    product_instance = update_or_create_product(store=store, product_id=product_id, vtex=vtex)
-
-                    # Collection products with a bad request
-                    if not product_instance:
-                        products_not_found.append(product_id)
-
-                    # Collection products with a good request
-                    elif product_id not in products_updated:
-                        products_updated.append(product_id)
-
-                # Changing product instance
-                elif product_id != product_instance.external_id:
-                    product_instance = update_or_create_product(store=store, product_id=product_id, vtex=vtex)
-
-                    # Collection products with a bad request
-                    if not product_instance and product_id not in [*products_updated, *products_not_found]:
-                        products_not_found.append(product_id)
-
-                    # Collection products with a good request
-                    elif product_id not in [*products_updated, *products_not_found]:
-                        products_updated.append(product_id)
-
-                # Update sku
-                sku_instance = update_or_create_sku(product_instance=product_instance, product_id=product_id, sku=sku, sku_id=sku_id, vtex=vtex, store=store)
-
-                #  Collection skus with a bad request
-                if sku_instance is None and int(sku_id) not in skus_not_found:
-                    skus_not_found.append(int(sku_id))
-
-    print('Not found')
-    print(f'products: {products_not_found}, skus: {skus_not_found}')
-
-    # Delete skus that don't have a product
-    Skus.objects.filter(product=None).delete()
+    gc.collect()
     return True

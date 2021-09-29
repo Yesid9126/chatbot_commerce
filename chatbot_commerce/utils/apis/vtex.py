@@ -2,6 +2,8 @@
 
 # Utilities
 import requests
+import urllib3
+import json
 
 
 class VtexStores:
@@ -9,11 +11,13 @@ class VtexStores:
 
     def __init__(self, store):
         self.store = store
+        self.vtexprice = VtexPriceSku(store=store)
+        self.http = urllib3.HTTPSConnectionPool(headers=self.store.headers, host=f'{self.store.name}.{self.store.url_enviroment}')
 
     def _get_resources(self, uri, **kwargs):
         """Get resources for store."""
         url = "{}/{}".format(self.store.urls['base_url'], uri)
-        r = requests.get(url, headers=self.store.headers, timeout=1000)
+        r = self.http.request(method='GET', url=url)
         return r
 
     def _get_json_resource(self, uri, **kwargs):
@@ -24,21 +28,21 @@ class VtexStores:
                 response = self._get_resources(uri, **kwargs)
             else:
                 pass
-            if response.status_code in [requests.codes.ok]:
+            if response.status in [requests.codes.ok]:
                 try:
-                    response_json = response.json()
+                    response_json = json.loads(response.data.decode('utf-8'))
                 except ValueError as e:
                     response_json = {
-                        "status_code": response.status_code,
+                        "status_code": response.status,
                         "message": e,
                     }
                     return response_json
-        except requests.ConnectTimeout as i:
+        except urllib3.exceptions.ConnectTimeoutError as i:
             response_json = {
                 "status_code": 504,
                 "message": f'TIMEOUT: {str(i)}',
             }
-        except requests.exceptions.RequestException as e:
+        except urllib3.exceptions.RequestError as e:
             status_code = getattr(e.response, "status_code", 406)
             reason = getattr(e.response, "reason", str(e))
             response_json = {
@@ -73,12 +77,30 @@ class VtexStores:
         )
 
     def get_sku_context(self, sku_id, sc):
+        # Quantity in warehouses
+        total_quantity = 0
+        price_dic = None
+        if sku_id:
+            sku_inventory = self.skus_inventory(sku_id=sku_id)
+            sku_price = self.vtexprice.price_sku(sku_id=sku_id)
+            listprice = sku_price.get('listPrice')
+            if listprice:
+                price_dic = sku_price
+            sku_inventory = sku_inventory.get('balance')
+            if sku_inventory:
+                for quantity in sku_inventory:
+                    quantity_sku = quantity.get('totalQuantity')
+                    total_quantity += quantity_sku
+        else:
+            print(f'error in sku: {sku_id} line 164 utils/products.py')
+
         uri = f'catalog_system/pvt/sku/stockkeepingunitbyid/{sku_id}?sc={sc}'
         method = 'get'
+
         return self._get_json_resource(
             uri,
             method=method
-        )
+        ) | {'total_quantity': total_quantity, 'price': price_dic}
 
     def skus_inventory(self, sku_id):
         uri = f'logistics/pvt/inventory/skus/{sku_id}'
@@ -178,10 +200,11 @@ class VtexPriceSku:
 
     def __init__(self, store):
         self.store = store
+        self.http = urllib3.HTTPSConnectionPool(headers=self.store.headers, host='api.vtex.com')
 
     def _get_resource(self, uri, **kwargs):
         url = '{}/{}'.format(self.store.urls['base_price_url'], uri)
-        r = requests.get(url, headers=self.store.headers, timeout=1000)
+        r = self.http.request(method='GET', url=url)
         return r
 
     def _get_json_resource(self, uri, **kwargs):
@@ -192,21 +215,21 @@ class VtexPriceSku:
                 response = self._get_resource(uri, **kwargs)
             else:
                 pass
-            if response.status_code in [requests.codes.ok]:
+            if response.status in [requests.codes.ok]:
                 try:
-                    response_json = response.json()
+                    response_json = json.loads(response.data.decode('utf-8'))
                 except ValueError as e:
                     response_json = {
-                        "status_code": response.status_code,
+                        "status_code": response.status,
                         "message": e
                     }
                     return response_json
-        except requests.ConnectionError as i:
+        except urllib3.exceptions.ConnectTimeoutError as i:
             response_json = {
                 "status_code": 504,
                 "message": f"TIMEOUT: {str(i)}"
             }
-        except requests.exceptions.RequestException as e:
+        except urllib3.exceptions.RequestError as e:
             status_code = getattr(e.response, "status_code", 406)
             reason = getattr(e.response, "resaon", str(e))
             response_json = {

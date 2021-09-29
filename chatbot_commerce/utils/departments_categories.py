@@ -49,8 +49,10 @@ def get_sc_sellers(store, task=None):
                 print(f'no sellers: {sellers}')
         else:
             print(f'error: channel: {channel}, sales_channel: {sales_channel}')
-        if channel_id == 1:
+        if channel_id == 1 or channel_id == '1':
+            sales_channel.clear()
             break
+    sales_channel.clear()
 
 
 def get_departments(store):
@@ -93,6 +95,7 @@ def get_departments(store):
                             'raw_json': item,
                         }
                     )
+    departments.clear()
 
 
 def get_brands(store):
@@ -110,3 +113,4 @@ def get_brands(store):
                 'raw_json': brand,
             }
         )
+    brands.clear()

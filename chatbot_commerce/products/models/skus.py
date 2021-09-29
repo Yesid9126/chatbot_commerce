@@ -4,9 +4,6 @@ from slugify import slugify
 
 # Django
 from django.db import models
-from django.db.models.signals import post_save, post_delete
-from django.dispatch import receiver
-
 
 # utilities
 from chatbot_commerce.utils.models import ChatbootModel, BaseAbstract, BaseRawAbstract
@@ -34,6 +31,8 @@ class Skus(BaseAbstract):
         null=True,
         blank=True
     )
+    search_attributes = models.TextField(_("Attributes search"), blank=True, null=True)
+    search = models.TextField(_("Search"), blank=True, null=True)
     is_transported = models.BooleanField(
         default=False,
         null=True,
@@ -104,48 +103,35 @@ class Skus(BaseAbstract):
         return f'{self.name}'
 
     def save(self, *args, **kwargs):
-        self.serializer_data = self.get_sku
+
+        array_sku_seller = list(self.sku_seller.values_list('seller__seller_id', flat=True))
+        if array_sku_seller:
+            seller = array_sku_seller[0]
+        else:
+            seller = None
+
+        price = self.price.first()
+        if price:
+            price = price.serializer_data
+        else:
+            price = None
+
+        self.serializer_data = {
+            'sku_id': self.external_id,
+            'seller_id': seller,
+            'sku_name': self.name,
+            'total_quantity': self.total_quantity,
+            'images': list(self.images.values_list('image_url', flat=True)),
+            'price': price,
+            'attributes': list(self.attributes.values('value', attribute_name=models.F('attribute_type__name'))),
+            'is_active': self.is_active
+        }
         return super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = "Sku"
         verbose_name_plural = "Sku's"
         default_related_name = 'skus'
-
-    @property
-    def get_sku(self):
-        from chatbot_commerce.stores.models import SkuSeller
-        sku_seller = SkuSeller.objects.filter(sku__pk=self.pk).values_list('serializer_data', flat=True)
-        sku_dict = {
-            'sku_id': self.external_id,
-            'sku_name': self.name,
-            'total_quantity': self.total_quantity,
-            'is_active': self.is_active,
-            'sku_images': self.get_images,
-            'attributes': self.get_attributes,
-            'price': self.get_prices,
-            'sellers': list(sku_seller)
-        }
-        return sku_dict
-
-    @property
-    def get_prices(self):
-        obj = self.price.all().first()
-        if obj:
-            return obj.serializer_data
-
-    @property
-    def get_attributes(self):
-        return list(self.attributes.all().values_list('serializer_data', flat=True))
-
-    @property
-    def get_images(self):
-        return list(self.images.all().values_list('image_url', flat=True))
-
-
-@receiver(post_save, sender=Skus)
-def call_sku_seller_save_from_skus(sender, instance, *args, **kwargs):
-    [sku_seller.save() for sku_seller in instance.sku_seller.all()]
 
 
 class Image(ChatbootModel):
@@ -169,16 +155,6 @@ class Image(ChatbootModel):
         default_related_name = 'images'
 
 
-@receiver(post_save, sender=Image)
-def call_sku_save_from_image_for_save(sender, instance, *args, **kwargs):
-    instance.sku.save()
-
-
-@receiver(post_delete, sender=Image)
-def call_sku_save_from_image_for_delete(sender, instance, *args, **kwargs):
-    instance.sku.save()
-
-
 class Price(BaseRawAbstract):
     """Price model"""
 
@@ -192,10 +168,6 @@ class Price(BaseRawAbstract):
     # Relationship filter
     sku = models.ForeignKey(Skus, on_delete=models.CASCADE)
 
-    def save(self, *args, **kwargs):
-        self.serializer_data = self.get_price
-        return super().save(*args, **kwargs)
-
     class Meta:
         """Meta class"""
 
@@ -204,27 +176,16 @@ class Price(BaseRawAbstract):
         ordering = ['sku', 'cost_price']
         default_related_name = 'price'
 
+    def save(self, *args, **kwargs):
+        self.serializer_data = {
+            'base_price': self.base_price,
+            'fixed_prices': list(self.fixed_prices.values_list('serializer_data', flat=True))
+        }
+        return super().save(*args, **kwargs)
+
     def __str__(self):
         """Return sku price."""
         return f'sku:{self.base_price}'
-
-    @property
-    def get_price(self):
-        price = {
-            "base_price": self.base_price,
-            "fixed_prices": list(self.fixed_prices.all().values_list('serializer_data', flat=True))
-        }
-        return price
-
-
-@receiver(post_save, sender=Price)
-def call_sku_save_from_price_for_save(sender, instance, *args, **kwargs):
-    instance.sku.save()
-
-
-@receiver(post_delete, sender=Price)
-def call_sku_save_from_price_for_delete(sender, instance, *args, **kwargs):
-    instance.sku.save()
 
 
 class FixedPrice(BaseRawAbstract):
@@ -240,7 +201,10 @@ class FixedPrice(BaseRawAbstract):
     price = models.ForeignKey(Price, on_delete=models.CASCADE)
 
     def save(self, *args, **kwargs):
-        self.serializer_data = self.get_fixed_price
+        self.serializer_data = {
+            'value': self.value,
+            'date_ranges': list(self.date_ranges.values('date_time_from', 'date_time_to'))
+        }
         return super().save(*args, **kwargs)
 
     class Meta:
@@ -250,24 +214,6 @@ class FixedPrice(BaseRawAbstract):
         verbose_name_plural = "Fixed price's"
         ordering = ['price', 'trade_policy_id']
         default_related_name = 'fixed_prices'
-
-    @property
-    def get_fixed_price(self):
-        fixed_price = {
-            "value": self.value,
-            "date_ranges": list(self.date_ranges.all().values_list('serializer_data', flat=True))
-        }
-        return fixed_price
-
-
-@receiver(post_save, sender=FixedPrice)
-def call_price_save_from_fixedprice_for_save(sender, instance, *args, **kwargs):
-    instance.price.save()
-
-
-@receiver(post_delete, sender=FixedPrice)
-def call_price_save_from_fixedprice_for_delete(sender, instance, *args, **kwargs):
-    instance.price.save()
 
 
 class DateRange(BaseRawAbstract):
@@ -280,10 +226,6 @@ class DateRange(BaseRawAbstract):
     # Relationship filter
     fixed_price = models.ForeignKey(FixedPrice, on_delete=models.CASCADE)
 
-    def save(self, *args, **kwargs):
-        self.serializer_data = self.get_date_range
-        return super().save(*args, **kwargs)
-
     class Meta:
         """Meta class"""
 
@@ -291,24 +233,6 @@ class DateRange(BaseRawAbstract):
         verbose_name_plural = "Date range's"
         ordering = ['fixed_price', 'date_time_from']
         default_related_name = 'date_ranges'
-
-    @property
-    def get_date_range(self):
-        date_rage = {
-            "from": self.date_time_from,
-            "to": self.date_time_to
-        }
-        return date_rage
-
-
-@receiver(post_save, sender=DateRange)
-def call_fixedprice_save_from_daterange_for_save(sender, instance, *args, **kwargs):
-    instance.fixed_price.save()
-
-
-@receiver(post_delete, sender=DateRange)
-def call_fixedprice_save_from_daterange_for_delete(sender, instance, *args, **kwargs):
-    instance.fixed_price.save()
 
 
 class AttributeType(ChatbootModel):
@@ -336,11 +260,6 @@ class AttributeType(ChatbootModel):
         default_related_name = 'attributes_type'
 
 
-@receiver(post_save, sender=AttributeType)
-def call_attributes_save_from_attributetype_for_save(sender, instance, *args, **kwargs):
-    [attribute.save() for attribute in instance.attributes.all()]
-
-
 class Attribute(BaseRawAbstract):
     """Attributes model"""
 
@@ -354,32 +273,9 @@ class Attribute(BaseRawAbstract):
     def __str__(self):
         return f'{self.sku.name}: {self.attribute_type}: {self.value}'
 
-    def save(self, *args, **kwargs):
-        self.serializer_data = self.get_attribute
-        return super().save(*args, **kwargs)
-
     class Meta:
         """Meta class"""
 
         verbose_name = "Attribute"
         verbose_name_plural = "Attributes"
-        unique_together = ['sku', 'attribute_type']
         default_related_name = 'attributes'
-
-    @property
-    def get_attribute(self):
-        attribute_dict = {
-            "type": self.attribute_type.name,
-            "value": self.value
-        }
-        return attribute_dict
-
-
-@receiver(post_save, sender=Attribute)
-def call_sku_save_from_attribute_for_save(sender, instance, *args, **kwargs):
-    instance.sku.save()
-
-
-@receiver(post_delete, sender=Attribute)
-def call_sku_save_from_attribute_for_delete(sender, instance, *args, **kwargs):
-    instance.sku.save()
