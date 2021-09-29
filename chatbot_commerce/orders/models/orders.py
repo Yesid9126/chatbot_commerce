@@ -36,6 +36,19 @@ class Order(ChatbootModel):
 
     hook_data = models.JSONField('Hook complete data', blank=True, null=True)
 
+    store = models.ForeignKey(
+        'stores.Store',
+        on_delete=models.CASCADE,
+        related_name='order',
+        null=True
+    )
+
+    url = models.CharField(
+        max_length=500,
+        blank=True,
+        null=True
+    )
+
     def __str__(self):
         """Return order id."""
         return str(self.id)
