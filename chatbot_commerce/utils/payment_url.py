@@ -1,10 +1,7 @@
 """Construction of payment url."""
 
-# Django
-from rest_framework.response import Response
-
 # Models
-from chatbot_commerce.stores.models import Store, SkuSeller
+from chatbot_commerce.stores.models import Store
 from chatbot_commerce.products.models import Skus
 
 
@@ -21,6 +18,5 @@ def kart_url(store, list_sku):
         seller = int(sku_seller.serializer_data.get('seller_id'))
         cadena.append(f'sc=1&sku={sku_id}&qty={quantity}&seller={seller}')
     cadena = '&'.join(cadena)
-    url = ''.join([url,cadena])
+    url = ''.join([url, cadena])
     return url
-    

@@ -15,9 +15,9 @@ from chatbot_commerce.utils.payment_url import kart_url
 # Models
 from chatbot_commerce.stores.models import Store
 
+
 class OrderViewSet(viewsets.GenericViewSet):
     """Web hook view set."""
-
 
     def get_serializer_class(self):
         """Return serializer based on action."""
