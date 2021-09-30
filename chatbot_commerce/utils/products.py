@@ -170,9 +170,9 @@ def update_or_create_sku(product_instance, product_id, sku, store):
                                     'date_time_to': daterange_dic.get('to'),
                                     "raw_json": daterange_dic
                                 }
-                            )            
+                            )
                             fixedprice_instance.save()
-                    price_instance.save()    
+                    price_instance.save()
 
                 price.clear()
                 fixed_prices.clear()
