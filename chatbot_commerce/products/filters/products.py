@@ -233,17 +233,8 @@ def products_skus(self):
 
 
 def filter_data_skus(self):
-    skus_filter_data = {}
-    total_quantity = self.data.get('stock_quantity')
-    if total_quantity:
-        skus_filter_data |= {'total_quantity': total_quantity}
-    search = self.data.get('search')
-    if search:
-        search = search.replace(',', ' ')
-        skus_filter_data |= {'search__search': search}
-    attributes = self.data.get('attributes')
-    if attributes:
-        attributes = attributes.replace('-', ' ')
-        skus_filter_data |= {'search_attributes__search': attributes}
-
-    return skus_filter_data
+    return {
+        'total_quantity' if key == 'stock_quantity' else\
+        'search_attributes__search' if key == 'attributes' else\
+        'search__search' : value for key, value in self.request.GET.items() if key in ('stock_quantity','search','attributes',)
+    }

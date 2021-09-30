@@ -45,7 +45,6 @@ class ProductViewset(mixins.RetrieveModelMixin,
     def dispatch(self, request, *args, **kwargs):
         slug_name = kwargs['store_slug_name']
         self.store = get_object_or_404(Store, slug_name=slug_name)
-        self.data = {key: value for key, value in self.request.GET.items()}
         return super().dispatch(request, *args, **kwargs)
 
     # @query_debugger
