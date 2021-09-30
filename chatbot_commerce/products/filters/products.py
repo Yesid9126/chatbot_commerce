@@ -234,7 +234,7 @@ def products_skus(self):
 
 def filter_data_skus(self):
     return {
-        'total_quantity' if key == 'stock_quantity' else\
-        'search_attributes__search' if key == 'attributes' else\
-        'search__search' : value for key, value in self.request.GET.items() if key in ('stock_quantity','search','attributes',)
+        'total_quantity' if key == 'stock_quantity' else
+        'search_attributes__search' if key == 'attributes' else
+        'search__search': value for key, value in self.request.GET.items() if key in ('stock_quantity', 'search', 'attributes',)
     }
