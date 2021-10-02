@@ -8,6 +8,7 @@ from rest_framework_api_key.models import APIKey
 from rest_framework_api_key.admin import APIKeyModelAdmin
 from chatbot_commerce.stores.models import StoreAPIKey
 
+
 class InlineSkuAdmin(admin.TabularInline):
     extra = 0
     model = SaleChannel.skus.through
@@ -59,6 +60,7 @@ class SaleChannelAdmin(admin.ModelAdmin):
     search_fields = ['name']
     list_filter = ['is_active', 'store']
     inlines = [InlineSkuAdmin, InlineSellers]
+
 
 admin.site.unregister(APIKey)
 @admin.register(StoreAPIKey)

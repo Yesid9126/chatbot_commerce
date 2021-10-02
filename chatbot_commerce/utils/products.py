@@ -61,7 +61,6 @@ def update_or_create_product(store, product, product_id):
 
 
 def update_or_create_sku(product_instance, product_id, sku, store):
-
     # Create or update sku
     try:
         # Get instance
@@ -181,6 +180,7 @@ def update_or_create_sku(product_instance, product_id, sku, store):
 
         # Create attributes for sku
         s = []
+        data_search = []
         try:
             if sku_specifications_array:
                 for dic in sku_specifications_array:
@@ -198,13 +198,20 @@ def update_or_create_sku(product_instance, product_id, sku, store):
                                 value=value,
                             )
                             s.append(value)
-                if sku_instance and product_instance:
-                    s = ' '.join(s)
-                    sku_instance.search_attributes = s
-                    sku_instance.search = ' '.join([product_instance.search, sku_name, s])
-                    sku_instance.save()
-                    sku_specifications_array.clear()
-                    values.clear()
+                        values.clear()
+                sku_specifications_array.clear()
+            if s:
+                s = ' '.join(s)
+                s_replaced = s.replace(',', ' ').replace('.', ' ')
+                s = ' '.join((s, s_replaced,))
+                sku_instance.search_attributes = s
+                data_search.append(s)
+            if sku_name:
+                data_search.append(sku_name)
+            sku_instance.search = ' '.join((product_instance.search, *data_search,))
+            sku_instance.save()
+            data_search.clear()
+            del s
         except Exception as message:
             print(f'message: {message} specificaciones')
 
@@ -293,8 +300,9 @@ def create_products_vtex_store(store, limit=False):
                     elif product_id != product_instance.external_id:
                         product_instance = Product.objects.filter(store=store, external_id=product_id).last()
 
-                    # Update sku
-                    update_or_create_sku(product_instance=product_instance, product_id=product_id, sku=sku_dict, store=store)
+                    if product_instance:
+                        # Update sku
+                        update_or_create_sku(product_instance=product_instance, product_id=product_id, sku=sku_dict, store=store)
         skus.clear()
         if limit:
             break

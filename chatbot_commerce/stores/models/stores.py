@@ -125,6 +125,7 @@ class StoreAPIKeyManager(BaseAPIKeyManager):
 
         return True
 
+
 class StoreAPIKey(AbstractAPIKey):
     """Store api keys model."""
 

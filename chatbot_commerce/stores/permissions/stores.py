@@ -4,6 +4,7 @@ from rest_framework_api_key.permissions import BaseHasAPIKey
 from chatbot_commerce.stores.models import StoreAPIKey
 from django.http import HttpRequest
 
+
 class HasStoreAPIKey(BaseHasAPIKey):
     model = StoreAPIKey
 
@@ -20,6 +21,7 @@ class HasStoreAPIKey(BaseHasAPIKey):
         if not key or not store_name:
             return False
         return self.model.objects.is_my_valid(key, store_name)
+
 
 class HasAPIKey(BaseHasAPIKey):
     model = StoreAPIKey
