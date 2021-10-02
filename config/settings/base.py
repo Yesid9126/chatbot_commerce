@@ -315,4 +315,6 @@ SWAGGER_SETTINGS = {
     'LOGIN_URL': reverse_lazy('admin:login'),
 }
 
+# API_KEY_CUSTOM_HEADER = 'HTTP_CHATBOT_API_KEY'
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

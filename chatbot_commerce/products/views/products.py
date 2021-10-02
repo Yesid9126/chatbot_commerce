@@ -14,7 +14,7 @@ from chatbot_commerce.products.serializers import (ProductModelSerializer,
                                                    DepartmentTreeModelSerializer,
                                                    BrandsModelSerializer,
                                                    AttributeTypeModelSerializer)
-from rest_framework_api_key.permissions import HasAPIKey
+from chatbot_commerce.stores.permissions import HasStoreAPIKey
 from rest_framework.permissions import IsAdminUser
 
 # Filters
@@ -38,7 +38,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
 
     serializer_class = ProductModelSerializer
     lookup_field = 'pk'
-    permission_classes = [HasAPIKey | IsAdminUser]
+    permission_classes = [HasStoreAPIKey | IsAdminUser]
     filter_class = ProductFilterSet
 
     # @query_debugger
@@ -96,7 +96,7 @@ class DepartmentsViewset(mixins.RetrieveModelMixin,
 
     serializer_class = DepartmentTreeModelSerializer
     lookup_field = 'department_name'
-    permission_classes = [HasAPIKey | IsAdminUser]
+    permission_classes = [HasStoreAPIKey | IsAdminUser]
     filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
     search_fields = ('name', 'categories__name', 'categories__subcategories__name')
     filter_fields = ('categories__name', 'categories__subcategories__name')
@@ -135,7 +135,7 @@ class BrandsViewset(mixins.ListModelMixin,
                     viewsets.GenericViewSet):
 
     serializer_class = BrandsModelSerializer
-    permission_classes = [HasAPIKey | IsAdminUser]
+    permission_classes = [HasStoreAPIKey | IsAdminUser]
     filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
     search_fields = ('name', 'title')
 
@@ -172,7 +172,7 @@ class AttributesViewset(mixins.ListModelMixin,
                         viewsets.GenericViewSet):
 
     serializer_class = AttributeTypeModelSerializer
-    permission_classes = [HasAPIKey | IsAdminUser]
+    permission_classes = [HasStoreAPIKey | IsAdminUser]
     filter_backends = (DjangoFilterBackend,)
 
     def dispatch(self, request, *args, **kwargs):

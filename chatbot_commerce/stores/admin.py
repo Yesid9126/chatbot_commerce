@@ -4,7 +4,9 @@
 from django.contrib import admin
 # Models
 from chatbot_commerce.stores.models import Store, SaleChannel, Seller, SkuSeller
-
+from rest_framework_api_key.models import APIKey
+from rest_framework_api_key.admin import APIKeyModelAdmin
+from chatbot_commerce.stores.models import StoreAPIKey
 
 class InlineSkuAdmin(admin.TabularInline):
     extra = 0
@@ -57,3 +59,13 @@ class SaleChannelAdmin(admin.ModelAdmin):
     search_fields = ['name']
     list_filter = ['is_active', 'store']
     inlines = [InlineSkuAdmin, InlineSellers]
+
+admin.site.unregister(APIKey)
+@admin.register(StoreAPIKey)
+class StoreAPIKeyAdmin(APIKeyModelAdmin):
+    """Store api key model admin."""
+
+    list_display = ('is_active', 'email_status', *APIKeyModelAdmin.list_display, 'email',)
+    list_filter = ('is_active', 'email_status', 'revoked',)
+    list_display_links = ('prefix',)
+    search_fields = ('name',)

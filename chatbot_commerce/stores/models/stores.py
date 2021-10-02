@@ -6,6 +6,10 @@ from slugify import slugify
 # Django
 from django.db import models
 
+# Models
+from rest_framework_api_key.models import AbstractAPIKey, BaseAPIKeyManager
+from rest_framework_api_key.crypto import KeyGenerator, concatenate, split
+
 # Celery
 from django_celery_beat.models import PeriodicTask, CrontabSchedule
 
@@ -15,6 +19,155 @@ from django.utils.translation import gettext as _
 from django.dispatch import receiver
 from django.db.models.signals import post_save
 import requests
+import typing
+
+
+class MyKeyGenerator(KeyGenerator):
+    def my_generate(self, key: str) -> typing.Tuple[str, str, str]:
+        try:
+            splited_key = key.split('.')
+            prefix = splited_key[0]
+            hashed_key = self.hash(key)
+        except Exception as message:
+            raise Exception(f'Incorrect key {message} you need a kwargs | key=(prefix).(secret_key) | for new hashed_key other wise use create_key instead create_my_key')
+        return key, prefix, hashed_key
+
+
+class StoreAPIKeyManager(BaseAPIKeyManager):
+    key_generator = MyKeyGenerator()
+
+    def get_usable_keys(self):
+        return super().get_usable_keys().filter(is_active=True, email_status=True)
+
+    def my_assign_key(self, obj: "StoreAPIKey", key: str, store_name: str) -> str:
+        try:
+            key, prefix, hashed_key = self.key_generator.my_generate(key=key)
+        except Exception as message:
+            raise Exception(f'todo mal {message}')
+        else:
+            pk = concatenate(prefix, hashed_key)
+
+        obj.id = pk
+        obj.prefix = prefix
+        obj.hashed_key = hashed_key
+
+        try:
+            obj.store = Store.objects.get(name=store_name)
+        except Exception:
+            obj.store = None
+
+        return key
+
+    def create_my_key(self, **kwargs: typing.Any) -> typing.Tuple["StoreAPIKey", str]:
+        kwargs.pop("id", None)
+        key = kwargs.pop("key", None)
+        name = kwargs.get("name")
+        obj = self.model(**kwargs)
+        key = self.my_assign_key(obj, key, name)
+        obj.save()
+        return obj, key
+
+    def assign_key(self, obj: "AbstractAPIKey") -> str:
+        try:
+            key, prefix, hashed_key = self.key_generator.generate()
+        except ValueError:  # Compatibility with < 1.4
+            generate = typing.cast(
+                typing.Callable[[], typing.Tuple[str, str]], self.key_generator.generate
+            )
+            key, hashed_key = generate()
+            pk = hashed_key
+            prefix, hashed_key = split(hashed_key)
+        else:
+            pk = concatenate(prefix, hashed_key)
+
+        obj.id = pk
+        obj.prefix = prefix
+        obj.hashed_key = hashed_key
+
+        try:
+            obj.store = Store.objects.get(name=self.name)
+        except Exception:
+            obj.store = None
+
+        return key
+
+    def create_key(self, **kwargs: typing.Any) -> typing.Tuple["AbstractAPIKey", str]:
+        # Prevent from manually setting the primary key.
+        kwargs.pop("id", None)
+        name = kwargs.get("name")
+        obj = self.model(**kwargs)
+        key = self.assign_key(obj, name)
+        obj.save()
+        return obj, key
+
+    def get_from_my_key(self, key: str, store_name: str) -> "StoreAPIKey":
+        prefix, _, _ = key.partition(".")
+        queryset = self.get_usable_keys()
+
+        try:
+            api_key = queryset.get(prefix=prefix, name=store_name)
+        except self.model.DoesNotExist:
+            raise  # For the sake of being explicit.
+
+        if not api_key.is_valid(key):
+            raise self.model.DoesNotExist("Key is not valid.")
+        else:
+            return api_key
+
+    def is_my_valid(self, key: str, store_name: str) -> bool:
+        try:
+            api_key = self.get_from_my_key(key, store_name)
+        except self.model.DoesNotExist:
+            return False
+
+        if api_key.has_expired:
+            return False
+
+        return True
+
+class StoreAPIKey(AbstractAPIKey):
+    """Store api keys model."""
+
+    store = models.ForeignKey("Store", verbose_name=_("Store"), on_delete=models.CASCADE, null=True, blank=True, editable=False)
+    is_active = models.BooleanField(_("Status"), default=False, editable=False)
+
+    __original_email = None
+    email = models.EmailField(_("E-mail"), max_length=254)
+    email_status = models.BooleanField(_("Status email"), default=False, editable=False)
+
+    objects = StoreAPIKeyManager()
+
+    def __init__(self, *args: typing.Any, **kwargs: typing.Any):
+        super().__init__(*args, **kwargs)
+        self.__original_email = self.email
+
+    def save(self, *args, **kwargs) -> None:
+        store = self.store
+        name = self.name
+        if store:
+            store_name = store.name
+            if not name or name != store_name:
+                self.name = store_name
+        elif not store and name:
+            try:
+                self.store = Store.objects.get(name=name)
+            except Exception as message:
+                raise Exception(f"That store don't exists {message}")
+        else:
+            raise Exception("Need a store name or a store object first.")
+
+        if self.email != self.__original_email:
+            self.email_status = False
+
+        super().save(*args, **kwargs)
+        self.__original_email = self.email
+
+    class Meta(AbstractAPIKey.Meta):
+        "Meta class"
+
+        verbose_name = 'Store APIKey'
+        verbose_name_plural = "Store APIKey's"
+        default_related_name = "keys"
 
 
 class Store(ChatbootModel):
