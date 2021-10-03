@@ -291,7 +291,6 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.TokenAuthentication',
         "rest_framework.authentication.SessionAuthentication",
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
@@ -313,6 +312,13 @@ SWAGGER_SETTINGS = {
     'USE_SESSION_AUTH': True,
     'LOGOUT_URL': reverse_lazy('admin:logout'),
     'LOGIN_URL': reverse_lazy('admin:login'),
+    'SECURITY_DEFINITIONS': {
+        'api_key': {
+            'type': 'apiKey',
+            'in': 'header',
+            'name': 'Authorization'
+        }
+    },
 }
 
 # API_KEY_CUSTOM_HEADER = 'HTTP_CHATBOT_API_KEY'

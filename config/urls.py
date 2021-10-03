@@ -5,7 +5,7 @@ from django.urls import include, path, re_path
 from django.views import defaults as default_views
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
-from rest_framework.documentation import include_docs_urls
+# from rest_framework.documentation import include_docs_urls
 # from db_python import product_list
 
 schema_view = get_schema_view(
@@ -21,7 +21,7 @@ urlpatterns = [
     # Django Admin
     path(settings.ADMIN_URL, admin.site.urls),
     path("api/", include("config.api_router")),
-    path('docs/', include_docs_urls(title='Todo Viernes', public=False)),
+    # path('docs/', include_docs_urls(title='Todo Viernes', public=False)),
     re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
