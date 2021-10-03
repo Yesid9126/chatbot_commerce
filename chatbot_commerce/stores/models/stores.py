@@ -174,8 +174,12 @@ class StoreAPIKey(AbstractAPIKey):
 class Store(ChatbootModel):
     """Stores model."""
 
+    STORE_TYPE = (
+        ('VTEX', 'VTEX'),
+    )
+
     # info filter
-    store_type = models.CharField(_("Type of store"), max_length=500)
+    store_type = models.CharField(_("Type of store"), max_length=500, choices=STORE_TYPE)
     name = models.CharField(_("Name of store"), max_length=255)
     slug_name = models.SlugField(max_length=50, null=True, blank=True)
     url_enviroment = models.CharField(_("Url enviroment"), max_length=500, blank=True, null=True)
@@ -215,7 +219,7 @@ class Store(ChatbootModel):
 
     @property
     def urls(self):
-        if self.store_type == 'Vtex':
+        if self.store_type == 'VTEX':
             urls = {
                 "base_url": f'https://{self.name}.{self.url_enviroment}/api',
                 "base_price_url": f'https://api.vtex.com/{self.name}',
