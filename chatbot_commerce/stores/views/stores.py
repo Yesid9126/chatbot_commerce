@@ -10,20 +10,18 @@ from chatbot_commerce.utils.token_email import api_key_activation_token
 
 
 def email_is_active(request, uidb64, token):
-    print(uidb64, token)
     try:
         uid = force_text(urlsafe_base64_decode(uidb64))
         store_api = StoreAPIKey.objects.get(pk=uid)
     except(TypeError, ValueError, OverflowError, StoreAPIKey.DoesNotExist):
         store_api = None
     if store_api and api_key_activation_token.check_token(store_api, token):
-        print(store_api)
         store_api.email_status = True
-        print(store_api)
         store_api.save()
-        print(store_api)
         return redirect(f'http://{settings.HOST}/successfuly/email/')
     return HttpResponse('Activation link is invalid!')
+
+
 def successfuly_email(request):
     print(request, 'Hola')
     return HttpResponse('Thank you for confirm your email, now wait for chatbot activate your api_key')
