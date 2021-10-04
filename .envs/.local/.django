@@ -21,3 +21,11 @@ CATALOG=catalog/pvt
 CATALOG_SYSTEM=catalog_system/pvt/sku
 DEPARTMENT_CATEGORIES=catalog_system/pub/category/tree/3
 
+# CHATBOT EMAIL
+EMAIL_USE_TLS=True
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+DEFAULT_FROM_EMAIL=michatbotlocal@gmail.com
+EMAIL_HOST_USER=michatbotlocal@gmail.com
+EMAIL_HOST_PASSWORD=Ever CHATBOT LOver 32|
+DJANGO_EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend

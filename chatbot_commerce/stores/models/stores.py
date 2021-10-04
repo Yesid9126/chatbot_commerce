@@ -5,6 +5,10 @@ from slugify import slugify
 
 # Django
 from django.db import models
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
+from django.template.loader import get_template
+from django.core.mail import EmailMultiAlternatives
 
 # Models
 from rest_framework_api_key.models import AbstractAPIKey, BaseAPIKeyManager
@@ -18,6 +22,7 @@ from chatbot_commerce.utils.models import ChatbootModel, BaseAbstract
 from django.utils.translation import gettext as _
 from django.dispatch import receiver
 from django.db.models.signals import post_save
+from django.conf import settings
 import requests
 import typing
 
@@ -67,7 +72,7 @@ class StoreAPIKeyManager(BaseAPIKeyManager):
         obj.save()
         return obj, key
 
-    def assign_key(self, obj: "AbstractAPIKey") -> str:
+    def assign_key(self, obj: "StoreAPIKey") -> str:
         try:
             key, prefix, hashed_key = self.key_generator.generate()
         except ValueError:  # Compatibility with < 1.4
@@ -89,9 +94,28 @@ class StoreAPIKeyManager(BaseAPIKeyManager):
         except Exception:
             obj.store = None
 
+        mail_subject = _('CHABOT API KEY')
+        context = {
+            'words': _('This is a new api key for your store just confirm your email and wait for chatbot active this key.'),
+            'key': key,
+        }
+        template = get_template('api_key.html')
+        content = template.render(context)
+        to_email = obj.email
+
+        email = EmailMultiAlternatives(
+            mail_subject,
+            'Your key',
+            settings.EMAIL_HOST_USER,
+            [to_email]
+        )
+
+        email.attach_alternative(content, 'text/html')
+        email.send()
+
         return key
 
-    def create_key(self, **kwargs: typing.Any) -> typing.Tuple["AbstractAPIKey", str]:
+    def create_key(self, **kwargs: typing.Any) -> typing.Tuple["StoreAPIKey", str]:
         # Prevent from manually setting the primary key.
         kwargs.pop("id", None)
         name = kwargs.get("name")
@@ -158,6 +182,28 @@ class StoreAPIKey(AbstractAPIKey):
             raise Exception("Need a store name or a store object first.")
 
         if self.email != self.__original_email:
+            from chatbot_commerce.utils.token_email import api_key_activation_token
+            mail_subject = _('CHATBOT CONFIRM EMAIL')
+            context = {
+                'words': _('confirm your email. this is required for new api key or when email address is changed'),
+                'domain': settings.HOST,
+                'uid': urlsafe_base64_encode(force_bytes(self.pk)),
+                'token': api_key_activation_token.make_token(self),
+            }
+            template = get_template('confirm_email.html')
+            content = template.render(context)
+            to_email = self.email
+
+            email = EmailMultiAlternatives(
+                mail_subject,
+                'Email confirmation',
+                settings.EMAIL_HOST_USER,
+                [to_email]
+            )
+
+            email.attach_alternative(content, 'text/html')
+            email.send()
+
             self.email_status = False
 
         super().save(*args, **kwargs)

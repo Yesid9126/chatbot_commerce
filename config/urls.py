@@ -5,6 +5,7 @@ from django.urls import include, path, re_path
 from django.views import defaults as default_views
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
+from chatbot_commerce.stores.views import successfuly_email, email_is_active
 # from rest_framework.documentation import include_docs_urls
 # from db_python import product_list
 
@@ -25,6 +26,8 @@ urlpatterns = [
     re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+    path('confirm/email/<uidb64>/<token>/', email_is_active, name='email-activate'),
+    path('successfuly/email/', successfuly_email, name='email-successfuly')
     # path('prueba/', product_list)
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
