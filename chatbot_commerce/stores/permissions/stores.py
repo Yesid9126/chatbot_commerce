@@ -18,6 +18,8 @@ class HasStoreAPIKey(BaseHasAPIKey):
         )
         key = self.get_key(request)
         store_name = view.kwargs.get("store_slug_name")
+        if not store_name:
+            store_name = request.data.get('store')
         if not key or not store_name:
             return False
         return self.model.objects.is_my_valid(key, store_name)

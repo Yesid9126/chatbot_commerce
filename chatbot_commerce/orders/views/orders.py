@@ -8,6 +8,9 @@ from rest_framework.response import Response
 
 # Serializer
 from chatbot_commerce.orders.serializers import CreateOrderSerializer
+from rest_framework.permissions import IsAdminUser
+from chatbot_commerce.stores.permissions import HasStoreAPIKey
+
 
 # Utils
 from chatbot_commerce.utils.payment_url import kart_url
@@ -18,6 +21,8 @@ from chatbot_commerce.stores.models import Store
 
 class OrderViewSet(viewsets.GenericViewSet):
     """Web hook view set."""
+
+    permission_classes = [ HasStoreAPIKey | IsAdminUser]
 
     def get_serializer_class(self):
         """Return serializer based on action."""

@@ -41,8 +41,8 @@ class MyKeyGenerator(KeyGenerator):
 class StoreAPIKeyManager(BaseAPIKeyManager):
     key_generator = MyKeyGenerator()
 
-    def get_usable_keys(self):
-        return super().get_usable_keys().filter(is_active=True, email_status=True)
+    def get_usable_keys(self) -> models.QuerySet:
+        return self.filter(revoked=False, is_active=True, email_status=True)
 
     def my_assign_key(self, obj: "StoreAPIKey", key: str, store_name: str) -> str:
         try:
