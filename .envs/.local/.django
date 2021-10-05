@@ -27,5 +27,5 @@ EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
 DEFAULT_FROM_EMAIL=michatbotlocal@gmail.com
 EMAIL_HOST_USER=michatbotlocal@gmail.com
-EMAIL_HOST_PASSWORD=Ever CHATBOT LOver 32|
+EMAIL_HOST_PASSWORD=sfwuysxjudttdhhs #Ever CHATBOT LOver 32|
 DJANGO_EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
