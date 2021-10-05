@@ -156,14 +156,6 @@ class BrandsViewset(mixins.ListModelMixin,
         Parameters.
         """
         queryset = self.filter_queryset(self.queryset)
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            data = [name for array in serializer.data for key, name in array.items() if key == 'name']
-            paginated_data = self.get_paginated_response(data).data
-            paginated_data['brands'] = paginated_data.pop('results')
-            return Response(data=paginated_data, status=HTTP_200_OK)
-
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
