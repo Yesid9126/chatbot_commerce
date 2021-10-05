@@ -153,8 +153,8 @@ class BrandsViewset(mixins.ListModelMixin,
         """
         return Response(
             {
-                'count':len(self.queryset.values_list('name', flat=True)),
-                'brands':self.queryset.values_list('name', flat=True),
+                'count': len(self.queryset.values_list('name', flat=True)),
+                'brands': self.queryset.values_list('name', flat=True),
             }
         )
 
