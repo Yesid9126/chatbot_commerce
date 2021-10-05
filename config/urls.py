@@ -3,14 +3,14 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path, re_path
 from django.views import defaults as default_views
-from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
+from drf_yasg.views import get_schema_view
 from rest_framework.documentation import include_docs_urls
 
 schema_view = get_schema_view(
     openapi.Info(
         title="TodoViernes 😎 commerce chatbot API",
-        default_version='v1',
+        default_version="v1",
         description="Commerce chatbot API endpoints documentation",
     ),
     public=True,
@@ -20,10 +20,23 @@ urlpatterns = [
     # Django Admin
     path(settings.ADMIN_URL, admin.site.urls),
     path("api/", include("config.api_router")),
-    path('docs/', include_docs_urls(title='Todo Viernes', public=False)),
-    re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
-    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+    path("docs/", include_docs_urls(title="Todo Viernes", public=False)),
+    re_path(
+        r"^swagger(?P<format>\.json|\.yaml)$",
+        schema_view.without_ui(cache_timeout=0),
+        name="schema-json",
+    ),
+    path(
+        "swagger/",
+        schema_view.with_ui("swagger", cache_timeout=0),
+        name="schema-swagger-ui",
+    ),
+    path("redoc/", schema_view.with_ui("redoc", cache_timeout=0), name="schema-redoc"),
+    # Vehicles
+    path(
+        "vehicles/",
+        include("chatbot_commerce.vehicles.urls", namespace="vehicles"),
+    ),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 

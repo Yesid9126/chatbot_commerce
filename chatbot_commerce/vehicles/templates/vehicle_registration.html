@@ -1,0 +1,336 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  {% comment %} {% include 'form.html' with form=form %} {% endcomment %}
+<!--  Formtitle-->
+<div class="card d-flex justify-content-center " style="background-color:#F0F3F4">
+  <div class="row mt-3 mx-1">
+    <div class="col-12">
+      <div
+        class="page-title-box d-flex align-items-center justify-content-between"
+      >
+        <h4 class="mb-0 font-size-18 ml-2">Registro de Vehiculos</h4>
+        <div class="page-title-right">
+          <ol class="breadcrumb m-0">
+            <li class="breadcrumb-item">
+              <a href="#btn-submit1">Ir al final</a>
+            </li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- End formtitle-->
+  <!-- Form-->
+  <form method="post">
+    {% csrf_token %}
+    <!-- Form1-->
+    <div id="form1" class="d-flex justify-content-center row ">
+      <div class="col-lg-10">
+        <div class="card">
+          <div class="card-body">
+            <h4 class="card-title mb-4">Información Principal</h4>
+
+              <div class="row">
+
+                <div class="col-lg-6">
+                  <div class="form-group">
+                    <label for="{{ form.brand.html_name}} ">{{form.brand.label}}</label>
+                      {{ form.brand }}
+                      {% if form.brand.errors %}
+                        <small class="form-text text-muted">{{ form.brand.errors }}</small>
+                      {% endif %}
+                  </div>
+                </div>
+
+                <div class="col-lg-6">
+                  <div class="form-group">
+                    <label for="{{ form.brand_desc.html_name}} ">{{form.brand_desc.label}}</label>
+                    {{ form.brand_desc }}
+                    {% if form.brand_desc.errors %}
+                      <small class="form-text text-muted">{{ form.brand_desc.errors }}</small>
+                    {% endif %}
+                  </div>
+                </div>
+
+              </div>
+
+              <div class="row">
+
+                <div class="col-lg-4">
+                  <div class="form-group">
+                    <label for="{{ form.model.html_name}} ">{{form.model.label}}</label>
+                      {{ form.model }}
+                      {% if form.model.errors %}
+                        <small class="form-text text-muted">{{ form.model.errors }}</small>
+                      {% endif %}
+                  </div>
+                </div>
+
+                <div class="col-lg-4">
+                  <div class="form-group">
+                    <label for="{{ form.model_year.html_name}} ">{{form.model_year.label}}</label>
+                    {{ form.model_year }}
+                    {% if form.model_year.errors %}
+                      <small class="form-text text-muted">{{ form.model_year.errors }}</small>
+                    {% endif %}
+                  </div>
+                </div>
+
+                <div class="col-lg-4">
+                  <div class="form-group">
+                    <label for="{{ form.model_desc.html_name}} ">{{form.model_desc.label}}</label>
+                    {{ form.model_desc }}
+                    {% if form.model_desc.errors %}
+                      <small class="form-text text-muted">{{ form.model_dec.errors }}</small>
+                    {% endif %}
+                  </div>
+                </div>
+
+              </div>
+
+              <div class="row">
+
+                <div class="col-lg-10">
+                  <div class="form-group">
+                    <label for="{{ form.description.html_name}} ">{{form.description.label}}</label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                      <small class="form-text text-muted">{{ form.description.errors }}</small>
+                    {% endif %}
+                  </div>
+                </div>
+
+                <div class="col-lg-2 d-flex justify-content-center align-items-end">
+                  <div class="form-group">
+                    <div class="custom-control custom-checkbox custom-checkbox-outline custom-checkbox-info mb-3">
+                    {{ form.es_flota }}
+                    <label  for="defaultCheck2" class="form-check-label">{{form.es_flota.label}}</label>
+                    {% if form.es_flota.errors %}
+                      <small class="form-text text-muted">{{ form.es_flota.errors }}</small>
+                    {% endif %}
+                  </div>
+                  </div>
+                </div>
+
+              </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+    <!--End Form1-->
+
+    <!-- Form2-->
+    <div class="d-flex justify-content-center row ">
+      <div class="col-lg-10">
+        <div class="card">
+          <div class="card-body">
+            <h4 class="card-title mb-4">Descripcion</h4>
+            <!--  Form card-->
+            <div class="row">
+
+              <div class="col-lg-4">
+                <div class="form-group">
+                  <label for="{{ form.reference_id.html_name}} ">{{form.reference_id.label}}</label>
+                    {{ form.reference_id }}
+                    {% if form.reference_id.errors %}
+                      <small class="form-text text-muted">{{ form.reference_id.errors }}</small>
+                    {% endif %}
+                </div>
+              </div>
+
+              <div class="col-lg-4">
+                <div class="form-group">
+                  <label for="{{ form.series_id.html_name}} ">{{form.series_id.label}}</label>
+                  {{ form.series_id }}
+                  {% if form.series_id.errors %}
+                    <small class="form-text text-muted">{{ form.series_id.errors }}</small>
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="col-lg-4">
+                <div class="form-group">
+                  <label for="{{ form.article_nit.html_name}} ">{{form.article_nit.label}}</label>
+                  {{ form.article_nit }}
+                  {% if form.article_nit.errors %}
+                    <small class="form-text text-muted">{{ form.article_nit.errors }}</small>
+                  {% endif %}
+                </div>
+              </div>
+
+            </div>
+
+            <div class="row">
+              <div class="col-lg-6">
+                <div class="form-group">
+                  <label for="{{ form.license_plate.html_name}} ">{{form.license_plate.label}}</label>
+                    {{ form.license_plate }}
+                    {% if form.license_plate.errors %}
+                      <small class="form-text text-muted">{{ form.license_plate.errors }}</small>
+                    {% endif %}
+                </div>
+              </div>
+
+              <div class="col-lg-6">
+                <div class="form-group">
+                  <label for="{{ form.city_license_plate.html_name}} ">{{form.city_license_plate.label}}</label>
+                  {{ form.city_license_plate }}
+                  {% if form.city_license_plate.errors %}
+                    <small class="form-text text-muted">{{ form.city_license_plate.errors }}</small>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-lg-6">
+                <div class="form-group">
+                  <label for="{{ form.manifest.html_name}} ">{{form.manifest.label}}</label>
+                    {{ form.manifest }}
+                    {% if form.manifest.errors %}
+                      <small class="form-text text-muted">{{ form.manifest.errors }}</small>
+                    {% endif %}
+                </div>
+              </div>
+
+              <div class="col-lg-6">
+                <div class="form-group">
+                  <label for="{{ form.technical_mechanical_date.html_name}} ">{{form.technical_mechanical_date.label}}</label>
+                  {{ form.technical_mechanical_date }}
+                  {% if form.technical_mechanical_date.errors %}
+                  <div class="text-danger" >{{ form.technical_mechanical_date.errors }}</div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            <!-- end Form card-->
+          </div>
+        </div>
+      </div>
+    </div>
+    <!--End Form2-->
+
+    <!-- Form3-->
+    <div class="d-flex justify-content-center row ">
+      <div class="col-lg-10">
+        <div class="card">
+          <div class="card-body">
+            <h4 class="card-title mb-4">Infomación Mecánica</h4>
+            <!--  Form card-->
+
+            <div class="row">
+              <div class="col-lg-4">
+                <div class="form-group">
+                  <label for="{{ form.capacity.html_name}} ">{{form.capacity.label}}</label>
+                    {{ form.capacity }}
+                    {% if form.capacity.errors %}
+                      <small class="form-text text-muted">{{ form.capacity.errors }}</small>
+                    {% endif %}
+                </div>
+              </div>
+
+              <div class="col-lg-4">
+                <div class="form-group">
+                  <label for="{{ form.capacity_unit.html_name}} ">{{form.capacity_unit.label}}</label>
+                  {{ form.capacity_unit }}
+                  {% if form.capacity_unit.errors %}
+                    <small class="form-text text-muted">{{ form.capacity_unit.errors }}</small>
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="col-lg-4">
+                <div class="form-group">
+                  <label for="{{ form.capacity_unit_desc.html_name}} ">{{form.capacity_unit_desc.label}}</label>
+                  {{ form.capacity_unit_desc }}
+                  {% if form.capacity_unit_desc.errors %}
+                    <small class="form-text text-muted">{{ form.capacity_unit_desc.errors }}</small>
+                  {% endif %}
+                </div>
+              </div>
+
+            </div>
+
+            <div class="row">
+              <div class="col-lg-6">
+                <div class="form-group">
+                  <label for="{{ form.engine.html_name}} ">{{form.engine.label}}</label>
+                    {{ form.engine }}
+                    {% if form.engine.errors %}
+                      <small class="form-text text-muted">{{ form.engine.errors }}</small>
+                    {% endif %}
+                </div>
+              </div>
+
+              <div class="col-lg-6">
+                <div class="form-group">
+                  <label for="{{ form.engine_displacement.html_name}} ">{{form.engine_displacement.label}}</label>
+                  {{ form.engine_displacement }}
+                  {% if form.engine_displacement.errors %}
+                    <small class="form-text text-muted">{{ form.engine_displacement.errors }}</small>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-lg-6">
+                <div class="form-group">
+                  <label for="{{ form.doors.html_name}} ">{{form.doors.label}}</label>
+                    {{ form.doors }}
+                    {% if form.doors.errors %}
+                      <small class="form-text text-muted">{{ form.doors.errors }}</small>
+                    {% endif %}
+                </div>
+              </div>
+
+              <div class="col-lg-6">
+                <div class="form-group">
+                  <label for="{{ form.kilometraje.html_name}} ">{{form.kilometraje.label}}</label>
+                  {{ form.kilometraje }}
+                  {% if form.kilometraje.errors %}
+                    <small class="form-text text-muted">{{ form.kilometraje.errors }}</small>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-lg-6">
+                <div class="form-group">
+                  <label for="{{ form.fuel.html_name}} ">{{form.fuel.label}}</label>
+                    {{ form.fuel }}
+                    {% if form.fuel.errors %}
+                      <small class="form-text text-muted">{{ form.fuel.errors }}</small>
+                    {% endif %}
+                </div>
+              </div>
+
+              <div class="col-lg-6">
+                <div class="form-group">
+                  <label for="{{ form.fuel_description.html_name}} ">{{form.fuel_description.label}}</label>
+                  {{ form.fuel_description }}
+                  {% if form.fuel_description.errors %}
+                    <small class="form-text text-muted">{{ form.fuel_description.errors }}</small>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <!-- end Form card-->
+          </div>
+        </div>
+      </div>
+    </div>
+    <!--End Form3-->
+
+    <div class="d-flex justify-content-center row ">
+      <div class="col-lg-10 d-flex justify-content-center mb-4">
+        <button id="btn-submit1"type="submit" class="btn btn-mustard w-lg">Enviar</button>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock content %}

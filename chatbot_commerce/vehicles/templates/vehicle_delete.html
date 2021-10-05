@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% comment %} <div  class="d-flex justify-content-center row "> {% endcomment %}
+  <div class="col-lg-12 d-flex justify-content-center ">
+
+    <div class="col-md-8 col-lg-6 col-xl-5">
+      <div class="card card-body">
+        <h3 class="card-title font-size-24 text-danger mt-0">Eliminar</h3>
+          <form method="post">{% csrf_token %}
+            <p class="card-text font-size-15">¿Está seguro que deséa eliminar el elemento {{object.brand}}-{{object.model}}-{{object.model_year}}?</p>
+            <br>
+            <button type="submit" class="btn btn-mustard w-lg font-size-15">Eliminar</button>
+          </form>
+        </div>
+    </div>
+  </div>
+{% comment %} </div> {% endcomment %}
+
+{% endblock %}

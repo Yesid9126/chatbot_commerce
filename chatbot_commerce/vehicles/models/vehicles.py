@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.translation import gettext as _
+from slugify import slugify
 
 
 class Vehicle(models.Model):
@@ -23,9 +24,8 @@ class Vehicle(models.Model):
         null=True,
         blank=True,
     )
-    capacity_unit_desc = models.CharField(
+    capacity_unit_desc = models.TextField(
         _("Capacity unit description"),
-        max_length=500,
         null=True,
         blank=True,
     )
@@ -53,7 +53,7 @@ class Vehicle(models.Model):
         null=True,
         blank=True,
     )
-    Engine = models.CharField(
+    engine = models.CharField(
         _("Engine"),
         max_length=500,
         null=True,
@@ -61,8 +61,8 @@ class Vehicle(models.Model):
     )
     model_year = models.IntegerField(
         _("Model year"),
-        null=True,
-        blank=True,
+        # null=True,
+        # blank=True,
     )
     manifest = models.CharField(  # manifiesto
         _("Manifest"),
@@ -109,9 +109,8 @@ class Vehicle(models.Model):
     sales_type = models.CharField(  # Choosefield?
         _("Sales type"), max_length=500, null=True, blank=True
     )
-    sales_type_desc = models.CharField(
+    sales_type_desc = models.TextField(
         _("Sales type description"),
-        max_length=500,
         blank=True,
         null=True,
     )
@@ -120,8 +119,8 @@ class Vehicle(models.Model):
         blank=True,
         null=True,
     )
-    sales_plan_desc = models.CharField(
-        _("Sales plan description"), max_length=500, null=True, blank=True
+    sales_plan_desc = models.TextField(
+        _("Sales plan description"), null=True, blank=True
     )
     date_sale = models.DateField(
         _("Date sale"), auto_now=False, auto_now_add=False, null=True, blank=True
@@ -165,8 +164,8 @@ class Vehicle(models.Model):
     model = models.CharField(
         _("Model"),
         max_length=500,
-        null=True,
-        blank=True,
+        # null=True,
+        # blank=True,
     )
     model_id = models.CharField(
         _("Model id"),
@@ -177,18 +176,16 @@ class Vehicle(models.Model):
     brand = models.CharField(
         _("Brand"),
         max_length=500,
-        null=True,
-        blank=True,
+        # null=True,
+        # blank=True,
     )
-    modelo_desc = models.CharField(
+    model_desc = models.TextField(
         _("Model description"),
-        max_length=500,
         null=True,
         blank=True,
     )
-    brand_desc = models.CharField(
+    brand_desc = models.TextField(
         _("Brand description"),
-        max_length=500,
         null=True,
         blank=True,
     )
@@ -198,9 +195,8 @@ class Vehicle(models.Model):
         null=True,
         blank=True,
     )
-    color_desc = models.CharField(
+    color_desc = models.TextField(
         _("Color description"),
-        max_length=500,
         null=True,
         blank=True,
     )
@@ -215,13 +211,12 @@ class Vehicle(models.Model):
         null=True,
         blank=True,
     )
-    fuel_description = models.CharField(
+    fuel_description = models.TextField(
         _("Fuel description"),
-        max_length=500,
         null=True,
         blank=True,
     )
-    date_last_entry = models.DateField(
+    date_last_entry = models.DateTimeField(
         _("Date last entry"),
         auto_now=False,
         auto_now_add=False,
@@ -245,10 +240,19 @@ class Vehicle(models.Model):
         null=True,
         blank=True,
     )
+    slug = models.SlugField(
+        _("Slug"),
+    )
 
     def __str__(self):
         """Return vehicle"""
         return f"{self.brand}-{self.model}-{self.model_year}"
+
+    def save(self, *args, **kwargs):
+        self.slug = slugify(
+            self.model + "-" + str(self.model_year) + "-" + str(self.id), separator="_"
+        )
+        return super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = "Vehicle"

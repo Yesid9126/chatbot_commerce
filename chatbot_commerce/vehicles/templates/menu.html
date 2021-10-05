@@ -1,0 +1,33 @@
+<div class="topnav">
+  <div class="container-fluid">
+    <nav class="navbar navbar-light navbar-expand-lg topnav-menu active">
+      <div class="collapse navbar-collapse active" id="topnav-menu-content">
+        <ul class="navbar-nav active">
+
+          <li class="nav-item ">
+            <a class="nav-link" href="{% url 'vehicles:registration-vehicles' %}" id="topnav-dashboard"    >
+              <i class="mdi mdi-newspaper-plus"></i> Crear registro<div class=""></div>
+            </a>
+          </li>
+          <li class="nav-item ">
+            <a class="nav-link" href="{% url 'vehicles:list-vehicles' %}" id="topnav-dashboard"    >
+                <i class="mdi mdi-format-list-bulleted-type"></i>   Listar<div class=""></div>
+            </a>
+          </li>
+
+          <li class="nav-item dropdown ">
+            <a class="nav-link dropdown-toggle arrow-none" href="#" id="topnav-layout" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <i class="mdi mdi-car-info"></i> Marcas<div class="arrow-down"></div>
+            </a>
+            <div class="dropdown-menu dropdown-menu-right active" aria-labelledby="topnav-layout">
+              {% for item in brands %}
+                <a href="{% url 'vehicles:list-vehicles'%}?brand={{item}}" class="dropdown-item">{{ item }} </a>
+              {% endfor %}
+            </div>
+          </li>
+
+        </ul>
+      </div>
+    </nav>
+  </div>
+</div>

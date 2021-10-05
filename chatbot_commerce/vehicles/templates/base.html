@@ -1,0 +1,72 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+
+        <meta charset="utf-8" />
+        <title>Autolarte | Registro de vehiculos </title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta content="Formulario para registro, actualizacion y eliminacion de vehiculos" name="description" />
+        <meta content="SMK" name="author" />
+        <!-- App favicon -->
+        <link rel="shortcut icon" href="https://assets-cdn.static-gm.com/Assets/925e467e-b354-4c6a-bee7-094286fb63d9/ca8d1aaf-6822-42c1-94c7-b6b2077f4497/v-1622078032/Desktop.webp">
+        <!-- Bootstrap Css -->
+        <link href="{% static 'css/bootstrap.css' %}" id="bootstrap-style" rel="stylesheet" type="text/css" />
+        <!-- Icons Css -->
+        <link href="{% static 'css/icons.min.css' %}" rel="stylesheet" type="text/css" />
+        <!-- App Css-->
+        <link href="{% static 'css/app.css' %}" id="app-style" rel="stylesheet" type="text/css" />
+
+    </head>
+    <body data-topbar="colored" data-layout="horizontal" class="horizontal">
+        <!-- Begin page -->
+      <div class="layout-wrapper">
+
+          {% include 'topbar.html' %}
+          {% include 'menu.html' %}
+
+        <div class="main-content" style="margin-left: 0">
+          <div class="page-content">
+            <div class="container-fluid">
+
+                {% if messages %} {% for message in messages %}
+                  <div class="d-flex align-items-end alert alert-{{message.tags}} alert-dismissible fade show" role="alert">
+                    {{message}}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                  </div>
+                  {% endfor %}
+                {% endif %}
+
+                {% block content %}
+                {% endblock content %}
+
+            </div>
+          </div>
+
+          <footer class="footer">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-sm-6">
+                       2021© Todos los derechos reservados
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="text-sm-right d-none d-sm-block">
+                            Design &amp; Develop by SMK
+                        </div>
+                    </div>
+                </div>
+            </div>
+          </footer>
+        </div>
+      </div>
+        <!-- /Begin page -->
+        <!-- JAVASCRIPT -->
+        <script src="{% static 'js/jquery.min.js' %}"></script>
+        <script src="{% static 'js/bootstrap.bundle.min.js' %}  "></script>
+        {% comment %} <script src="{% static 'js/waves.min.js' %}  "></script> {% endcomment %}
+        {% comment %} <script src="{% static 'js/app.js' %}  "></script> {% endcomment %}
+    </body>
+</html>
