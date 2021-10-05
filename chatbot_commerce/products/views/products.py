@@ -12,7 +12,6 @@ from rest_framework.status import HTTP_200_OK, HTTP_404_NOT_FOUND
 # Serializers
 from chatbot_commerce.products.serializers import (ProductModelSerializer,
                                                    DepartmentTreeModelSerializer,
-                                                   BrandsModelSerializer,
                                                    AttributeTypeModelSerializer)
 from chatbot_commerce.stores.permissions import HasStoreAPIKey
 from rest_framework.permissions import IsAdminUser
@@ -134,10 +133,7 @@ class DepartmentsViewset(mixins.RetrieveModelMixin,
 class BrandsViewset(mixins.ListModelMixin,
                     viewsets.GenericViewSet):
 
-    serializer_class = BrandsModelSerializer
     permission_classes = [HasStoreAPIKey | IsAdminUser]
-    filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
-    search_fields = ('name', 'title')
 
     def dispatch(self, request, *args, **kwargs):
         slug_name = kwargs['store_slug_name']
@@ -155,9 +151,7 @@ class BrandsViewset(mixins.ListModelMixin,
 
         Parameters.
         """
-        queryset = self.filter_queryset(self.queryset)
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+        return Response(self.queryset.values_list('name', flat=True))
 
 
 class AttributesViewset(mixins.ListModelMixin,

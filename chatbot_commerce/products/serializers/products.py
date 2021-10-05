@@ -8,23 +8,6 @@ from rest_framework import serializers
 # Model
 from chatbot_commerce.products.models import Product
 
-
-class BrandsModelSerializer(serializers.ModelSerializer):
-    """Brand model serializer"""
-
-    class Meta:
-        """Meta class."""
-
-        model = Brand
-        fields = [
-            'external_id',
-            'name',
-            'title',
-            'description'
-        ]
-        read_only_fields = fields
-
-
 class ProductModelSerializer(serializers.ModelSerializer):
     """Product model serializer."""
 
