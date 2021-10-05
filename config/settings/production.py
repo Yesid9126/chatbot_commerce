@@ -142,7 +142,7 @@ ADMIN_URL = env("DJANGO_ADMIN_URL")
 # https://docs.djangoproject.com/en/dev/ref/settings/#email-backend
 # https://anymail.readthedocs.io/en/stable/installation/#anymail-settings-reference
 # https://anymail.readthedocs.io/en/stable/esps/mailgun/
-#EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"
+# EMAIL_BACKEND = "anymail.backends.mailgun.EmailBackend"
 # ANYMAIL = {
 #     "MAILGUN_API_KEY": env("MAILGUN_API_KEY"),
 #     "MAILGUN_SENDER_DOMAIN": env("MAILGUN_DOMAIN"),
@@ -222,7 +222,7 @@ DEBUG = False
 SENDGRID_API_KEY = env('SENDGRID_API_KEY')
 
 EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = 'michatbotlocal@gmail.com' # this is exactly the value 'apikey'
+EMAIL_HOST_USER = 'michatbotlocal@gmail.com'  # this is exactly the value 'apikey'
 EMAIL_HOST_PASSWORD = SENDGRID_API_KEY
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True

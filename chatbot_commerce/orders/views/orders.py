@@ -22,7 +22,7 @@ from chatbot_commerce.stores.models import Store
 class OrderViewSet(viewsets.GenericViewSet):
     """Web hook view set."""
 
-    permission_classes = [ HasStoreAPIKey | IsAdminUser]
+    permission_classes = [HasStoreAPIKey | IsAdminUser]
 
     def get_serializer_class(self):
         """Return serializer based on action."""

@@ -2,11 +2,11 @@
 
 # Django rest framework
 from chatbot_commerce.products.models.skus import AttributeType
-from chatbot_commerce.products.models import Brand
 from rest_framework import serializers
 
 # Model
 from chatbot_commerce.products.models import Product
+
 
 class ProductModelSerializer(serializers.ModelSerializer):
     """Product model serializer."""
