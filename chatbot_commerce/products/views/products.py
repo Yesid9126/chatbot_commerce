@@ -151,7 +151,12 @@ class BrandsViewset(mixins.ListModelMixin,
 
         Parameters.
         """
-        return Response(self.queryset.values_list('name', flat=True))
+        return Response(
+            {
+                'count': len(self.queryset.values_list('name', flat=True)),
+                'brands': self.queryset.values_list('name', flat=True)
+            }
+        )
 
 
 class AttributesViewset(mixins.ListModelMixin,
