@@ -153,7 +153,7 @@ class StoreAPIKeyManager(BaseAPIKeyManager):
 class StoreAPIKey(AbstractAPIKey):
     """Store api keys model."""
 
-    store = models.ForeignKey("Store", verbose_name=_("Store"), on_delete=models.CASCADE, null=True, blank=True, editable=False)
+    store = models.ForeignKey("stores.Store", verbose_name=_("Store"), on_delete=models.CASCADE, null=True, blank=True, editable=False)
     is_active = models.BooleanField(_("Status"), default=False, editable=False)
 
     __original_email = None
@@ -294,7 +294,7 @@ class Store(ChatbootModel):
 @receiver(post_save, sender=Store)
 def execute_task(sender, instance, *args, **kwargs):
     if instance.status is True and instance.sync_status is False:
-        from chatbot_commerce.products.tasks import store_begining
+        from chatbot_commerce.stores.tasks import store_begining
         store_begining.s(store=instance.pk).apply_async(countdown=5)
 
     if instance.sync_status is True:
@@ -316,8 +316,8 @@ class SaleChannel(BaseAbstract):
     is_active = models.BooleanField(_("Status"), default=False)
 
     # Relationship filter
-    store = models.ForeignKey("Store", verbose_name=_("Store"), on_delete=models.CASCADE)
-    sellers = models.ManyToManyField("Seller", verbose_name=_("Sellers"))
+    store = models.ForeignKey("stores.Store", verbose_name=_("Store"), on_delete=models.CASCADE)
+    sellers = models.ManyToManyField("stores.Seller", verbose_name=_("Sellers"))
 
     def __str__(self):
         """Return store name."""
@@ -344,7 +344,7 @@ class Seller(ChatbootModel):
     is_active = models.BooleanField(_("Status"), default=False)
 
     # Relationship filter
-    store = models.ForeignKey("Store", verbose_name=_("Store"), on_delete=models.CASCADE)
+    store = models.ForeignKey("stores.Store", verbose_name=_("Store"), on_delete=models.CASCADE)
 
     # Extra data
     description = models.CharField(_("Description of seller"), max_length=500)
@@ -371,8 +371,8 @@ class SkuSeller(ChatbootModel):
     is_active = models.BooleanField(_("Status"))
 
     # Relationship filter
-    sku = models.ForeignKey("products.Skus", verbose_name=_("Sku"), on_delete=models.CASCADE)
-    seller = models.ForeignKey("Seller", verbose_name=_("Seller"), on_delete=models.CASCADE)
+    sku = models.ForeignKey("stores.Skus", verbose_name=_("Sku"), on_delete=models.CASCADE)
+    seller = models.ForeignKey("stores.Seller", verbose_name=_("Seller"), on_delete=models.CASCADE)
 
     # Raw data
     raw_json = models.JSONField(_("Raw data"))

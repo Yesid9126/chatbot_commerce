@@ -76,10 +76,7 @@ THIRD_PARTY_APPS = [
 ]
 
 LOCAL_APPS = [
-    "chatbot_commerce.products.apps.ProductConfig",
     "chatbot_commerce.stores.apps.StoresConfig",
-    "chatbot_commerce.orders.apps.OrdersConfig"
-
     # Your stuff: custom apps go here
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -290,7 +287,7 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         "rest_framework.authentication.SessionAuthentication",
     ),
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'DEFAULT_PAGINATION_CLASS': 'chatbot_commerce.utils.paginators.FasterPagenumberPagination',
     'PAGE_SIZE': 50
 }
 CORS_ALLOW_ALL_ORIGINS = True

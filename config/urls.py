@@ -27,7 +27,7 @@ urlpatterns = [
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     path('confirm/email/<uidb64>/<token>/', email_is_active, name='email-activate'),
-    path('successfuly/email/', successfuly_email, name='email-successfuly')
+    path('successfuly/email/', successfuly_email, name='email-successfuly'),
     # path('prueba/', product_list)
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

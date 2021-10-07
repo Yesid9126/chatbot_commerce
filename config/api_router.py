@@ -4,8 +4,8 @@ from django.conf import settings
 from rest_framework.routers import DefaultRouter, SimpleRouter
 
 # Views
-from chatbot_commerce.products.views import ProductViewset, DepartmentsViewset, BrandsViewset, AttributesViewset
-from chatbot_commerce.orders.views import OrderViewSet
+from chatbot_commerce.stores.views import ProductViewset, DepartmentsViewset, BrandsViewset, AttributesViewset
+from chatbot_commerce.stores.views import OrderViewSet
 
 
 if settings.DEBUG:

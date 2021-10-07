@@ -1,13 +1,11 @@
 """Construction of payment url."""
 
 # Models
-from chatbot_commerce.stores.models import Store
-from chatbot_commerce.products.models import Skus
+from chatbot_commerce.stores.models import Skus, Store
 
 
 def kart_url(store, list_sku):
     skus = list_sku
-    url = 'https://www.pilatos.com/checkout/cart/add?sc=1&sku=7686+7690&qty=1&seller=1'
     stores = Store.objects.filter(name=store).get()
     url = stores.domain
     cadena = []

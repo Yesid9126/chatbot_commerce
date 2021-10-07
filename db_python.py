@@ -1,14 +1,13 @@
 from rest_framework.decorators import api_view
 
 from django.db import connection, reset_queries
-from chatbot_commerce.products.models import Product, Skus
-from chatbot_commerce.stores.models import Store
+from chatbot_commerce.stores.models import Product, Skus, Store
 from rest_framework.response import Response
 from django.db.models import Prefetch
 import time
 import functools
 
-from chatbot_commerce.products.serializers import ProductModelSerializer
+from chatbot_commerce.stores.serializers import ProductModelSerializer
 
 
 def query_debugger(func):
