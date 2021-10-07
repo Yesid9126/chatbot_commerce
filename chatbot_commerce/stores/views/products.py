@@ -11,8 +11,8 @@ from rest_framework.status import HTTP_200_OK, HTTP_404_NOT_FOUND
 
 # Serializers
 from chatbot_commerce.stores.serializers import (ProductModelSerializer,
-                                                   DepartmentTreeModelSerializer,
-                                                   AttributeTypeModelSerializer)
+                                                 DepartmentTreeModelSerializer,
+                                                 AttributeTypeModelSerializer)
 from chatbot_commerce.stores.permissions import HasStoreAPIKey
 from rest_framework.permissions import IsAdminUser
 
