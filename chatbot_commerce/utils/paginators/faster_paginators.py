@@ -2,7 +2,7 @@ from django.core.paginator import Paginator
 from django.utils.functional import cached_property
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
-from collections import OrderedDict
+
 
 class FastDjangoPaginator(Paginator):
     @cached_property
