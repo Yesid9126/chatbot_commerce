@@ -30,7 +30,7 @@ class Product(AbstractCategory):
     )
     is_active = models.BooleanField(
         _('Is active'),
-        default=True, db_index=True,
+        default=True, db_index=True
     )
     show_without_stock = models.BooleanField(
         _('Without stock'),
@@ -48,7 +48,7 @@ class Product(AbstractCategory):
     )
     search_vector = SearchVectorField(
         _("Search vector"),
-        blank=True, null=True, db_index=True
+        blank=True, null=True
     )
 
     # Relationship filter

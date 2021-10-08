@@ -57,8 +57,7 @@ class BaseAbstract(BaseRawAbstract):
         null=True, blank=True
     )
     external_id = models.BigIntegerField(
-        _("External ID"),
-        db_index=True
+        _("External ID")
     )
 
     class Meta:

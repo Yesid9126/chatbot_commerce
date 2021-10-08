@@ -34,7 +34,7 @@ class Skus(BaseAbstract):
     )
     search_vector = SearchVectorField(
         _("Search vector"),
-        blank=True, null=True, db_index=True
+        blank=True, null=True
     )
 
     is_transported = models.BooleanField(
