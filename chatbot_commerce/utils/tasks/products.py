@@ -8,6 +8,7 @@ from chatbot_commerce.stores.models import (
     Subcategory, Image, Attribute, AttributeType
 )
 from chatbot_commerce.stores.models import SaleChannel, Seller
+from django.contrib.postgres.search import SearchVector
 
 # Apis
 from chatbot_commerce.utils.apis.vtex import VtexStores
@@ -180,7 +181,7 @@ def update_or_create_sku(product_instance, product_id, sku, store):
 
         # Create attributes for sku
         s = []
-        data_search = []
+        extra_data_search = []
         try:
             if sku_specifications_array:
                 for dic in sku_specifications_array:
@@ -204,13 +205,13 @@ def update_or_create_sku(product_instance, product_id, sku, store):
                 s = ' '.join(s)
                 s_replaced = s.replace(',', ' ').replace('.', ' ')
                 s = ' '.join((s, s_replaced,))
-                sku_instance.search_attributes = s
-                data_search.append(s)
+                # sku_instance.search_attributes = s
+                extra_data_search.append(s)
             if sku_name:
-                data_search.append(sku_name)
-            sku_instance.search = ' '.join((product_instance.search, *data_search,))
+                extra_data_search.append(sku_name)
+            sku_instance.search = ' '.join((product_instance.search, *extra_data_search,))
             sku_instance.save()
-            data_search.clear()
+            extra_data_search.clear()
             del s
         except Exception as message:
             print(f'message: {message} specificaciones')
@@ -309,6 +310,8 @@ def create_products_vtex_store(store, limit=False):
     sc.clear()
     sub_skus_ids.clear()
     # Delete skus that don't have a product
+    Product.objects.update(search_vector=SearchVector('search'))
     Skus.objects.filter(product=None).delete()
+    Skus.objects.update(search_vector=SearchVector('search'))
     gc.collect()
     return True

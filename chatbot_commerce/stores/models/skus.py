@@ -4,6 +4,7 @@ from slugify import slugify
 
 # Django
 from django.db import models
+from django.contrib.postgres.search import SearchVectorField
 
 # utilities
 from chatbot_commerce.utils.models import ChatbootModel, BaseAbstract, BaseRawAbstract
@@ -16,86 +17,76 @@ class Skus(BaseAbstract):
     # Filter data
     is_active = models.BooleanField(
         'Active sku',
-        default=False,
-        null=True,
-        blank=True
+        default=False, null=True, blank=True, db_index=True
     )
     is_inventoried = models.BooleanField(
-        default=False,
-        null=True,
-        blank=True
+        default=False, null=True, blank=True
     )
     total_quantity = models.CharField(
         'Quantity sku',
         max_length=255,
-        null=True,
-        blank=True
+        null=True, blank=True
     )
-    search_attributes = models.TextField(_("Attributes search"), blank=True, null=True)
-    search = models.TextField(_("Search"), blank=True, null=True)
+    # search_attributes = models.TextField(_("Attributes search"), blank=True, null=True)
+    search = models.TextField(
+        _("Search"),
+        blank=True, null=True
+    )
+    search_vector = SearchVectorField(
+        _("Search vector"),
+        blank=True, null=True, db_index=True
+    )
+
     is_transported = models.BooleanField(
-        default=False,
-        null=True,
-        blank=True
+        default=False, null=True, blank=True
     )
     is_kit = models.BooleanField(
         'sku is kit',
-        default=False,
-        null=True,
-        blank=True
+        default=False, null=True, blank=True
     )
 
     # Relationship filter
     product = models.ForeignKey(
-        to='stores.Product',
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
+        to='stores.Product', on_delete=models.CASCADE,
+        null=True, blank=True, db_index=True
     )
-    sales_channels = models.ManyToManyField("stores.SaleChannel", verbose_name=_("Sales channel's"))
+    sales_channels = models.ManyToManyField(
+        "stores.SaleChannel", verbose_name=_("Sales channel's")
+    )
 
     # Extra data
     comercial_condition_id = models.CharField(
         max_length=100,
-        null=True,
-        blank=True
+        null=True, blank=True
     )
     manufacter_code = models.CharField(
         max_length=100,
-        null=True,
-        blank=True
+        null=True, blank=True
     )
     ref_id = models.CharField(
         'Reference id',
         max_length=100,
-        null=True,
-        blank=True
+        null=True, blank=True
     )
     packaged_height = models.CharField(
         max_length=50,
-        null=True,
-        blank=True
+        null=True, blank=True
     )
     packaged_length = models.CharField(
         max_length=50,
-        null=True,
-        blank=True
+        null=True, blank=True
     )
     packaged_width = models.CharField(
         max_length=50,
-        null=True,
-        blank=True
+        null=True, blank=True
     )
     packaged_weight = models.CharField(
         'Packaged weight Kg',
         max_length=50,
-        null=True,
-        blank=True
+        null=True, blank=True
     )
     reference_stock_id = models.BooleanField(
-        default=False,
-        null=True,
-        blank=True
+        default=False, null=True, blank=True
     )
 
     def __str__(self):
@@ -138,14 +129,28 @@ class Image(ChatbootModel):
     """Image model"""
 
     # Filter data
-    name = models.CharField(_("Name"), max_length=500, null=True, blank=True)
-    image_id = models.CharField(_("Image external id"), max_length=50, null=True, blank=True)
+    name = models.CharField(
+        _("Name"),
+        max_length=500,
+        null=True, blank=True
+    )
+    image_id = models.CharField(
+        _("Image external id"),
+        max_length=50,
+        null=True, blank=True
+    )
 
     # Relationship filter
-    sku = models.ForeignKey("stores.Skus", on_delete=models.CASCADE)
+    sku = models.ForeignKey(
+        "stores.Skus", on_delete=models.CASCADE
+    )
 
     # Url data
-    image_url = models.URLField(_("Image url"), max_length=2000, null=True, blank=True)
+    image_url = models.URLField(
+        _("Image url"),
+        max_length=2000,
+        null=True, blank=True
+    )
 
     class Meta:
         """Meta class"""
@@ -158,15 +163,29 @@ class Image(ChatbootModel):
 class Price(BaseRawAbstract):
     """Price model"""
 
-    list_price = models.BigIntegerField(_('List price'), null=True, blank=True)
-    cost_price = models.BigIntegerField(_('Cost price'), null=True, blank=True)
-    markup = models.BigIntegerField(_('Mark up'), null=True, blank=True)
+    list_price = models.BigIntegerField(
+        _('List price'),
+        null=True, blank=True
+    )
+    cost_price = models.BigIntegerField(
+        _('Cost price'),
+        null=True, blank=True
+    )
+    markup = models.BigIntegerField(
+        _('Mark up'),
+        null=True, blank=True
+    )
 
     # Filter data
-    base_price = models.BigIntegerField(_('Base price'), null=True, blank=True)
+    base_price = models.BigIntegerField(
+        _('Base price'),
+        null=True, blank=True
+    )
 
     # Relationship filter
-    sku = models.ForeignKey('stores.Skus', on_delete=models.CASCADE)
+    sku = models.ForeignKey(
+        'stores.Skus', on_delete=models.CASCADE
+    )
 
     class Meta:
         """Meta class"""
@@ -192,13 +211,27 @@ class FixedPrice(BaseRawAbstract):
     """Fixed price model"""
 
     # Filter data
-    trade_policy_id = models.CharField(_('Trade porlice ID'), max_length=50)
-    value = models.BigIntegerField(_('Value'), null=True, blank=True)
-    list_price = models.BigIntegerField(_('List price'), null=True, blank=True)
-    min_quantity = models.IntegerField(_('Minimun quantity'), null=True, blank=True)
+    trade_policy_id = models.CharField(
+        _('Trade porlice ID'),
+        max_length=50
+    )
+    value = models.BigIntegerField(
+        _('Value'),
+        null=True, blank=True
+    )
+    list_price = models.BigIntegerField(
+        _('List price'),
+        null=True, blank=True
+    )
+    min_quantity = models.IntegerField(
+        _('Minimun quantity'),
+        null=True, blank=True
+    )
 
     # Relationship filter
-    price = models.ForeignKey('stores.Price', on_delete=models.CASCADE)
+    price = models.ForeignKey(
+        'stores.Price', on_delete=models.CASCADE
+    )
 
     def save(self, *args, **kwargs):
         self.serializer_data = {
@@ -220,11 +253,19 @@ class DateRange(BaseRawAbstract):
     """Date range model"""
 
     # Filter data
-    date_time_from = models.DateTimeField(_("From date time"), auto_now=False, auto_now_add=False)
-    date_time_to = models.DateTimeField(_("To date time"), auto_now=False, auto_now_add=False)
+    date_time_from = models.DateTimeField(
+        _("From date time"),
+        auto_now=False, auto_now_add=False
+    )
+    date_time_to = models.DateTimeField(
+        _("To date time"),
+        auto_now=False, auto_now_add=False
+    )
 
     # Relationship filter
-    fixed_price = models.ForeignKey('stores.FixedPrice', on_delete=models.CASCADE)
+    fixed_price = models.ForeignKey(
+        'stores.FixedPrice', on_delete=models.CASCADE
+    )
 
     class Meta:
         """Meta class"""
@@ -238,8 +279,13 @@ class DateRange(BaseRawAbstract):
 class AttributeType(ChatbootModel):
 
     # Filter data
-    name = models.CharField(max_length=255)
-    slug_name = models.SlugField(max_length=255, null=True, blank=True)
+    name = models.CharField(
+        max_length=255
+    )
+    slug_name = models.SlugField(
+        max_length=255,
+        null=True, blank=True
+    )
 
     # Relationship filter
     store = models.ForeignKey(
@@ -264,11 +310,17 @@ class Attribute(BaseRawAbstract):
     """Attributes model"""
 
     # Filter data
-    value = models.CharField(max_length=255)
+    value = models.CharField(
+        max_length=255
+    )
 
     # Relationship filter
-    sku = models.ForeignKey('stores.Skus', on_delete=models.CASCADE)
-    attribute_type = models.ForeignKey('stores.AttributeType', on_delete=models.CASCADE)
+    sku = models.ForeignKey(
+        'stores.Skus', on_delete=models.CASCADE
+    )
+    attribute_type = models.ForeignKey(
+        'stores.AttributeType', on_delete=models.CASCADE
+    )
 
     def __str__(self):
         return f'{self.sku.name}: {self.attribute_type}: {self.value}'

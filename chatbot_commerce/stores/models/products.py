@@ -2,6 +2,7 @@
 
 # Django
 from django.db import models
+from django.contrib.postgres.search import SearchVectorField
 
 # utilities
 from chatbot_commerce.utils.models import AbstractCategory
@@ -29,7 +30,7 @@ class Product(AbstractCategory):
     )
     is_active = models.BooleanField(
         _('Is active'),
-        default=True
+        default=True, db_index=True,
     )
     show_without_stock = models.BooleanField(
         _('Without stock'),
@@ -37,14 +38,24 @@ class Product(AbstractCategory):
     )
 
     # Extra filter data
-    keywords = models.TextField(_("Keywords"), blank=True, null=True)
-    search = models.TextField(_("Search"), blank=True, null=True)
+    keywords = models.TextField(
+        _("Keywords"),
+        blank=True, null=True
+    )
+    search = models.TextField(
+        _("Search"),
+        blank=True, null=True
+    )
+    search_vector = SearchVectorField(
+        _("Search vector"),
+        blank=True, null=True, db_index=True
+    )
 
     # Relationship filter
     store = models.ForeignKey(
         to='stores.Store',
         on_delete=models.CASCADE,
-        null=True, blank=True
+        null=True, blank=True, db_index=True
     )
     department = models.ForeignKey(
         to='stores.Department',
@@ -54,37 +65,38 @@ class Product(AbstractCategory):
     category = models.ForeignKey(
         to='stores.Category',
         on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
+        null=True, blank=True,
     )
     sub_category = models.ForeignKey(
         to='stores.Subcategory',
         on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
+        null=True, blank=True,
     )
     brand = models.ForeignKey(
         'stores.Brand',
         on_delete=models.CASCADE,
-        blank=True,
-        null=True,
+        blank=True, null=True,
     )
 
     # Extra data
     link_id = models.CharField(
         _('link id'),
         max_length=500,
-        null=True,
-        blank=True
+        null=True, blank=True
     )
     reference_id = models.CharField(
         _('Reference id'),
         max_length=500,
-        null=True,
-        blank=True
+        null=True, blank=True
     )
-    description_short = models.TextField(_("Short description"), null=True, blank=True)
-    meta_tag_description = models.TextField(_("Tag description"), null=True, blank=True)
+    description_short = models.TextField(
+        _("Short description"),
+        null=True, blank=True
+    )
+    meta_tag_description = models.TextField(
+        _("Tag description"),
+        null=True, blank=True
+    )
 
     def __str__(self):
         """Return product name|id."""

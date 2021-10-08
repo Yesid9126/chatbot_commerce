@@ -52,8 +52,14 @@ class BaseRawAbstract(ChatbootModel):
 class BaseAbstract(BaseRawAbstract):
 
     # Filter data
-    name = models.CharField(max_length=500, null=True, blank=True)
-    external_id = models.BigIntegerField(_("External ID"))
+    name = models.CharField(
+        max_length=500,
+        null=True, blank=True
+    )
+    external_id = models.BigIntegerField(
+        _("External ID"),
+        db_index=True
+    )
 
     class Meta:
         """Meta option."""
@@ -63,11 +69,18 @@ class BaseAbstract(BaseRawAbstract):
 class AbstractCategory(BaseAbstract):
 
     # Filter data
-    slug_name = models.SlugField(max_length=255, null=True, blank=True)
-    title = models.TextField(null=True, blank=True)
+    slug_name = models.SlugField(
+        max_length=255,
+        null=True, blank=True
+    )
+    title = models.TextField(
+        null=True, blank=True
+    )
 
     # Extra data
-    description = models.TextField(null=True, blank=True)
+    description = models.TextField(
+        null=True, blank=True
+    )
 
     def __str__(self):
         return self.name

@@ -18,7 +18,7 @@ from rest_framework_api_key.crypto import KeyGenerator, concatenate, split
 from django_celery_beat.models import PeriodicTask, CrontabSchedule
 
 # utilities
-from chatbot_commerce.utils.models import ChatbootModel, BaseAbstract
+from chatbot_commerce.utils.models import ChatbootModel, BaseAbstract, BaseRawAbstract
 from django.utils.translation import gettext as _
 from django.dispatch import receiver
 from django.db.models.signals import post_save
@@ -153,12 +153,24 @@ class StoreAPIKeyManager(BaseAPIKeyManager):
 class StoreAPIKey(AbstractAPIKey):
     """Store api keys model."""
 
-    store = models.ForeignKey("stores.Store", verbose_name=_("Store"), on_delete=models.CASCADE, null=True, blank=True, editable=False)
-    is_active = models.BooleanField(_("Status"), default=False, editable=False)
+    store = models.ForeignKey(
+        "stores.Store", verbose_name=_("Store"), on_delete=models.CASCADE,
+        null=True, blank=True, editable=False
+    )
+    is_active = models.BooleanField(
+        _("Status"),
+        default=False, editable=False
+    )
 
     __original_email = None
-    email = models.EmailField(_("E-mail"), max_length=254)
-    email_status = models.BooleanField(_("Status email"), default=False, editable=False)
+    email = models.EmailField(
+        _("E-mail"),
+        max_length=254
+    )
+    email_status = models.BooleanField(
+        _("Status email"),
+        default=False, editable=False
+    )
 
     objects = StoreAPIKeyManager()
 
@@ -225,27 +237,72 @@ class Store(ChatbootModel):
     )
 
     # info filter
-    store_type = models.CharField(_("Type of store"), max_length=500, choices=STORE_TYPE)
-    name = models.CharField(_("Name of store"), max_length=255)
-    slug_name = models.SlugField(max_length=50, null=True, blank=True)
-    url_enviroment = models.CharField(_("Url enviroment"), max_length=500, blank=True, null=True)
+    store_type = models.CharField(
+        _("Type of store"),
+        max_length=500, choices=STORE_TYPE
+    )
+    name = models.CharField(
+        _("Name of store"),
+        max_length=255
+    )
+    slug_name = models.SlugField(
+        max_length=50,
+        null=True, blank=True
+    )
+    url_enviroment = models.CharField(
+        _("Url enviroment"),
+        max_length=500,
+        blank=True, null=True
+    )
 
     # Task manage
-    sync_status = models.BooleanField(_("Task begun Finish"), default=False)
-    creating_updating_elements_status = models.BooleanField(_("Task principal store elments"), default=False)
+    sync_status = models.BooleanField(
+        _("Task begun Finish"),
+        default=False
+    )
+    creating_updating_elements_status = models.BooleanField(
+        _("Task principal store elments"),
+        default=False
+    )
 
     # Request information
-    domain = models.CharField(_("Domain of store"), max_length=500, blank=True, null=True)
-    status = models.BooleanField(_("Valid connection"), default=False)
-    api_key = models.CharField(max_length=500)
-    api_token = models.CharField(max_length=500)
+    domain = models.CharField(
+        _("Domain of store"),
+        max_length=500,
+        blank=True, null=True
+    )
+    status = models.BooleanField(
+        _("Valid connection"),
+        default=False
+    )
+    api_key = models.CharField(
+        max_length=500
+    )
+    api_token = models.CharField(
+        max_length=500
+    )
 
     # Filter manage
-    disable_filters = models.BooleanField(_("Disable filters"), default=False)
-    apply_filter_enable_products = models.BooleanField(_("Enable products"), default=True)
-    apply_filter_enable_skus = models.BooleanField(_("Enable skus"), default=True)
-    apply_filter_price = models.BooleanField(_("Valid price"), default=True)
-    apply_filter_image = models.BooleanField(_("Valid image"), default=True)
+    disable_filters = models.BooleanField(
+        _("Disable filters"),
+        default=False
+    )
+    apply_filter_enable_products = models.BooleanField(
+        _("Enable products"),
+        default=True
+    )
+    apply_filter_enable_skus = models.BooleanField(
+        _("Enable skus"),
+        default=True
+    )
+    apply_filter_price = models.BooleanField(
+        _("Valid price"),
+        default=True
+    )
+    apply_filter_image = models.BooleanField(
+        _("Valid image"),
+        default=True
+    )
 
     def __str__(self):
         """Return store name."""
@@ -312,12 +369,22 @@ class SaleChannel(BaseAbstract):
     """Trade policy model."""
 
     # Filter data
-    slug_name = models.SlugField(max_length=50, null=True, blank=True)
-    is_active = models.BooleanField(_("Status"), default=False)
+    slug_name = models.SlugField(
+        max_length=50,
+        null=True, blank=True
+    )
+    is_active = models.BooleanField(
+        _("Status"),
+        default=False
+    )
 
     # Relationship filter
-    store = models.ForeignKey("stores.Store", verbose_name=_("Store"), on_delete=models.CASCADE)
-    sellers = models.ManyToManyField("stores.Seller", verbose_name=_("Sellers"))
+    store = models.ForeignKey(
+        "stores.Store", on_delete=models.CASCADE, verbose_name=_("Store")
+    )
+    sellers = models.ManyToManyField(
+        "stores.Seller", verbose_name=_("Sellers")
+    )
 
     def __str__(self):
         """Return store name."""
@@ -333,24 +400,41 @@ class SaleChannel(BaseAbstract):
         default_related_name = 'sales_channel'
 
 
-class Seller(ChatbootModel):
+class Seller(BaseRawAbstract):
     """Seller model."""
 
     # Filter data
-    seller_id = models.CharField(_("Id of seller"), help_text=_("coud be a text instade a number"), max_length=500)
-    name = models.CharField(_("Name of seller"), max_length=500, null=True, blank=True)
-    slug_name = models.SlugField(max_length=50, null=True, blank=True)
-    hibrit_payment_options = models.BooleanField(_("Various forms of payment"), default=False, null=True)
-    is_active = models.BooleanField(_("Status"), default=False)
+    seller_id = models.CharField(
+        _("Id of seller"), help_text=_("coud be a text instade a number"),
+        max_length=500
+    )
+    name = models.CharField(
+        _("Name of seller"),
+        max_length=500,
+        null=True, blank=True
+    )
+    slug_name = models.SlugField(
+        max_length=50,
+        null=True, blank=True
+    )
+    hibrit_payment_options = models.BooleanField(
+        _("Various forms of payment"),
+        default=False, null=True
+    )
+    is_active = models.BooleanField(
+        _("Status"),
+        default=False
+    )
 
     # Relationship filter
-    store = models.ForeignKey("stores.Store", verbose_name=_("Store"), on_delete=models.CASCADE)
+    store = models.ForeignKey(
+        "stores.Store", verbose_name=_("Store"), on_delete=models.CASCADE)
 
     # Extra data
-    description = models.CharField(_("Description of seller"), max_length=500)
-
-    # raw data
-    raw_json = models.JSONField(_("Raw data"))
+    description = models.CharField(
+        _("Description of seller"),
+        max_length=500
+    )
 
     def __str__(self):
         return f'{self.store} | {self.name}'
@@ -365,17 +449,20 @@ class Seller(ChatbootModel):
         default_related_name = 'sellers'
 
 
-class SkuSeller(ChatbootModel):
+class SkuSeller(BaseRawAbstract):
 
     # Filter data
-    is_active = models.BooleanField(_("Status"))
+    is_active = models.BooleanField(
+        _("Status")
+    )
 
     # Relationship filter
-    sku = models.ForeignKey("stores.Skus", verbose_name=_("Sku"), on_delete=models.CASCADE)
-    seller = models.ForeignKey("stores.Seller", verbose_name=_("Seller"), on_delete=models.CASCADE)
-
-    # Raw data
-    raw_json = models.JSONField(_("Raw data"))
+    sku = models.ForeignKey(
+        "stores.Skus", verbose_name=_("Sku"), on_delete=models.CASCADE
+    )
+    seller = models.ForeignKey(
+        "stores.Seller", verbose_name=_("Seller"), on_delete=models.CASCADE
+    )
 
     class Meta:
         verbose_name = 'Sku Seller'

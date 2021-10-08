@@ -10,13 +10,15 @@ from django.db.models import Q, Prefetch
 
 class ProductFilterSet(FilterSet):
 
-    attributes = filters.CharFilter(field_name='name')
+    # attributes = filters.CharFilter(field_name='name')
     stock_quantity = filters.CharFilter(field_name='skus__total_quantity')
 
     class Meta:
         model = Product
         fields = [
-            'search', 'attributes', 'stock_quantity'
+            'search',
+            #  'attributes',
+            'stock_quantity'
         ]
 
 
@@ -28,7 +30,7 @@ def products_skus(self):
     # Apply filter products
     if self.store.apply_filter_enable_products and self.store.apply_filter_enable_skus and self.store.apply_filter_image and self.store.apply_filter_price:
         skus = Skus.objects\
-            .filter(~Q(images=None), ~Q(price=None), *self.skus_filter_data, price__base_price__gt=0, total_quantity__gt=0, is_active=True).distinct('pk')
+            .filter(~Q(images=None), ~Q(price=None), **self.skus_filter_data, price__base_price__gt=0, total_quantity__gt=0, is_active=True).distinct('pk')
         queryset = Product.objects\
             .select_related('department', 'category', 'sub_category', 'brand')\
             .prefetch_related(
@@ -44,7 +46,7 @@ def products_skus(self):
             if self.store.apply_filter_enable_skus:
                 if self.store.apply_filter_image:
                     skus = Skus.objects\
-                        .filter(~Q(images=None), *self.skus_filter_data, total_quantity__gt=0, is_active=True).distinct('pk')
+                        .filter(~Q(images=None), **self.skus_filter_data, total_quantity__gt=0, is_active=True).distinct('pk')
                     queryset = Product.objects\
                         .select_related('department', 'category', 'sub_category', 'brand')\
                         .prefetch_related(
@@ -56,7 +58,7 @@ def products_skus(self):
                         .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True).distinct('external_id').order_by('-external_id')
                 elif self.store.apply_filter_price:
                     skus = Skus.objects\
-                        .filter(~Q(price=None), *self.skus_filter_data, price__base_price__gt=0, total_quantity__gt=0, is_active=True).distinct('pk')
+                        .filter(~Q(price=None), **self.skus_filter_data, price__base_price__gt=0, total_quantity__gt=0, is_active=True).distinct('pk')
                     queryset = Product.objects\
                         .select_related('department', 'category', 'sub_category', 'brand')\
                         .prefetch_related(
@@ -68,7 +70,7 @@ def products_skus(self):
                         .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True).distinct('external_id').order_by('-external_id')
                 else:
                     skus = Skus.objects\
-                        .filter(*self.skus_filter_data, total_quantity__gt=0, is_active=True).distinct('pk')
+                        .filter(**self.skus_filter_data, total_quantity__gt=0, is_active=True).distinct('pk')
                     queryset = Product.objects\
                         .select_related('department', 'category', 'sub_category', 'brand')\
                         .prefetch_related(
@@ -81,7 +83,7 @@ def products_skus(self):
             elif self.store.apply_filter_image:
                 if self.store.apply_filter_price:
                     skus = Skus.objects\
-                        .filter(~Q(images=None), ~Q(price=None), *self.skus_filter_data, price__base_price__gt=0).distinct('pk')
+                        .filter(~Q(images=None), ~Q(price=None), **self.skus_filter_data, price__base_price__gt=0).distinct('pk')
                     queryset = Product.objects\
                         .select_related('department', 'category', 'sub_category', 'brand')\
                         .prefetch_related(
@@ -93,7 +95,7 @@ def products_skus(self):
                         .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True).distinct('external_id').order_by('-external_id')
                 else:
                     skus = Skus.objects\
-                        .filter(~Q(images=None), *self.skus_filter_data).distinct('pk')
+                        .filter(~Q(images=None), **self.skus_filter_data).distinct('pk')
                     queryset = Product.objects\
                         .select_related('department', 'category', 'sub_category', 'brand')\
                         .prefetch_related(
@@ -105,7 +107,7 @@ def products_skus(self):
                         .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True).distinct('external_id').order_by('-external_id')
             elif self.store.apply_filter_price:
                 skus = Skus.objects\
-                    .filter(~Q(price=None), *self.skus_filter_data, price__base_price__gt=0).distinct('pk')
+                    .filter(~Q(price=None), **self.skus_filter_data, price__base_price__gt=0).distinct('pk')
                 queryset = Product.objects\
                     .select_related('department', 'category', 'sub_category', 'brand')\
                     .prefetch_related(
@@ -117,7 +119,7 @@ def products_skus(self):
                     .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True).distinct('external_id').order_by('-external_id')
             else:
                 skus = Skus.objects\
-                    .filter(*self.skus_filter_data)
+                    .filter(**self.skus_filter_data)
                 queryset = Product.objects\
                     .select_related('department', 'category', 'sub_category', 'brand')\
                     .prefetch_related(
@@ -131,7 +133,7 @@ def products_skus(self):
             if self.store.apply_filter_image:
                 if self.store.apply_filter_price:
                     skus = Skus.objects\
-                        .filter(~Q(images=None), ~Q(price=None), *self.skus_filter_data, price__base_price__gt=0, total_quantity__gt=0, is_active=True).distinct('pk')
+                        .filter(~Q(images=None), ~Q(price=None), **self.skus_filter_data, price__base_price__gt=0, total_quantity__gt=0, is_active=True).distinct('pk')
                     queryset = Product.objects\
                         .select_related('department', 'category', 'sub_category', 'brand')\
                         .prefetch_related(
@@ -143,7 +145,7 @@ def products_skus(self):
                         .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store).distinct('external_id').order_by('-external_id')
                 else:
                     skus = Skus.objects\
-                        .filter(~Q(images=None), *self.skus_filter_data, total_quantity__gt=0, is_active=True).distinct('pk')
+                        .filter(~Q(images=None), **self.skus_filter_data, total_quantity__gt=0, is_active=True).distinct('pk')
                     queryset = Product.objects\
                         .select_related('department', 'category', 'sub_category', 'brand')\
                         .prefetch_related(
@@ -155,7 +157,7 @@ def products_skus(self):
                         .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store).distinct('external_id').order_by('-external_id')
             elif self.store.apply_filter_price:
                 skus = Skus.objects\
-                    .filter(~Q(price=None), *self.skus_filter_data, price__base_price__gt=0, total_quantity__gt=0, is_active=True).distinct('pk')
+                    .filter(~Q(price=None), **self.skus_filter_data, price__base_price__gt=0, total_quantity__gt=0, is_active=True).distinct('pk')
                 queryset = Product.objects\
                     .select_related('department', 'category', 'sub_category', 'brand')\
                     .prefetch_related(
@@ -167,7 +169,7 @@ def products_skus(self):
                     .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store).distinct('external_id').order_by('-external_id')
             else:
                 skus = Skus.objects\
-                    .filter(*self.skus_filter_data, total_quantity__gt=0, is_active=True).distinct('pk')
+                    .filter(**self.skus_filter_data, total_quantity__gt=0, is_active=True).distinct('pk')
                 queryset = Product.objects\
                     .select_related('department', 'category', 'sub_category', 'brand')\
                     .prefetch_related(
@@ -180,7 +182,7 @@ def products_skus(self):
         elif self.store.apply_filter_image:
             if self.store.apply_filter_price:
                 skus = Skus.objects\
-                    .filter(~Q(images=None), ~Q(price=None), *self.skus_filter_data, price__base_price__gt=0).distinct('pk')
+                    .filter(~Q(images=None), ~Q(price=None), **self.skus_filter_data, price__base_price__gt=0).distinct('pk')
                 queryset = Product.objects\
                     .select_related('department', 'category', 'sub_category', 'brand')\
                     .prefetch_related(
@@ -193,7 +195,7 @@ def products_skus(self):
 
             else:
                 skus = Skus.objects\
-                    .filter(~Q(images=None), *self.skus_filter_data).distinct('pk')
+                    .filter(~Q(images=None), **self.skus_filter_data).distinct('pk')
                 queryset = Product.objects\
                     .select_related('department', 'category', 'sub_category', 'brand')\
                     .prefetch_related(
@@ -206,7 +208,7 @@ def products_skus(self):
 
         else:
             skus = Skus.objects\
-                .filter(~Q(price=None), *self.skus_filter_data, price__base_price__gt=0).distinct('pk')
+                .filter(~Q(price=None), **self.skus_filter_data, price__base_price__gt=0).distinct('pk')
             queryset = Product.objects\
                 .select_related('department', 'category', 'sub_category', 'brand')\
                 .prefetch_related(
@@ -224,7 +226,7 @@ def products_skus(self):
             .prefetch_related(
                 Prefetch(
                     'skus',
-                    queryset=Skus.objects.filter(*self.skus_filter_data)
+                    queryset=Skus.objects.filter(**self.skus_filter_data)
                 )
             )\
             .filter(store=self.store).order_by('-external_id')
@@ -233,20 +235,8 @@ def products_skus(self):
 
 
 def filter_data_skus(self):
-    data = {key: value for key, value in self.request.GET.items() if key in ('stock_quantity', 'search', 'attributes',)}
-    search_data = []
-
-    search = data.get('search')
-    if search:
-        search_q = Q(search__search=search) | Q(search__icontains=search.replace(',', ' '))
-        search_data.append(search_q)
-    attributes = data.get('attributes')
-    if attributes:
-        attributes_q = Q(search_attributes__search=attributes) | Q(search_attributes__icontains=attributes.replace(',', ' '))
-        search_data.append(attributes_q)
-    total_quantity = data.get('stock_quantity')
-    if total_quantity:
-        total_quantity_q = Q(total_quantity=total_quantity)
-        search_data.append(total_quantity_q)
-
-    return search_data
+    return {
+        # 'search_attributes' if key == 'attributes' else\
+        'search_vector' if key == 'search' else\
+        'total_quantity': value for key, value in self.request.GET.items() if key in ('stock_quantity', 'search',)
+    }
