@@ -2,11 +2,10 @@
 
 # Django Rest Framework
 from django.db.models import Prefetch
-from chatbot_commerce.stores.models.skus import Attribute, AttributeType, Skus
-from chatbot_commerce.stores.models.products import Brand
 from rest_framework.generics import get_object_or_404
 from rest_framework import viewsets, mixins
 from rest_framework.response import Response
+from django.http import HttpResponseBadRequest
 from rest_framework.status import HTTP_200_OK, HTTP_404_NOT_FOUND
 
 # Serializers
@@ -19,11 +18,10 @@ from rest_framework.permissions import IsAdminUser
 # Filters
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
-from chatbot_commerce.stores.filters import ProductFilterSet
-from chatbot_commerce.stores.filters import products_skus, filter_data_skus
+from chatbot_commerce.stores.filters import ProductFilterSet, products_skus, count_products
 
 # Models
-from chatbot_commerce.stores.models import Product, Department, Store
+from chatbot_commerce.stores.models import Product, Department, Store, Attribute, AttributeType, Skus, Brand
 
 # Runtime
 # from db_python import query_debugger
@@ -43,6 +41,37 @@ class ProductViewset(mixins.RetrieveModelMixin,
     def dispatch(self, request, *args, **kwargs):
         slug_name = kwargs['store_slug_name']
         self.store = get_object_or_404(Store, slug_name=slug_name)
+        self.skus_filter_data = {
+            # 'search_attributes' if key == 'attributes' else\
+            'search_vector' if key == 'search' else\
+            'total_quantity' if key == 'stock_quantity' else\
+            key: value for key, value in self.request.GET.items() if key in ('stock_quantity', 'search', 'offset', 'limit', 'page')
+        }
+
+        if 'limit' in self.skus_filter_data:
+            limit = int(self.skus_filter_data.pop('limit'))
+        else:
+            limit = 50
+
+        if 'offset' in self.skus_filter_data:
+            q_offset = int(self.skus_filter_data.pop('offset'))
+        else:
+            q_offset=0
+
+        self.page = 1
+        if 'page' in self.skus_filter_data:
+            try:
+                page = int(self.skus_filter_data.pop('page'))
+                if page > 0:
+                    self.page = page
+                if page <= 0:
+                    raise Exception('Number must be a positive int() with base 10: page > 0')
+            except Exception as error:
+                return HttpResponseBadRequest(error)
+        self.next_page = self.page + 1
+        self.previous_page = self.page - 1
+        self.offset = q_offset + limit*(self.page - 1)
+        self.limit = self.offset + limit
         return super().dispatch(request, *args, **kwargs)
 
     # @query_debugger
@@ -53,10 +82,46 @@ class ProductViewset(mixins.RetrieveModelMixin,
         search = Put a keyword like name category or department to filter whith it
         example... search = jeans azul L
         """
-        self.skus_filter_data = filter_data_skus(self)
-        self.queryset = products_skus(self)
-        serializer = self.get_serializer(self.paginate_queryset(self.queryset), many=True)
-        paginated_data = self.get_paginated_response(serializer.data).data
+        serializer = self.get_serializer(products_skus(self), many=True)
+        page_size = len(serializer.data)
+        try:
+            assert(page_size>0)
+        except AssertionError:
+            return HttpResponseBadRequest(Exception('Page not found remember next time use a lower page number'))
+
+        standar_page_size = self.limit - self.offset
+
+        base_url = self.request.build_absolute_uri()
+        count = count_products(self)
+        if standar_page_size*self.page == count:
+            next_link = None
+        else:
+            if page_size == self.limit - self.offset:
+                if f'page={self.page}' in base_url:
+                    next_link = base_url.replace(f'page={self.page}', f'page={self.next_page}')
+                elif '?' in base_url:
+                    next_link = base_url.replace('?', f'?page={self.next_page}&')
+                else:
+                    next_link = '/?'.join((base_url, f'page={self.next_page}',))
+            else:
+                next_link = None
+        if self.previous_page > 0:
+            if f'page={self.page}' in base_url:
+                previous_link = base_url.replace(f'page={self.page}', f'page={self.previous_page}')
+            elif '?' in base_url:
+                previous_link = base_url.replace('?', f'?page={self.previous_page}&')
+            else:
+                previous_link = '/?'.join((base_url, f'page={self.previous_page}',))
+        else:
+            previous_link = None
+
+        paginated_data = {
+            'count': count,
+            'page_size': page_size,
+            'next_link': next_link,
+            'previous_link': previous_link,
+            'results': serializer.data
+        }
         return Response(data=paginated_data, status=HTTP_200_OK)
 
     # @query_debugger
@@ -67,7 +132,6 @@ class ProductViewset(mixins.RetrieveModelMixin,
         Parameters.
         """
         try:
-            skus_filter_data = filter_data_skus(self)
             return Response(
                 self.get_serializer(
                     Product.objects
@@ -76,7 +140,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
                         Prefetch(
                             'skus',
                             queryset=Skus.objects
-                            .filter(**skus_filter_data)
+                            .filter(**self.skus_filter_data)
                         ),
                     )
                     .get(store=self.store, external_id=kwargs['pk'])
