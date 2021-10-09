@@ -237,6 +237,7 @@ def products_skus(self):
 
     return queryset
 
+
 def count_products(self):
     """
     Plane function of apply_filters of model Store.

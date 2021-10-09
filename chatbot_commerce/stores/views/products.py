@@ -56,7 +56,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
         if 'offset' in self.skus_filter_data:
             q_offset = int(self.skus_filter_data.pop('offset'))
         else:
-            q_offset=0
+            q_offset = 0
 
         self.page = 1
         if 'page' in self.skus_filter_data:
@@ -85,7 +85,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
         serializer = self.get_serializer(products_skus(self), many=True)
         page_size = len(serializer.data)
         try:
-            assert(page_size>0)
+            assert(page_size > 0)
         except AssertionError:
             return HttpResponseBadRequest(Exception('Page not found remember next time use a lower page number'))
 
