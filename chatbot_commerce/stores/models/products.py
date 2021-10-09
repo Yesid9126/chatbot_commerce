@@ -30,7 +30,7 @@ class Product(AbstractCategory):
     )
     is_active = models.BooleanField(
         _('Is active'),
-        default=True, db_index=True
+        default=True,
     )
     show_without_stock = models.BooleanField(
         _('Without stock'),
@@ -55,7 +55,7 @@ class Product(AbstractCategory):
     store = models.ForeignKey(
         to='stores.Store',
         on_delete=models.CASCADE,
-        null=True, blank=True, db_index=True
+        null=True, blank=True,
     )
     department = models.ForeignKey(
         to='stores.Department',
@@ -106,3 +106,4 @@ class Product(AbstractCategory):
         verbose_name = "Product"
         verbose_name_plural = "Product"
         default_related_name = 'products'
+        indexes = [models.Index(fields=['is_active', 'external_id'])]

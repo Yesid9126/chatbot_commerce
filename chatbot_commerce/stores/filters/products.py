@@ -26,7 +26,7 @@ class ProductFilterSet(FilterSet):
         ]
 
 
-def products_skus(self):
+def products_skus(self, store_pk):
     """
     Plane function of apply_filters of model Store.
     """
@@ -43,7 +43,7 @@ def products_skus(self):
                     queryset=skus
                 )
             )\
-            .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True).distinct('external_id').order_by('-external_id')[self.offset:self.limit]
+            .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store_id=store_pk, is_active=True).distinct('external_id').order_by('-external_id')[self.offset:self.limit]
 
     elif self.store.apply_filter_enable_products or self.store.apply_filter_enable_skus or self.store.apply_filter_image or self.store.apply_filter_price:
         if self.store.apply_filter_enable_products:
@@ -59,7 +59,7 @@ def products_skus(self):
                                 queryset=skus
                             )
                         )\
-                        .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True).distinct('external_id').order_by('-external_id')[self.offset:self.limit]
+                        .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store_id=store_pk, is_active=True).distinct('external_id').order_by('-external_id')[self.offset:self.limit]
                 elif self.store.apply_filter_price:
                     skus = Skus.objects\
                         .filter(~Q(price=None), **self.skus_filter_data, price__base_price__gt=0, total_quantity__gt=0, is_active=True).distinct('pk')
@@ -71,7 +71,7 @@ def products_skus(self):
                                 queryset=skus
                             )
                         )\
-                        .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True).distinct('external_id').order_by('-external_id')[self.offset:self.limit]
+                        .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store_id=store_pk, is_active=True).distinct('external_id').order_by('-external_id')[self.offset:self.limit]
                 else:
                     skus = Skus.objects\
                         .filter(**self.skus_filter_data, total_quantity__gt=0, is_active=True).distinct('pk')
@@ -83,7 +83,7 @@ def products_skus(self):
                                 queryset=skus
                             )
                         )\
-                        .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True).distinct('external_id').order_by('-external_id')[self.offset:self.limit]
+                        .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store_id=store_pk, is_active=True).distinct('external_id').order_by('-external_id')[self.offset:self.limit]
             elif self.store.apply_filter_image:
                 if self.store.apply_filter_price:
                     skus = Skus.objects\
@@ -96,7 +96,7 @@ def products_skus(self):
                                 queryset=skus
                             )
                         )\
-                        .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True).distinct('external_id').order_by('-external_id')[self.offset:self.limit]
+                        .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store_id=store_pk, is_active=True).distinct('external_id').order_by('-external_id')[self.offset:self.limit]
                 else:
                     skus = Skus.objects\
                         .filter(~Q(images=None), **self.skus_filter_data).distinct('pk')
@@ -108,7 +108,7 @@ def products_skus(self):
                                 queryset=skus
                             )
                         )\
-                        .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True).distinct('external_id').order_by('-external_id')[self.offset:self.limit]
+                        .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store_id=store_pk, is_active=True).distinct('external_id').order_by('-external_id')[self.offset:self.limit]
             elif self.store.apply_filter_price:
                 skus = Skus.objects\
                     .filter(~Q(price=None), **self.skus_filter_data, price__base_price__gt=0).distinct('pk')
@@ -120,7 +120,7 @@ def products_skus(self):
                             queryset=skus
                         )
                     )\
-                    .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True).distinct('external_id').order_by('-external_id')[self.offset:self.limit]
+                    .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store_id=store_pk, is_active=True).distinct('external_id').order_by('-external_id')[self.offset:self.limit]
             else:
                 skus = Skus.objects\
                     .filter(**self.skus_filter_data)
@@ -132,7 +132,7 @@ def products_skus(self):
                             queryset=skus
                         )
                     )\
-                    .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True).distinct('external_id').order_by('-external_id')[self.offset:self.limit]
+                    .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store_id=store_pk, is_active=True).distinct('external_id').order_by('-external_id')[self.offset:self.limit]
         elif self.store.apply_filter_enable_skus:
             if self.store.apply_filter_image:
                 if self.store.apply_filter_price:
@@ -146,7 +146,7 @@ def products_skus(self):
                                 queryset=skus
                             )
                         )\
-                        .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store).distinct('external_id').order_by('-external_id')[self.offset:self.limit]
+                        .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store_id=store_pk).distinct('external_id').order_by('-external_id')[self.offset:self.limit]
                 else:
                     skus = Skus.objects\
                         .filter(~Q(images=None), **self.skus_filter_data, total_quantity__gt=0, is_active=True).distinct('pk')
@@ -158,7 +158,7 @@ def products_skus(self):
                                 queryset=skus
                             )
                         )\
-                        .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store).distinct('external_id').order_by('-external_id')[self.offset:self.limit]
+                        .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store_id=store_pk).distinct('external_id').order_by('-external_id')[self.offset:self.limit]
             elif self.store.apply_filter_price:
                 skus = Skus.objects\
                     .filter(~Q(price=None), **self.skus_filter_data, price__base_price__gt=0, total_quantity__gt=0, is_active=True).distinct('pk')
@@ -170,7 +170,7 @@ def products_skus(self):
                             queryset=skus
                         )
                     )\
-                    .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store).distinct('external_id').order_by('-external_id')[self.offset:self.limit]
+                    .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store_id=store_pk).distinct('external_id').order_by('-external_id')[self.offset:self.limit]
             else:
                 skus = Skus.objects\
                     .filter(**self.skus_filter_data, total_quantity__gt=0, is_active=True).distinct('pk')
@@ -182,7 +182,7 @@ def products_skus(self):
                             queryset=skus
                         )
                     )\
-                    .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store).distinct('external_id').order_by('-external_id')[self.offset:self.limit]
+                    .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store_id=store_pk).distinct('external_id').order_by('-external_id')[self.offset:self.limit]
         elif self.store.apply_filter_image:
             if self.store.apply_filter_price:
                 skus = Skus.objects\
@@ -195,7 +195,7 @@ def products_skus(self):
                             queryset=skus
                         )
                     )\
-                    .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store).distinct('external_id').order_by('-external_id')[self.offset:self.limit]
+                    .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store_id=store_pk).distinct('external_id').order_by('-external_id')[self.offset:self.limit]
 
             else:
                 skus = Skus.objects\
@@ -208,7 +208,7 @@ def products_skus(self):
                             queryset=skus
                         )
                     )\
-                    .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store).distinct('external_id').order_by('-external_id')[self.offset:self.limit]
+                    .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store_id=store_pk).distinct('external_id').order_by('-external_id')[self.offset:self.limit]
 
         else:
             skus = Skus.objects\
@@ -221,7 +221,7 @@ def products_skus(self):
                         queryset=skus
                     )
                 )\
-                .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store).distinct('external_id').order_by('-external_id')[self.offset:self.limit]
+                .filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store_id=store_pk).distinct('external_id').order_by('-external_id')[self.offset:self.limit]
 
     else:
 
@@ -233,74 +233,73 @@ def products_skus(self):
                     queryset=Skus.objects.filter(**self.skus_filter_data)
                 )
             )\
-            .filter(store=self.store).order_by('-external_id')[self.offset:self.limit]
+            .filter(store_id=store_pk).order_by('-external_id')[self.offset:self.limit]
 
     return queryset
 
 
-def count_products(self):
+def count_products(self, store_pk):
     """
     Plane function of apply_filters of model Store.
     """
-
     # Apply filter products
     if self.store.apply_filter_enable_products and self.store.apply_filter_enable_skus and self.store.apply_filter_image and self.store.apply_filter_price:
         skus = Skus.objects.filter(~Q(images=None), ~Q(price=None), **self.skus_filter_data, price__base_price__gt=0, total_quantity__gt=0, is_active=True).values_list('pk', flat=True)
-        count = Product.objects.filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True).distinct('pk').values_list('pk', flat=True).count()
+        count = Product.objects.filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store_id=store_pk, is_active=True).distinct('pk').values_list('pk', flat=True)
 
     elif self.store.apply_filter_enable_products or self.store.apply_filter_enable_skus or self.store.apply_filter_image or self.store.apply_filter_price:
         if self.store.apply_filter_enable_products:
             if self.store.apply_filter_enable_skus:
                 if self.store.apply_filter_image:
                     skus = Skus.objects.filter(~Q(images=None), **self.skus_filter_data, total_quantity__gt=0, is_active=True).values_list('pk', flat=True)
-                    count = Product.objects.filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True).distinct('pk').values_list('pk', flat=True).count()
+                    count = Product.objects.filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store_id=store_pk, is_active=True).distinct('pk').values_list('pk', flat=True)
                 elif self.store.apply_filter_price:
                     skus = Skus.objects.filter(~Q(price=None), **self.skus_filter_data, price__base_price__gt=0, total_quantity__gt=0, is_active=True).values_list('pk', flat=True)
-                    count = Product.objects.filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True).distinct('pk').values_list('pk', flat=True).count()
+                    count = Product.objects.filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store_id=store_pk, is_active=True).distinct('pk').values_list('pk', flat=True)
                 else:
                     skus = Skus.objects.filter(**self.skus_filter_data, total_quantity__gt=0, is_active=True).values_list('pk', flat=True)
-                    count = Product.objects.filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True).distinct('pk').values_list('pk', flat=True).count()
+                    count = Product.objects.filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store_id=store_pk, is_active=True).distinct('pk').values_list('pk', flat=True)
             elif self.store.apply_filter_image:
                 if self.store.apply_filter_price:
                     skus = Skus.objects.filter(~Q(images=None), ~Q(price=None), **self.skus_filter_data, price__base_price__gt=0).values_list('pk', flat=True)
-                    count = Product.objects.filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True).distinct('pk').values_list('pk', flat=True).count()
+                    count = Product.objects.filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store_id=store_pk, is_active=True).distinct('pk').values_list('pk', flat=True)
                 else:
                     skus = Skus.objects.filter(~Q(images=None), **self.skus_filter_data).values_list('pk', flat=True)
-                    count = Product.objects.filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True).distinct('pk').values_list('pk', flat=True).count()
+                    count = Product.objects.filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store_id=store_pk, is_active=True).distinct('pk').values_list('pk', flat=True)
             elif self.store.apply_filter_price:
                 skus = Skus.objects.filter(~Q(price=None), **self.skus_filter_data, price__base_price__gt=0).values_list('pk', flat=True)
-                count = Product.objects.filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True).distinct('pk').values_list('pk', flat=True).count()
+                count = Product.objects.filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store_id=store_pk, is_active=True).distinct('pk').values_list('pk', flat=True)
             else:
                 skus = Skus.objects.filter(**self.skus_filter_data).values_list('pk', flat=True)
-                count = Product.objects.filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store, is_active=True).distinct('pk').values_list('pk', flat=True).count()
+                count = Product.objects.filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store_id=store_pk, is_active=True).distinct('pk').values_list('pk', flat=True)
         elif self.store.apply_filter_enable_skus:
             if self.store.apply_filter_image:
                 if self.store.apply_filter_price:
                     skus = Skus.objects.filter(~Q(images=None), ~Q(price=None), **self.skus_filter_data, price__base_price__gt=0, total_quantity__gt=0, is_active=True).values_list('pk', flat=True)
-                    count = Product.objects.filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store).distinct('pk').values_list('pk', flat=True).count()
+                    count = Product.objects.filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store_id=store_pk).distinct('pk').values_list('pk', flat=True)
                 else:
                     skus = Skus.objects.filter(~Q(images=None), **self.skus_filter_data, total_quantity__gt=0, is_active=True).values_list('pk', flat=True)
-                    count = Product.objects.filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store).distinct('pk').values_list('pk', flat=True).count()
+                    count = Product.objects.filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store_id=store_pk).distinct('pk').values_list('pk', flat=True)
             elif self.store.apply_filter_price:
                 skus = Skus.objects.filter(~Q(price=None), **self.skus_filter_data, price__base_price__gt=0, total_quantity__gt=0, is_active=True).values_list('pk', flat=True)
-                count = Product.objects.filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store).distinct('pk').values_list('pk', flat=True).count()
+                count = Product.objects.filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store_id=store_pk).distinct('pk').values_list('pk', flat=True)
             else:
                 skus = Skus.objects.filter(**self.skus_filter_data, total_quantity__gt=0, is_active=True).values_list('pk', flat=True)
-                count = Product.objects.filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store).distinct('pk').values_list('pk', flat=True).count()
+                count = Product.objects.filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store_id=store_pk).distinct('pk').values_list('pk', flat=True)
         elif self.store.apply_filter_image:
             if self.store.apply_filter_price:
                 skus = Skus.objects.filter(~Q(images=None), ~Q(price=None), **self.skus_filter_data, price__base_price__gt=0).values_list('pk', flat=True)
-                count = Product.objects.filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store).distinct('pk').values_list('pk', flat=True).count()
+                count = Product.objects.filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store_id=store_pk).distinct('pk').values_list('pk', flat=True)
 
             else:
                 skus = Skus.objects.filter(~Q(images=None), **self.skus_filter_data).values_list('pk', flat=True)
-                count = Product.objects.filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store).distinct('pk').values_list('pk', flat=True).count()
+                count = Product.objects.filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store_id=store_pk).distinct('pk').values_list('pk', flat=True)
 
         else:
             skus = Skus.objects.filter(~Q(price=None), **self.skus_filter_data, price__base_price__gt=0).values_list('pk', flat=True)
-            count = Product.objects.filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store=self.store).distinct('pk').values_list('pk', flat=True).count()
+            count = Product.objects.filter(Q(Q(skus__in=skus) & ~Q(skus=None)), store_id=store_pk).distinct('pk').values_list('pk', flat=True)
 
     else:
-        count = Product.objects.filter(store=self.store).values_list('pk', flat=True).count()
+        count = Product.objects.filter(store_id=store_pk).values_list('pk', flat=True)
 
     return count

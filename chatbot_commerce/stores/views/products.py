@@ -82,13 +82,23 @@ class ProductViewset(mixins.RetrieveModelMixin,
         search = Put a keyword like name category or department to filter whith it
         example... search = jeans azul L
         """
-        serializer = self.get_serializer(products_skus(self), many=True)
-
-        standar_page_size = self.limit - self.offset
+        store_pk = self.store.pk
 
         base_url = self.request.build_absolute_uri()
-        count = count_products(self)
-        if standar_page_size*self.page >= count:
+        page_size = self.limit - self.offset
+        count = len(count_products(self, store_pk=store_pk))
+        actual_size = page_size*self.page
+        if actual_size > count:
+            differ = actual_size - count
+            actual_size -= differ
+            page_size -= differ
+        try:
+            assert(page_size>0)
+        except AssertionError:
+            return HttpResponseBadRequest(Exception('Page not found please next time use a lower number page: 0 < page'))
+        serializer = self.get_serializer(products_skus(self, store_pk=store_pk), many=True)
+
+        if actual_size >= count:
             next_link = None
         elif f'page={self.page}' in base_url:
             next_link = base_url.replace(f'page={self.page}', f'page={self.next_page}')
@@ -108,6 +118,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
 
         paginated_data = {
             'count': count,
+            'page_size': page_size,
             'next_link': next_link,
             'previous_link': previous_link,
             'results': serializer.data

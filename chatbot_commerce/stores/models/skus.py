@@ -17,7 +17,7 @@ class Skus(BaseAbstract):
     # Filter data
     is_active = models.BooleanField(
         'Active sku',
-        default=False, null=True, blank=True, db_index=True
+        default=False, null=True, blank=True,
     )
     is_inventoried = models.BooleanField(
         default=False, null=True, blank=True
@@ -48,7 +48,7 @@ class Skus(BaseAbstract):
     # Relationship filter
     product = models.ForeignKey(
         to='stores.Product', on_delete=models.CASCADE,
-        null=True, blank=True, db_index=True
+        null=True, blank=True,
     )
     sales_channels = models.ManyToManyField(
         "stores.SaleChannel", verbose_name=_("Sales channel's")
@@ -123,6 +123,7 @@ class Skus(BaseAbstract):
         verbose_name = "Sku"
         verbose_name_plural = "Sku's"
         default_related_name = 'skus'
+        indexes = [models.Index(fields=['is_active', 'external_id'])]
 
 
 class Image(ChatbootModel):
