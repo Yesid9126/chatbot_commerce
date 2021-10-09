@@ -66,7 +66,7 @@ admin.site.unregister(APIKey)
 class StoreAPIKeyAdmin(APIKeyModelAdmin):
     """Store api key model admin."""
 
-    list_display = ('is_active', 'email_status', *APIKeyModelAdmin.list_display, 'email',)
-    list_filter = ('is_active', 'email_status', 'revoked',)
+    list_display = ('is_active', 'verify', *APIKeyModelAdmin.list_display, 'email',)
+    list_filter = ('is_active', 'verify', 'revoked',)
     list_display_links = ('prefix',)
     search_fields = ('name',)

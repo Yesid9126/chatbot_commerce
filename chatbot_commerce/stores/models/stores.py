@@ -42,7 +42,7 @@ class StoreAPIKeyManager(BaseAPIKeyManager):
     key_generator = MyKeyGenerator()
 
     def get_usable_keys(self) -> models.QuerySet:
-        return self.filter(revoked=False, is_active=True, email_status=True)
+        return self.filter(revoked=False, is_active=True, verify=True)
 
     def my_assign_key(self, obj: "StoreAPIKey", key: str, store_name: str) -> str:
         try:
@@ -167,8 +167,8 @@ class StoreAPIKey(AbstractAPIKey):
         _("E-mail"),
         max_length=254
     )
-    email_status = models.BooleanField(
-        _("Status email"),
+    verify = models.BooleanField(
+        _("Verify"),
         default=False, editable=False
     )
 
@@ -216,7 +216,7 @@ class StoreAPIKey(AbstractAPIKey):
             email.attach_alternative(content, 'text/html')
             email.send()
 
-            self.email_status = False
+            self.verify = False
 
         super().save(*args, **kwargs)
         self.__original_email = self.email

@@ -16,7 +16,7 @@ def email_is_active(request, uidb64, token):
     except(TypeError, ValueError, OverflowError, StoreAPIKey.DoesNotExist):
         store_api = None
     if store_api and api_key_activation_token.check_token(store_api, token):
-        store_api.email_status = True
+        store_api.verify = True
         store_api.save()
         return redirect(f'http://{settings.HOST}/successfuly/email/')
     return HttpResponse('Activation link is invalid!')
