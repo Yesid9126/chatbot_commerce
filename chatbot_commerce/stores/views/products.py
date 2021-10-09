@@ -83,28 +83,19 @@ class ProductViewset(mixins.RetrieveModelMixin,
         example... search = jeans azul L
         """
         serializer = self.get_serializer(products_skus(self), many=True)
-        page_size = len(serializer.data)
-        try:
-            assert(page_size > 0)
-        except AssertionError:
-            return HttpResponseBadRequest(Exception('Page not found remember next time use a lower page number'))
 
         standar_page_size = self.limit - self.offset
 
         base_url = self.request.build_absolute_uri()
         count = count_products(self)
-        if standar_page_size*self.page == count:
+        if standar_page_size*self.page >= count:
             next_link = None
+        elif f'page={self.page}' in base_url:
+            next_link = base_url.replace(f'page={self.page}', f'page={self.next_page}')
+        elif '?' in base_url:
+            next_link = base_url.replace('?', f'?page={self.next_page}&')
         else:
-            if page_size == self.limit - self.offset:
-                if f'page={self.page}' in base_url:
-                    next_link = base_url.replace(f'page={self.page}', f'page={self.next_page}')
-                elif '?' in base_url:
-                    next_link = base_url.replace('?', f'?page={self.next_page}&')
-                else:
-                    next_link = '/?'.join((base_url, f'page={self.next_page}',))
-            else:
-                next_link = None
+            next_link = '/?'.join((base_url, f'page={self.next_page}',))
         if self.previous_page > 0:
             if f'page={self.page}' in base_url:
                 previous_link = base_url.replace(f'page={self.page}', f'page={self.previous_page}')
@@ -117,7 +108,6 @@ class ProductViewset(mixins.RetrieveModelMixin,
 
         paginated_data = {
             'count': count,
-            'page_size': page_size,
             'next_link': next_link,
             'previous_link': previous_link,
             'results': serializer.data
