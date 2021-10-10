@@ -33,10 +33,12 @@ CACHES = {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             # Mimicing memcache behavior.
             # https://github.com/jazzband/django-redis#memcached-exceptions-behavior
-            "IGNORE_EXCEPTIONS": False,
+            "IGNORE_EXCEPTIONS": True,
         },
     }
 }
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+SESSION_CACHE_ALIAS = "default"
 
 # SECURITY
 # ------------------------------------------------------------------------------

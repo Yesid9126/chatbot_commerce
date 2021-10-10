@@ -105,7 +105,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
         elif '?' in base_url:
             next_link = base_url.replace('?', f'?page={self.next_page}&')
         else:
-            next_link = '/?'.join((base_url, f'page={self.next_page}',))
+            next_link = '?'.join((base_url, f'page={self.next_page}',))
         if self.previous_page > 0:
             if f'page={self.page}' in base_url:
                 previous_link = base_url.replace(f'page={self.page}', f'page={self.previous_page}')
