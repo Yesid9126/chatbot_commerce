@@ -96,7 +96,6 @@ class ProductViewset(mixins.RetrieveModelMixin,
         #     actual_size -= differ
         #     page_size -= differ
         data = self.get_serializer(products_skus(self, store_pk=store_pk), many=True).data
-        print('6')
         try:
             assert(data != [])
         except AssertionError:
@@ -112,7 +111,6 @@ class ProductViewset(mixins.RetrieveModelMixin,
             'previous_link': previous_link,
             'results': data
         }
-        print('7')
         return Response(data=paginated_data, status=HTTP_200_OK)
 
     # @query_debugger
