@@ -25,7 +25,7 @@ class FasterPagenumberPagination(PageNumberPagination):
         )
 
 
-def page_url(page: int, base_url: str) -> typing.Tuple[str, str]:
+def page_url(page: int, base_url: str):
     next_page = page + 1
     if f'page={page}' in base_url:
         next_link = base_url.replace(f'page={page}', f'page={next_page}')

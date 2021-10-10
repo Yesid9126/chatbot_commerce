@@ -112,6 +112,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
             'previous_link': previous_link,
             'results': data
         }
+        print('7')
         return Response(data=paginated_data, status=HTTP_200_OK)
 
     # @query_debugger
