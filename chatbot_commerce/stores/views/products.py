@@ -18,10 +18,13 @@ from rest_framework.permissions import IsAdminUser
 # Filters
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
-from chatbot_commerce.stores.filters import ProductFilterSet, products_skus, count_products
+from chatbot_commerce.stores.filters import ProductFilterSet, products_skus
 
 # Models
 from chatbot_commerce.stores.models import Product, Department, Store, Attribute, AttributeType, Skus, Brand
+
+# Paginator
+from chatbot_commerce.utils.paginators import page_url
 
 # Runtime
 # from db_python import query_debugger
@@ -59,15 +62,15 @@ class ProductViewset(mixins.RetrieveModelMixin,
             q_offset = 0
 
         self.page = 1
+        self.page_error = Exception('Page not found try with a number int() with base 10: page > 0')
         if 'page' in self.skus_filter_data:
             try:
                 page = int(self.skus_filter_data.pop('page'))
-                if page > 0:
+                assert(page >= 1)
+                if page > 1:
                     self.page = page
-                if page <= 0:
-                    raise Exception('Number must be a positive int() with base 10: page > 0')
-            except Exception as error:
-                return HttpResponseBadRequest(error)
+            except (AssertionError, TypeError, ValueError) as error:
+                return HttpResponseBadRequest(self.page_error)
         self.next_page = self.page + 1
         self.previous_page = self.page - 1
         self.offset = q_offset + limit*(self.page - 1)
@@ -85,43 +88,28 @@ class ProductViewset(mixins.RetrieveModelMixin,
         store_pk = self.store.pk
 
         base_url = self.request.build_absolute_uri()
-        page_size = self.limit - self.offset
-        count = len(count_products(self, store_pk=store_pk))
-        actual_size = page_size*self.page
-        if actual_size > count:
-            differ = actual_size - count
-            actual_size -= differ
-            page_size -= differ
+        # page_size = self.limit - self.offset
+        # count = len(count_products(self, store_pk=store_pk))
+        # actual_size = page_size*self.page
+        # if actual_size > count:
+        #     differ = actual_size - count
+        #     actual_size -= differ
+        #     page_size -= differ
+        data = self.get_serializer(products_skus(self, store_pk=store_pk), many=True).data
         try:
-            assert(page_size>0)
+            assert(data != [])
         except AssertionError:
-            return HttpResponseBadRequest(Exception('Page not found please next time use a lower number page: 0 < page'))
-        serializer = self.get_serializer(products_skus(self, store_pk=store_pk), many=True)
-
-        if actual_size >= count:
-            next_link = None
-        elif f'page={self.page}' in base_url:
-            next_link = base_url.replace(f'page={self.page}', f'page={self.next_page}')
-        elif '?' in base_url:
-            next_link = base_url.replace('?', f'?page={self.next_page}&')
-        else:
-            next_link = '?'.join((base_url, f'page={self.next_page}',))
-        if self.previous_page > 0:
-            if f'page={self.page}' in base_url:
-                previous_link = base_url.replace(f'page={self.page}', f'page={self.previous_page}')
-            elif '?' in base_url:
-                previous_link = base_url.replace('?', f'?page={self.previous_page}&')
-            else:
-                previous_link = '/?'.join((base_url, f'page={self.previous_page}',))
-        else:
-            previous_link = None
-
+            return HttpResponseBadRequest(self.page_error)
+        # if actual_size >= count:
+        #     next_link = None
+        
+        # else:
+        #     previous_link = None
+        next_link, previous_link = page_url(page=self.page, base_url=base_url)
         paginated_data = {
-            'count': count,
-            'page_size': page_size,
             'next_link': next_link,
             'previous_link': previous_link,
-            'results': serializer.data
+            'results': data
         }
         return Response(data=paginated_data, status=HTTP_200_OK)
 
