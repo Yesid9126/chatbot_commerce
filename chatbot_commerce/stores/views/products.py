@@ -96,6 +96,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
         #     actual_size -= differ
         #     page_size -= differ
         data = self.get_serializer(products_skus(self, store_pk=store_pk), many=True).data
+        print('6')
         try:
             assert(data != [])
         except AssertionError:

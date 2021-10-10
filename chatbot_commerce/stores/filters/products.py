@@ -170,5 +170,5 @@ def products_skus(self, store_pk):
                 )
             )\
             .filter(pk__in=products_pk).order_by('-external_id')
-
+    print('5')
     return queryset
