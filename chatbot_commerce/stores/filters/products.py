@@ -33,10 +33,13 @@ def products_skus(self, store_pk):
 
     # Apply filter products
     if self.store.apply_filter_enable_products and self.store.apply_filter_enable_skus and self.store.apply_filter_image and self.store.apply_filter_price:
+        print('1')
         skus_pk = Skus.objects\
             .filter(~Q(images=None), ~Q(price=None), **self.skus_filter_data, price__base_price__gt=0, total_quantity__gt=0, is_active=True)\
             .values_list('pk', flat=True).distinct('pk')
-        products_pk = Product.objects.filter(store_id=store_pk, skus__in=skus_pk, is_active=True).values_list('pk', flat=True).distinct('pk')[self.offset:self.limit]
+        print('2')
+        products_pk = Product.objects.filter(store_id=store_pk, skus__pk__in=skus_pk, is_active=True).values_list('pk', flat=True).distinct('pk')[self.offset:self.limit]
+        print('3')
         queryset = Product.objects\
             .select_related('department', 'category', 'sub_category', 'brand')\
             .prefetch_related(
@@ -46,6 +49,7 @@ def products_skus(self, store_pk):
                 )
             )\
             .filter(pk__in=products_pk).order_by('-external_id')
+        print('4')
 
     elif self.store.apply_filter_enable_products or self.store.apply_filter_enable_skus or self.store.apply_filter_image or self.store.apply_filter_price:
         if self.store.apply_filter_enable_products:
@@ -79,7 +83,7 @@ def products_skus(self, store_pk):
                 skus_pk = Skus.objects\
                     .filter(**self.skus_filter_data)\
                     .values_list('pk', flat=True).distinct('pk')
-            products_pk = Product.objects.filter(skus__in=skus_pk, store_id=store_pk, is_active=True).values_list('pk', flat=True).distinct('pk')[self.offset:self.limit]
+            products_pk = Product.objects.filter(skus__pk__in=skus_pk, store_id=store_pk, is_active=True).values_list('pk', flat=True).distinct('pk')[self.offset:self.limit]
             queryset = Product.objects\
                 .select_related('department', 'category', 'sub_category', 'brand')\
                 .prefetch_related(
@@ -107,7 +111,7 @@ def products_skus(self, store_pk):
                 skus_pk = Skus.objects\
                     .filter(**self.skus_filter_data, total_quantity__gt=0, is_active=True)\
                     .values_list('pk', flat=True).distinct('pk')
-            products_pk = Product.objects.filter(skus__in=skus_pk, store_id=store_pk).values_list('pk', flat=True).distinct('pk')[self.offset:self.limit]
+            products_pk = Product.objects.filter(skus__pk__in=skus_pk, store_id=store_pk).values_list('pk', flat=True).distinct('pk')[self.offset:self.limit]
             queryset = Product.objects\
                 .select_related('department', 'category', 'sub_category', 'brand')\
                 .prefetch_related(
@@ -126,7 +130,7 @@ def products_skus(self, store_pk):
                 skus_pk = Skus.objects\
                     .filter(~Q(images=None), **self.skus_filter_data)\
                     .values_list('pk', flat=True).distinct('pk')
-            products_pk = Product.objects.filter(skus__in=skus_pk, store_id=store_pk).values_list('pk', flat=True).distinct('pk')[self.offset:self.limit]
+            products_pk = Product.objects.filter(skus__pk__in=skus_pk, store_id=store_pk).values_list('pk', flat=True).distinct('pk')[self.offset:self.limit]
             queryset = Product.objects\
                 .select_related('department', 'category', 'sub_category', 'brand')\
                 .prefetch_related(
@@ -141,7 +145,7 @@ def products_skus(self, store_pk):
             skus_pk = Skus.objects\
                 .filter(~Q(price=None), **self.skus_filter_data, price__base_price__gt=0)\
                 .values_list('pk', flat=True).distinct('pk')
-            products_pk = Product.objects.filter(skus__in=skus_pk, store_id=store_pk).values_list('pk', flat=True).distinct('pk')[self.offset:self.limit]
+            products_pk = Product.objects.filter(skus__pk__in=skus_pk, store_id=store_pk).values_list('pk', flat=True).distinct('pk')[self.offset:self.limit]
             queryset = Product.objects\
                 .select_related('department', 'category', 'sub_category', 'brand')\
                 .prefetch_related(
@@ -156,7 +160,7 @@ def products_skus(self, store_pk):
         skus_pk = Skus.objects\
             .filter(**self.skus_filter_data)\
             .values_list('pk', flat=True).distinct('pk')
-        products_pk = Product.objects.filter(skus__in=skus_pk, store_id=store_pk).values_list('pk', flat=True).distinct('pk')[self.offset:self.limit]
+        products_pk = Product.objects.filter(skus__pk__in=skus_pk, store_id=store_pk).values_list('pk', flat=True).distinct('pk')[self.offset:self.limit]
         queryset = Product.objects\
             .select_related('department', 'category', 'sub_category', 'brand')\
             .prefetch_related(
