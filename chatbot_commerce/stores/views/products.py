@@ -26,6 +26,9 @@ from chatbot_commerce.stores.models import Product, Department, Store, Attribute
 # Paginator
 from chatbot_commerce.utils.paginators import page_url
 
+# Cache
+from django.core.cache import cache
+
 # Runtime
 # from db_python import query_debugger
 
@@ -84,9 +87,12 @@ class ProductViewset(mixins.RetrieveModelMixin,
         search = Put a keyword like name category or department to filter whith it
         example... search = jeans azul L
         """
-        store_pk = self.store.pk
-
         base_url = self.request.build_absolute_uri()
+        cache_key = base_url.replace('?', '').replace('&', '').replace('/', '')
+        paginated_data = cache.get(key=cache_key)
+        if paginated_data:
+            return Response(data=paginated_data, status=HTTP_200_OK)
+        store_pk = self.store.pk
         # page_size = self.limit - self.offset
         # count = len(count_products(self, store_pk=store_pk))
         # actual_size = page_size*self.page
@@ -118,6 +124,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
             'previous_link': previous_link,
             'results': data
         }
+        cache.set(key=cache_key, value=paginated_data, timeout=30)
         return Response(data=paginated_data, status=HTTP_200_OK)
 
     # @query_debugger
