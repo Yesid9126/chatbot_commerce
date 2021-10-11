@@ -36,7 +36,9 @@ def products_skus(self, store_pk):
         skus_pk = Skus.objects\
             .filter(~Q(images=None), ~Q(price=None), **self.skus_filter_data, price__base_price__gt=0, total_quantity__gt=0, is_active=True)\
             .values_list('pk', flat=True)
-        products_pk = list(set(Product.objects.filter(store_id=store_pk, skus__pk__in=skus_pk, is_active=True).values_list('pk', flat=True)))[self.offset:self.limit]
+        products_pk = list(set(Product.objects.filter(store_id=store_pk, skus__pk__in=skus_pk, is_active=True).values_list('pk', flat=True)))
+        count = len(products_pk)
+        products_pk = products_pk[self.offset:self.limit]
         queryset = Product.objects\
             .select_related('department', 'category', 'sub_category', 'brand')\
             .prefetch_related(
@@ -79,7 +81,9 @@ def products_skus(self, store_pk):
                 skus_pk = Skus.objects\
                     .filter(**self.skus_filter_data)\
                     .values_list('pk', flat=True)
-            products_pk = list(set(Product.objects.filter(skus__pk__in=skus_pk, store_id=store_pk, is_active=True).values_list('pk', flat=True)))[self.offset:self.limit]
+            products_pk = list(set(Product.objects.filter(skus__pk__in=skus_pk, store_id=store_pk, is_active=True).values_list('pk', flat=True)))
+            count = len(products_pk)
+            products_pk = products_pk[self.offset:self.limit]
             queryset = Product.objects\
                 .select_related('department', 'category', 'sub_category', 'brand')\
                 .prefetch_related(
@@ -107,7 +111,9 @@ def products_skus(self, store_pk):
                 skus_pk = Skus.objects\
                     .filter(**self.skus_filter_data, total_quantity__gt=0, is_active=True)\
                     .values_list('pk', flat=True)
-            products_pk = list(set(Product.objects.filter(skus__pk__in=skus_pk, store_id=store_pk).values_list('pk', flat=True)))[self.offset:self.limit]
+            products_pk = list(set(Product.objects.filter(skus__pk__in=skus_pk, store_id=store_pk).values_list('pk', flat=True)))
+            count = len(products_pk)
+            products_pk = products_pk[self.offset:self.limit]
             queryset = Product.objects\
                 .select_related('department', 'category', 'sub_category', 'brand')\
                 .prefetch_related(
@@ -126,7 +132,9 @@ def products_skus(self, store_pk):
                 skus_pk = Skus.objects\
                     .filter(~Q(images=None), **self.skus_filter_data)\
                     .values_list('pk', flat=True)
-            products_pk = list(set(Product.objects.filter(skus__pk__in=skus_pk, store_id=store_pk).values_list('pk', flat=True)))[self.offset:self.limit]
+            products_pk = list(set(Product.objects.filter(skus__pk__in=skus_pk, store_id=store_pk).values_list('pk', flat=True)))
+            count = len(products_pk)
+            products_pk = products_pk[self.offset:self.limit]
             queryset = Product.objects\
                 .select_related('department', 'category', 'sub_category', 'brand')\
                 .prefetch_related(
@@ -141,7 +149,9 @@ def products_skus(self, store_pk):
             skus_pk = Skus.objects\
                 .filter(~Q(price=None), **self.skus_filter_data, price__base_price__gt=0)\
                 .values_list('pk', flat=True)
-            products_pk = list(set(Product.objects.filter(skus__pk__in=skus_pk, store_id=store_pk).values_list('pk', flat=True)))[self.offset:self.limit]
+            products_pk = list(set(Product.objects.filter(skus__pk__in=skus_pk, store_id=store_pk).values_list('pk', flat=True)))
+            count = len(products_pk)
+            products_pk = products_pk[self.offset:self.limit]
             queryset = Product.objects\
                 .select_related('department', 'category', 'sub_category', 'brand')\
                 .prefetch_related(
@@ -156,7 +166,9 @@ def products_skus(self, store_pk):
         skus_pk = Skus.objects\
             .filter(**self.skus_filter_data)\
             .values_list('pk', flat=True)
-        products_pk = list(set(Product.objects.filter(skus__pk__in=skus_pk, store_id=store_pk).values_list('pk', flat=True)))[self.offset:self.limit]
+        products_pk = list(set(Product.objects.filter(skus__pk__in=skus_pk, store_id=store_pk).values_list('pk', flat=True)))
+        count = len(products_pk)
+        products_pk = products_pk[self.offset:self.limit]
         queryset = Product.objects\
             .select_related('department', 'category', 'sub_category', 'brand')\
             .prefetch_related(
@@ -166,4 +178,4 @@ def products_skus(self, store_pk):
                 )
             )\
             .filter(pk__in=products_pk).order_by('-external_id')
-    return queryset
+    return queryset, count

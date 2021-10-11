@@ -75,6 +75,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
         self.previous_page = self.page - 1
         self.offset = q_offset + limit*(self.page - 1)
         self.limit = self.offset + limit
+        self.current_size_position = self.page*limit
         return super().dispatch(request, *args, **kwargs)
 
     # @query_debugger
@@ -95,7 +96,12 @@ class ProductViewset(mixins.RetrieveModelMixin,
         #     differ = actual_size - count
         #     actual_size -= differ
         #     page_size -= differ
-        data = self.get_serializer(products_skus(self, store_pk=store_pk), many=True).data
+        query, count = products_skus(self, store_pk=store_pk)
+        differ = self.current_size_position - count
+        page_size = self.limit - self.offset
+        if differ > -1:
+            page_size = page_size - differ
+        data = self.get_serializer(query, many=True).data
         try:
             assert(data != [])
         except AssertionError:
@@ -105,8 +111,10 @@ class ProductViewset(mixins.RetrieveModelMixin,
         
         # else:
         #     previous_link = None
-        next_link, previous_link = page_url(page=self.page, base_url=base_url)
+        next_link, previous_link = page_url(page=self.page, base_url=base_url, differ=differ)
         paginated_data = {
+            'count': count,
+            'page_size': page_size,
             'next_link': next_link,
             'previous_link': previous_link,
             'results': data

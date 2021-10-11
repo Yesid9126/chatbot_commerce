@@ -25,23 +25,24 @@ class FasterPagenumberPagination(PageNumberPagination):
         )
 
 
-def page_url(page: int, base_url: str):
+def page_url(page: int, base_url: str, differ: int):
     next_page = page + 1
-    if f'page={page}' in base_url:
+    if differ > -1:
+        next_link = None
+    elif f'page={page}' in base_url:
         next_link = base_url.replace(f'page={page}', f'page={next_page}')
     elif '?' in base_url:
         next_link = base_url.replace('?', f'?page={next_page}&')
     else:
         next_link = '?'.join((base_url, f'page={next_page}',))
     # if self.previous_page > 0:
-    if page > 1:
-        previous_page = page - 1
-        if f'page={page}' in base_url:
-            previous_link = base_url.replace(f'page={page}', f'page={previous_page}')
-        elif '?' in base_url:
-            previous_link = base_url.replace('?', f'?page={previous_page}&')
-        else:
-            previous_link = '/?'.join((base_url, f'page={previous_page}',))
-    else:
+    previous_page = page - 1
+    if page < 2:
         previous_link = None
+    elif f'page={page}' in base_url:
+        previous_link = base_url.replace(f'page={page}', f'page={previous_page}')
+    elif '?' in base_url:
+        previous_link = base_url.replace('?', f'?page={previous_page}&')
+    else:
+        previous_link = '/?'.join((base_url, f'page={previous_page}',))
     return next_link, previous_link
