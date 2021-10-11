@@ -3,7 +3,6 @@
 
 # Celery
 from celery import Celery
-from celery.schedules import crontab
 
 # Cache
 from django.core.cache import cache
@@ -18,10 +17,12 @@ from chatbot_commerce.stores.models.stores import Store
 
 app = Celery()
 
+
 @app.task(name='clear_cache')
 def clear_cache(*args, **kwargs):
     cache.clear()
     return True
+
 
 @app.task(name='store_begining')
 def store_begining(store, *args, **kwargs):
