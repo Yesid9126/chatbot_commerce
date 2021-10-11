@@ -2,7 +2,6 @@ from django.core.paginator import Paginator
 from django.utils.functional import cached_property
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
-import typing
 
 
 class FastDjangoPaginator(Paginator):

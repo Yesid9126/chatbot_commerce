@@ -69,7 +69,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
                 assert(page >= 1)
                 if page > 1:
                     self.page = page
-            except (AssertionError, TypeError, ValueError) as error:
+            except (AssertionError, TypeError, ValueError):
                 return HttpResponseBadRequest(self.page_error)
         self.offset = q_offset + limit*(self.page - 1)
         self.limit = self.offset + limit
@@ -106,7 +106,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
             return HttpResponseBadRequest(self.page_error)
         # if actual_size >= count:
         #     next_link = None
-        
+
         # else:
         #     previous_link = None
         next_link, previous_link = page_url(page=self.page, base_url=base_url, differ=differ)

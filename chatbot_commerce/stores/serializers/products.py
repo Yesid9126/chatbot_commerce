@@ -14,7 +14,7 @@ class ProductModelSerializer(serializers.ModelSerializer):
     skus = serializers.SerializerMethodField(method_name='get_skus')
     brand = serializers.SerializerMethodField('get_brand')
     tree_categories = serializers.SerializerMethodField('get_tree_categories')
-    product_id = serializers.CharField(source='external_id')
+    product_id = serializers.IntegerField(source='external_id')
 
     class Meta:
         """Meta class."""
