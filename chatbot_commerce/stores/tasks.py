@@ -27,6 +27,7 @@ def clear_cache(*args, **kwargs):
     cursor = connections['cache_database'].cursor()
     cursor.execute('DELETE FROM cache_table')
     transaction.commit_unless_managed(using='cache_database')
+    gc.collect()
     return True
 
 
