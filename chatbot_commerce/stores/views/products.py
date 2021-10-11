@@ -71,11 +71,9 @@ class ProductViewset(mixins.RetrieveModelMixin,
                     self.page = page
             except (AssertionError, TypeError, ValueError) as error:
                 return HttpResponseBadRequest(self.page_error)
-        self.next_page = self.page + 1
-        self.previous_page = self.page - 1
         self.offset = q_offset + limit*(self.page - 1)
         self.limit = self.offset + limit
-        self.current_size_position = self.page*limit
+        self.current_size_position = self.limit - q_offset
         return super().dispatch(request, *args, **kwargs)
 
     # @query_debugger
@@ -97,7 +95,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
         #     actual_size -= differ
         #     page_size -= differ
         query, count = products_skus(self, store_pk=store_pk)
-        differ = self.current_size_position - count
+        differ = self.limit - count
         page_size = self.limit - self.offset
         if differ > -1:
             page_size = page_size - differ
@@ -112,6 +110,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
         # else:
         #     previous_link = None
         next_link, previous_link = page_url(page=self.page, base_url=base_url, differ=differ)
+        count -= self.limit - self.current_size_position
         paginated_data = {
             'count': count,
             'page_size': page_size,
