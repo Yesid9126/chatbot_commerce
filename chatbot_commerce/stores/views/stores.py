@@ -23,5 +23,4 @@ def email_is_active(request, uidb64, token):
 
 
 def successfuly_email(request):
-    print(request, 'Hola')
     return HttpResponse('Thank you for confirm your email, now wait for chatbot activate your api_key')

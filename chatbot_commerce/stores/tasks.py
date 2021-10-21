@@ -13,14 +13,21 @@ from chatbot_commerce.utils.tasks import create_products_vtex_store, get_departm
 import gc
 
 # Models
-from chatbot_commerce.stores.models.stores import Store
+from chatbot_commerce.stores.models import Store
 from django.db import connections, transaction
+from django_celery_beat.models import PeriodicTask, CrontabSchedule
 
 app = Celery()
-
+app.autodiscover_tasks()
+@app.on_after_configure.connect
+def setup_periodic_tasks(sender, **kwargs):
+    # Calls clear_cache at 23:55.
+    every_23_55, _ = CrontabSchedule.objects.get_or_create(day_of_week='*', hour=23, minute=55)
+    task_instance, _ = PeriodicTask.objects.get_or_create(name='limpiador', task='clear_cache', defaults=dict(crontab=every_23_55))
 
 @app.task(name='clear_cache')
 def clear_cache(*args, **kwargs):
+    print('funcion 2')
     # This works as advertised on the memcached cache:
     cache.clear()
     # This manually purges the SQLite cache:
@@ -29,7 +36,6 @@ def clear_cache(*args, **kwargs):
     transaction.commit_unless_managed(using='cache_database')
     gc.collect()
     return True
-
 
 @app.task(name='store_begining')
 def store_begining(store, *args, **kwargs):
@@ -90,5 +96,4 @@ def principal_periodic_task(*args, **kwargs):
 
     store.creating_updating_elements_status = False
     store.save()
-    print('new')
     return True

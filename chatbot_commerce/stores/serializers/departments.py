@@ -56,7 +56,7 @@ class SubcategoryTreeModelSerializer(serializers.ModelSerializer):
 
 class CategoryTreeModelSerializer(serializers.ModelSerializer):
 
-    subcategories = SubcategoryTreeModelSerializer(many=True, read_only=True)
+    subcategories = serializers.SerializerMethodField(method_name='get_subcategories')
 
     class Meta:
         model = Category
@@ -67,11 +67,14 @@ class CategoryTreeModelSerializer(serializers.ModelSerializer):
         )
         read_only_fields = fields
 
+    def get_subcategories(self, obj):
+        return obj.subcategories.values_list('name', flat=True)
+
 
 class DepartmentTreeModelSerializer(serializers.ModelSerializer):
 
-    categories = CategoryTreeModelSerializer(many=True)
-
+    categories = serializers.SerializerMethodField(method_name='get_categories')
+    pk = serializers.IntegerField(source='external_id')
     class Meta:
         model = Department
         fields = (
@@ -80,3 +83,16 @@ class DepartmentTreeModelSerializer(serializers.ModelSerializer):
             'categories'
         )
         read_only_fields = fields
+
+    def get_categories(self, obj):
+        return [
+            {
+                'pk':category.external_id,
+                'name': category.name,
+                'subcategories': [
+                    subcategory.name\
+                    for subcategory in category.q_subcategories
+                ],
+            }\
+            for category in obj.q_categories
+        ]

@@ -14,6 +14,8 @@ class ProductFilterSet(FilterSet):
     stock_quantity = filters.CharFilter(field_name='name')
     offset = filters.CharFilter(field_name='name')
     limit = filters.CharFilter(field_name='name')
+    page = filters.CharFilter(field_name='name')
+
 
     class Meta:
         model = Product
@@ -21,6 +23,7 @@ class ProductFilterSet(FilterSet):
             'offset',
             'limit',
             'search',
+            'page',
             #  'attributes',
             'stock_quantity',
         ]
@@ -46,7 +49,8 @@ def products_skus(self, store_pk):
             .prefetch_related(
                 Prefetch(
                     'skus',
-                    queryset=Skus.objects.filter(pk__in=skus_pk, product__external_id__in=products_external_id)
+                    queryset=Skus.objects.filter(pk__in=skus_pk, product__external_id__in=products_external_id),
+                    to_attr='q_skus'
                 )
             )\
             .filter(external_id__in=products_external_id, store_id=store_pk).order_by('-external_id')
@@ -94,7 +98,8 @@ def products_skus(self, store_pk):
                 .prefetch_related(
                     Prefetch(
                         'skus',
-                        queryset=Skus.objects.filter(pk__in=skus_pk, product__external_id__in=products_external_id)
+                        queryset=Skus.objects.filter(pk__in=skus_pk, product__external_id__in=products_external_id),
+                        to_attr='q_skus'
                     )
                 )\
                 .filter(external_id__in=products_external_id, store_id=store_pk).order_by('-external_id')
@@ -127,7 +132,8 @@ def products_skus(self, store_pk):
                 .prefetch_related(
                     Prefetch(
                         'skus',
-                        queryset=Skus.objects.filter(pk__in=skus_pk, product__external_id__in=products_external_id)
+                        queryset=Skus.objects.filter(pk__in=skus_pk, product__external_id__in=products_external_id),
+                        to_attr='q_skus'
                     )
                 )\
                 .filter(external_id__in=products_external_id, store_id=store_pk).order_by('-external_id')
@@ -151,7 +157,8 @@ def products_skus(self, store_pk):
                 .prefetch_related(
                     Prefetch(
                         'skus',
-                        queryset=Skus.objects.filter(pk__in=skus_pk, product__external_id__in=products_external_id)
+                        queryset=Skus.objects.filter(pk__in=skus_pk, product__external_id__in=products_external_id),
+                        to_attr='q_skus'
                     )
                 )\
                 .filter(external_id__in=products_external_id, store_id=store_pk).order_by('-external_id')
@@ -171,7 +178,8 @@ def products_skus(self, store_pk):
                 .prefetch_related(
                     Prefetch(
                         'skus',
-                        queryset=Skus.objects.filter(pk__in=skus_pk, product__external_id__in=products_external_id)
+                        queryset=Skus.objects.filter(pk__in=skus_pk, product__external_id__in=products_external_id),
+                        to_attr='q_skus'
                     )
                 )\
                 .filter(external_id__in=products_external_id, store_id=store_pk).order_by('-external_id')
@@ -190,7 +198,8 @@ def products_skus(self, store_pk):
             .prefetch_related(
                 Prefetch(
                     'skus',
-                    queryset=Skus.objects.filter(pk__in=skus_pk, product__external_id__in=products_external_id)
+                    queryset=Skus.objects.filter(pk__in=skus_pk, product__external_id__in=products_external_id),
+                    to_attr='q_skus'
                 )
             )\
             .filter(external_id__in=products_external_id, store_id=store_pk).order_by('-external_id')

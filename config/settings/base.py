@@ -288,8 +288,8 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         "rest_framework.authentication.SessionAuthentication",
     ),
-    'DEFAULT_PAGINATION_CLASS': 'chatbot_commerce.utils.paginators.FasterPagenumberPagination',
-    'PAGE_SIZE': 50
+    # 'DEFAULT_PAGINATION_CLASS': 'chatbot_commerce.utils.paginators.FasterPagenumberPagination',
+    # 'PAGE_SIZE': 50
 }
 CORS_ALLOW_ALL_ORIGINS = True
 APPEND_SLASH = True

@@ -21,7 +21,7 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from chatbot_commerce.stores.filters import ProductFilterSet, products_skus
 
 # Models
-from chatbot_commerce.stores.models import Product, Department, Store, Attribute, AttributeType, Skus, Brand
+from chatbot_commerce.stores.models import Product, Department, Store, Attribute, AttributeType, Skus, Brand, Category, Subcategory
 
 # Paginator
 from chatbot_commerce.utils.paginators import page_url
@@ -30,7 +30,7 @@ from chatbot_commerce.utils.paginators import page_url
 from django.core.cache import cache
 
 # Runtime
-# from db_python import query_debugger
+from db_python import query_debugger
 
 
 class ProductViewset(mixins.RetrieveModelMixin,
@@ -79,7 +79,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
         self.current_size_position = self.limit - q_offset
         return super().dispatch(request, *args, **kwargs)
 
-    # @query_debugger
+    @query_debugger
     def list(self, request, *args, **kwargs):
         """
         Return all products
@@ -88,33 +88,21 @@ class ProductViewset(mixins.RetrieveModelMixin,
         example... search = jeans azul L
         """
         base_url = self.request.build_absolute_uri()
-        cache_key = base_url.replace('?', '').replace('&', '').replace('/', '')
+        cache_key = base_url.replace('?', '').replace('&', '').replace('/', '').lower()
         paginated_data = cache.get(key=cache_key)
         if paginated_data:
             return Response(data=paginated_data, status=HTTP_200_OK)
         store_pk = self.store.pk
-        # page_size = self.limit - self.offset
-        # count = len(count_products(self, store_pk=store_pk))
-        # actual_size = page_size*self.page
-        # if actual_size > count:
-        #     differ = actual_size - count
-        #     actual_size -= differ
-        #     page_size -= differ
         query, count = products_skus(self, store_pk=store_pk)
         differ = self.limit - count
         page_size = self.limit - self.offset
         if differ > -1:
             page_size = page_size - differ
-        data = self.get_serializer(query, many=True).data
+        data = self.get_serializer(query, many=True, read_only=True).data
         try:
             assert(data != [])
         except AssertionError:
             return HttpResponseBadRequest(self.page_error)
-        # if actual_size >= count:
-        #     next_link = None
-
-        # else:
-        #     previous_link = None
         next_link, previous_link = page_url(page=self.page, base_url=base_url, differ=differ)
         count -= self.limit - self.current_size_position
         paginated_data = {
@@ -127,7 +115,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
         cache.set(key=cache_key, value=paginated_data, timeout=30)
         return Response(data=paginated_data, status=HTTP_200_OK)
 
-    # @query_debugger
+    @query_debugger
     def retrieve(self, request, *args, **kwargs):
         """
         Return a single product with his skus.
@@ -143,10 +131,12 @@ class ProductViewset(mixins.RetrieveModelMixin,
                         Prefetch(
                             'skus',
                             queryset=Skus.objects
-                            .filter(**self.skus_filter_data)
+                            .filter(**self.skus_filter_data),
+                            to_attr='p_skus'
                         ),
                     )
-                    .get(store=self.store, external_id=kwargs['pk'])
+                    .get(store=self.store, external_id=kwargs['pk']),
+                    read_only=True
                 ).data,
                 status=HTTP_200_OK
             )
@@ -155,27 +145,19 @@ class ProductViewset(mixins.RetrieveModelMixin,
             return Response({}, status=HTTP_404_NOT_FOUND)
 
 
-class DepartmentsViewset(mixins.RetrieveModelMixin,
-                         mixins.ListModelMixin,
+class DepartmentsViewset(mixins.ListModelMixin,
                          viewsets.GenericViewSet):
 
     serializer_class = DepartmentTreeModelSerializer
-    lookup_field = 'department_name'
     permission_classes = [HasStoreAPIKey | IsAdminUser]
-    filter_backends = (SearchFilter, OrderingFilter, DjangoFilterBackend)
-    search_fields = ('name', 'categories__name', 'categories__subcategories__name')
-    filter_fields = ('categories__name', 'categories__subcategories__name')
+    filter_backends = (SearchFilter,)
 
     def dispatch(self, request, *args, **kwargs):
         slug_name = kwargs['store_slug_name']
         self.store = get_object_or_404(Store, slug_name=slug_name)
         return super().dispatch(request, *args, **kwargs)
 
-    def get_queryset(self):
-        queryset = Department.objects.filter(store=self.store).prefetch_related('categories__subcategories')
-        return queryset
-
-    # @query_debugger
+    @query_debugger
     def list(self, request, *args, **kwargs):
         """
         Return all departments with tree category
@@ -183,17 +165,124 @@ class DepartmentsViewset(mixins.RetrieveModelMixin,
         for search Put a keyword like name category or department to filter whith it
         example... search = Hombres
         """
-        return super().list(request, *args, **kwargs)
+        base_url = self.request.build_absolute_uri()
+        cache_key = base_url.replace('?', '').replace('&', '').replace('/', '').lower()
+        data = cache.get(key=cache_key)
+        if data:
+            return Response(data=data, status=HTTP_200_OK)
+        search = request.GET.get('search')
+        if search:
+            search = {'name__iexact': search}
+            if Department.objects.filter(**search).exists():
+                queryset = Department.objects\
+                                .filter(**search, store=self.store)\
+                                .prefetch_related(
+                                    Prefetch(
+                                        'categories',
+                                        queryset=Category.objects\
+                                            .filter(department__store=self.store)\
+                                            .prefetch_related(
+                                                Prefetch(
+                                                    'subcategories',
+                                                    to_attr='q_subcategories')
+                                                ),
+                                        to_attr='q_categories')
+                                )
+                data = [
+                    {
+                        'pk': deparment.external_id,
+                        'name': deparment.name,
+                        'categories': [
+                            {
+                                'pk': category.external_id,
+                                'name': category.name,
+                                'subcategories': [
+                                    subcategory.name\
+                                    for subcategory in category.q_subcategories
+                                ]
+                            }\
+                            for category in deparment.q_categories
+                        ]
 
-    # @query_debugger
-    def retrieve(self, request, *args, **kwargs):
-        """
-        Return a single department with tree category.
+                    }\
+                    for deparment in queryset
+                ]
+            elif Category.objects.filter(**search).exists():
+                queryset = Category.objects\
+                                .select_related('department')\
+                                .filter(department__store=self.store, **search)\
+                                .prefetch_related(
+                                    Prefetch(
+                                        'subcategories',
+                                        to_attr='q_subcategories')
+                                )
+                data = [
+                    {
+                        'pk': category.external_id,
+                        'name': category.name,
+                        'department': category.department.name,
+                        'subcategories': [
+                            subcategory.name\
+                            for subcategory in category.q_subcategories
+                        ]
+                    }\
+                    for category in queryset
+                ]
+            elif Subcategory.objects.filter(**search).exists():
+                queryset = Subcategory.objects\
+                                .select_related('category__department')\
+                                .filter(category__department__store=self.store, **search)
+                data = [
+                    {
+                        'pk': subcategory.external_id,
+                        'name': subcategory.name,
+                        'department': subcategory.category.department.name,
+                        'category': subcategory.category.name
+                    }\
+                    for subcategory in queryset
+                ]
+            else:
+                return Response(data=[], status=HTTP_404_NOT_FOUND)
+            cache.set(key=cache_key, value=data, timeout=360)
+            return Response(data=data, status=HTTP_200_OK)
+        queryset = Department.objects\
+                        .filter(store=self.store)\
+                        .prefetch_related(
+                            Prefetch(
+                                'categories',
+                                queryset=Category.objects\
+                                    .filter(department__store=self.store)\
+                                    .prefetch_related(
+                                        Prefetch(
+                                            'subcategories',
+                                            to_attr='q_subcategories')
+                                        ),
+                                to_attr='q_categories')
+                        )
+        data = [
+            {
+                'pk': deparment.external_id,
+                'name': deparment.name,
+                'categories': [
+                    {
+                        'pk': category.external_id,
+                        'name': category.name,
+                        'subcategories': [
+                            subcategory.name\
+                            for subcategory in category.q_subcategories
+                        ]
+                    }\
+                    for category in deparment.q_categories
+                ]
 
-        Parameters.
-        """
-        obj = Department.objects.filter(store=self.store, name=kwargs['department_name']).prefetch_related('categories__subcategories').first()
-        return Response(self.serializer_class(obj).data)
+            }\
+            for deparment in queryset
+        ]
+        cache.set(key=cache_key, value=data, timeout=360)
+        return Response(
+            data=data,
+            status=HTTP_200_OK
+        )
 
 
 class BrandsViewset(mixins.ListModelMixin,
@@ -204,13 +293,13 @@ class BrandsViewset(mixins.ListModelMixin,
     def dispatch(self, request, *args, **kwargs):
         slug_name = kwargs['store_slug_name']
         self.store = get_object_or_404(Store, slug_name=slug_name)
-        self.queryset = Brand.objects.filter(store=self.store).order_by()
+        self.queryset = Brand.objects.filter(store=self.store)
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
         return self.queryset
 
-    # @query_debugger
+    @query_debugger
     def list(self, request, *args, **kwargs):
         """
         Return all brands of a store.
@@ -230,34 +319,27 @@ class AttributesViewset(mixins.ListModelMixin,
 
     serializer_class = AttributeTypeModelSerializer
     permission_classes = [HasStoreAPIKey | IsAdminUser]
-    filter_backends = (DjangoFilterBackend,)
 
     def dispatch(self, request, *args, **kwargs):
         slug_name = kwargs['store_slug_name']
         self.store = get_object_or_404(Store, slug_name=slug_name)
-        self.attributes = Attribute.objects.filter(attribute_type__in=self.get_queryset())
         return super().dispatch(request, *args, **kwargs)
 
-    def get_queryset(self):
-        queryset = AttributeType.objects.filter(store=self.store)
-        return queryset
-
-    def get_serializer_context(self):
-        return self.attributes
-
-    # @query_debugger
+    @query_debugger
     def list(self, request, *args, **kwargs):
         """
         Return all attribute of a type.
 
         Parameters.
         """
-        queryset = self.filter_queryset(self.get_queryset())
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            data = {key: array for array in serializer.data for key, array in array.items()}
-            return self.get_paginated_response(data)
-
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+        base_url = self.request.build_absolute_uri()
+        cache_key = base_url.replace('/', '').lower().split('?')[0]
+        data = cache.get(key=cache_key)
+        if data:
+            return Response(data=data, status=HTTP_200_OK)
+        queryset = AttributeType.objects\
+            .filter(store=self.store)\
+            .prefetch_related(Prefetch('attributes', to_attr='q_attributes'))
+        data = {attribute_type.name:sorted({attribute.value for attribute in attribute_type.q_attributes}) for attribute_type in queryset}
+        cache.set(key=cache_key, value=data, timeout=360)
+        return Response(data)

@@ -31,7 +31,9 @@ class ProductModelSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
     def get_skus(self, obj):
-        return obj.skus.values_list('serializer_data', flat=True)
+        print(obj.q_skus)
+        # return obj.skus.values_list('serializer_data', flat=True)
+        return [sku.serializer_data for sku in obj.q_skus]
 
     def get_tree_categories(self, obj):
         if obj.sub_category:
