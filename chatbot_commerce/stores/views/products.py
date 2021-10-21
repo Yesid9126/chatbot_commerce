@@ -16,12 +16,11 @@ from chatbot_commerce.stores.permissions import HasStoreAPIKey
 from rest_framework.permissions import IsAdminUser
 
 # Filters
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.filters import SearchFilter
 from chatbot_commerce.stores.filters import ProductFilterSet, products_skus
 
 # Models
-from chatbot_commerce.stores.models import Product, Department, Store, Attribute, AttributeType, Skus, Brand, Category, Subcategory
+from chatbot_commerce.stores.models import Product, Department, Store, AttributeType, Skus, Brand, Category, Subcategory
 
 # Paginator
 from chatbot_commerce.utils.paginators import page_url
@@ -175,19 +174,19 @@ class DepartmentsViewset(mixins.ListModelMixin,
             search = {'name__iexact': search}
             if Department.objects.filter(**search).exists():
                 queryset = Department.objects\
-                                .filter(**search, store=self.store)\
-                                .prefetch_related(
-                                    Prefetch(
-                                        'categories',
-                                        queryset=Category.objects\
-                                            .filter(department__store=self.store)\
-                                            .prefetch_related(
-                                                Prefetch(
-                                                    'subcategories',
-                                                    to_attr='q_subcategories')
-                                                ),
-                                        to_attr='q_categories')
-                                )
+                    .filter(**search, store=self.store)\
+                    .prefetch_related(
+                        Prefetch(
+                            'categories',
+                            queryset=Category.objects
+                            .filter(department__store=self.store)
+                            .prefetch_related(
+                                Prefetch(
+                                    'subcategories',
+                                    to_attr='q_subcategories')
+                            ),
+                            to_attr='q_categories')
+                    )
                 data = [
                     {
                         'pk': deparment.external_id,
@@ -197,48 +196,48 @@ class DepartmentsViewset(mixins.ListModelMixin,
                                 'pk': category.external_id,
                                 'name': category.name,
                                 'subcategories': [
-                                    subcategory.name\
+                                    subcategory.name
                                     for subcategory in category.q_subcategories
                                 ]
-                            }\
+                            }
                             for category in deparment.q_categories
                         ]
 
-                    }\
+                    }
                     for deparment in queryset
                 ]
             elif Category.objects.filter(**search).exists():
                 queryset = Category.objects\
-                                .select_related('department')\
-                                .filter(department__store=self.store, **search)\
-                                .prefetch_related(
-                                    Prefetch(
-                                        'subcategories',
-                                        to_attr='q_subcategories')
-                                )
+                    .select_related('department')\
+                    .filter(department__store=self.store, **search)\
+                    .prefetch_related(
+                        Prefetch(
+                            'subcategories',
+                            to_attr='q_subcategories')
+                    )
                 data = [
                     {
                         'pk': category.external_id,
                         'name': category.name,
                         'department': category.department.name,
                         'subcategories': [
-                            subcategory.name\
+                            subcategory.name
                             for subcategory in category.q_subcategories
                         ]
-                    }\
+                    }
                     for category in queryset
                 ]
             elif Subcategory.objects.filter(**search).exists():
                 queryset = Subcategory.objects\
-                                .select_related('category__department')\
-                                .filter(category__department__store=self.store, **search)
+                    .select_related('category__department')\
+                    .filter(category__department__store=self.store, **search)
                 data = [
                     {
                         'pk': subcategory.external_id,
                         'name': subcategory.name,
                         'department': subcategory.category.department.name,
                         'category': subcategory.category.name
-                    }\
+                    }
                     for subcategory in queryset
                 ]
             else:
@@ -246,19 +245,19 @@ class DepartmentsViewset(mixins.ListModelMixin,
             cache.set(key=cache_key, value=data, timeout=360)
             return Response(data=data, status=HTTP_200_OK)
         queryset = Department.objects\
-                        .filter(store=self.store)\
-                        .prefetch_related(
-                            Prefetch(
-                                'categories',
-                                queryset=Category.objects\
-                                    .filter(department__store=self.store)\
-                                    .prefetch_related(
-                                        Prefetch(
-                                            'subcategories',
-                                            to_attr='q_subcategories')
-                                        ),
-                                to_attr='q_categories')
-                        )
+            .filter(store=self.store)\
+            .prefetch_related(
+                Prefetch(
+                    'categories',
+                    queryset=Category.objects
+                    .filter(department__store=self.store)
+                    .prefetch_related(
+                        Prefetch(
+                            'subcategories',
+                            to_attr='q_subcategories')
+                    ),
+                    to_attr='q_categories')
+            )
         data = [
             {
                 'pk': deparment.external_id,
@@ -268,14 +267,14 @@ class DepartmentsViewset(mixins.ListModelMixin,
                         'pk': category.external_id,
                         'name': category.name,
                         'subcategories': [
-                            subcategory.name\
+                            subcategory.name
                             for subcategory in category.q_subcategories
                         ]
-                    }\
+                    }
                     for category in deparment.q_categories
                 ]
 
-            }\
+            }
             for deparment in queryset
         ]
         cache.set(key=cache_key, value=data, timeout=360)
@@ -340,6 +339,6 @@ class AttributesViewset(mixins.ListModelMixin,
         queryset = AttributeType.objects\
             .filter(store=self.store)\
             .prefetch_related(Prefetch('attributes', to_attr='q_attributes'))
-        data = {attribute_type.name:sorted({attribute.value for attribute in attribute_type.q_attributes}) for attribute_type in queryset}
+        data = {attribute_type.name: sorted({attribute.value for attribute in attribute_type.q_attributes}) for attribute_type in queryset}
         cache.set(key=cache_key, value=data, timeout=360)
         return Response(data)

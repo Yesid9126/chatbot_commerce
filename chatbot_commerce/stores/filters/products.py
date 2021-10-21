@@ -16,7 +16,6 @@ class ProductFilterSet(FilterSet):
     limit = filters.CharFilter(field_name='name')
     page = filters.CharFilter(field_name='name')
 
-
     class Meta:
         model = Product
         fields = [

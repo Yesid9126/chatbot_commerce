@@ -25,6 +25,7 @@ def setup_periodic_tasks(sender, **kwargs):
     every_23_55, _ = CrontabSchedule.objects.get_or_create(day_of_week='*', hour=23, minute=55)
     task_instance, _ = PeriodicTask.objects.get_or_create(name='limpiador', task='clear_cache', defaults=dict(crontab=every_23_55))
 
+
 @app.task(name='clear_cache')
 def clear_cache(*args, **kwargs):
     print('funcion 2')
@@ -36,6 +37,7 @@ def clear_cache(*args, **kwargs):
     transaction.commit_unless_managed(using='cache_database')
     gc.collect()
     return True
+
 
 @app.task(name='store_begining')
 def store_begining(store, *args, **kwargs):

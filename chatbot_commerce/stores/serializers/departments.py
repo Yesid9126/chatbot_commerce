@@ -75,6 +75,7 @@ class DepartmentTreeModelSerializer(serializers.ModelSerializer):
 
     categories = serializers.SerializerMethodField(method_name='get_categories')
     pk = serializers.IntegerField(source='external_id')
+
     class Meta:
         model = Department
         fields = (
@@ -87,12 +88,12 @@ class DepartmentTreeModelSerializer(serializers.ModelSerializer):
     def get_categories(self, obj):
         return [
             {
-                'pk':category.external_id,
+                'pk': category.external_id,
                 'name': category.name,
                 'subcategories': [
-                    subcategory.name\
+                    subcategory.name
                     for subcategory in category.q_subcategories
                 ],
-            }\
+            }
             for category in obj.q_categories
         ]
