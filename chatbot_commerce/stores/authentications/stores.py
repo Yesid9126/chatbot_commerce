@@ -31,7 +31,6 @@ class StoreAPIKeyAuthentication(BaseAuthentication):
             raise exceptions.PermissionDenied('CSRF Failed: %s' % reason)
 
     def authenticate(self, request):
-        print(request.headers)
         auth = request.headers.get('Authorization').split('Api-Key ')
 
         if len(auth) < 1:
