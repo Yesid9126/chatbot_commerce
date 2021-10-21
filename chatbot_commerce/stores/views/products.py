@@ -29,7 +29,7 @@ from chatbot_commerce.utils.paginators import page_url
 from django.core.cache import cache
 
 # Runtime
-from db_python import query_debugger
+# from db_python import query_debugger
 
 
 class ProductViewset(mixins.RetrieveModelMixin,
@@ -78,7 +78,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
         self.current_size_position = self.limit - q_offset
         return super().dispatch(request, *args, **kwargs)
 
-    @query_debugger
+    # @query_debugger
     def list(self, request, *args, **kwargs):
         """
         Return all products
@@ -114,7 +114,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
         cache.set(key=cache_key, value=paginated_data, timeout=30)
         return Response(data=paginated_data, status=HTTP_200_OK)
 
-    @query_debugger
+    # @query_debugger
     def retrieve(self, request, *args, **kwargs):
         """
         Return a single product with his skus.
@@ -156,7 +156,7 @@ class DepartmentsViewset(mixins.ListModelMixin,
         self.store = get_object_or_404(Store, slug_name=slug_name)
         return super().dispatch(request, *args, **kwargs)
 
-    @query_debugger
+    # @query_debugger
     def list(self, request, *args, **kwargs):
         """
         Return all departments with tree category
@@ -298,7 +298,7 @@ class BrandsViewset(mixins.ListModelMixin,
     def get_queryset(self):
         return self.queryset
 
-    @query_debugger
+    # @query_debugger
     def list(self, request, *args, **kwargs):
         """
         Return all brands of a store.
@@ -324,7 +324,7 @@ class AttributesViewset(mixins.ListModelMixin,
         self.store = get_object_or_404(Store, slug_name=slug_name)
         return super().dispatch(request, *args, **kwargs)
 
-    @query_debugger
+    # @query_debugger
     def list(self, request, *args, **kwargs):
         """
         Return all attribute of a type.
