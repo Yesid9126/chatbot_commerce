@@ -100,7 +100,7 @@ Or
 
 ::
 
-    :~# ./restoredb.sh
+    :~# ./restoredb.sh container_name file.sql.gz
 
 Basic Commands
 --------------
