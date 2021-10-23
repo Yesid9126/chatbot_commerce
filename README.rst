@@ -88,7 +88,14 @@ requirements
 ~~~~~~~~~~~~
 
 * Link to documentation for two first step:
-    https://www.ndchost.com/wiki/guides/how-to-create-swap-file-in-linux
+
+    Docu_1_.
+
+    .. _Docu_1: https://www.ndchost.com/wiki/guides/how-to-create-swap-file-in-linux
+
+    Docu_2_.
+
+    .. _Docu_2: https://linuxize.com/post/create-a-linux-swap-file/
 
 * **Warning**
 
@@ -111,7 +118,7 @@ requirements
     :~# echo 3 > /proc/sys/vm/drop_caches && swapoff -a && swapon -a
 
 * link to documentation for last step:
-    https://www.tecmint.com/clear-ram-memory-cache-buffer-and-swap-space-on-linux/
+    ! https://www.tecmint.com/clear-ram-memory-cache-buffer-and-swap-space-on-linux/
 
 
 Basic Commands
