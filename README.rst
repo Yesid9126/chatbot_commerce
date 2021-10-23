@@ -87,15 +87,11 @@ Clear Ram And Cache
 requirements
 ~~~~~~~~~~~~
 
-* Link to documentation for two first step:
+* Links to documentation for two first step, click here_ or this one_ too works.
 
-    Docu_1_.
+    .. _here: https://www.ndchost.com/wiki/guides/how-to-create-swap-file-in-linux
 
-    .. _Docu_1: https://www.ndchost.com/wiki/guides/how-to-create-swap-file-in-linux
-
-    Docu_2_.
-
-    .. _Docu_2: https://linuxize.com/post/create-a-linux-swap-file/
+    .. _one: https://linuxize.com/post/create-a-linux-swap-file/
 
 * **Warning**
 
@@ -117,8 +113,9 @@ requirements
 
     :~# echo 3 > /proc/sys/vm/drop_caches && swapoff -a && swapon -a
 
-* link to documentation for last step:
-    ! https://www.tecmint.com/clear-ram-memory-cache-buffer-and-swap-space-on-linux/
+* link to documentation_ for last step
+
+    .. _documentation: https://www.tecmint.com/clear-ram-memory-cache-buffer-and-swap-space-on-linux/
 
 
 Basic Commands
