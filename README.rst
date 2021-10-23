@@ -19,6 +19,89 @@ Moved to settings_.
 
 .. _settings: http://cookiecutter-django.readthedocs.io/en/latest/settings.html
 
+Avanced Commands
+----------------
+
+Create An Api key
+^^^^^^^^^^^^^^^^^
+
+* To create a **new api key**, Go to admin site Sign Up and select Store APIKey's that gonna be en section **STORES** click on **ADD STORE APIKEY** where say Name put the store name that belongs this new api key and provides a e-mail to send verification. then confirm your api key in your email address to active it.
+
+* To create an **old api key**, Go to terminal and access to the machine ssh root@my_domain_site and put these commands::
+
+    :~# sudo docker-compose -f file.yml run --rm django python manage.py shell
+
+Usually in this project
+~~~~~~~~~~~~~~~~~~~~~~~
+
+::
+
+    :~# sudo docker-compose -f chatbot_commerce/production.yml run --rm django python manage.py shell
+
+In Django shell
+~~~~~~~~~~~~~~~
+
+::
+
+    from chatbot_commerce.stores.models import StoreAPIKey
+
+    StoreAPIKey.objects.create_my_key(name="store_name", key="old_api_key", email="my_email_address", verify=True, is_active=True)
+
+Create Backups
+^^^^^^^^^^^^^^
+
+* To creata a **backup**, Go to terminal and access to the machine ssh root@my_domain_site and put these commands::
+
+    :~# docker-compose -f file.yml exec service-name backup
+    :~# docker cp container-name:/path/to/container/backups /path/machine/folder
+    :~# docker exec --detach container-name rm /path/to/container/backups/*
+
+Usually in this project
+~~~~~~~~~~~~~~~~~~~~~~~
+
+::
+
+    :~# docker-compose -f chatbot_commerce/production.yml exec postgres backup
+    :~# docker cp chatbot_commerce_postgres_1:/backups ./
+    :~# docker exec --detach chatbot_commerce_postgres_1 rm ./backups/*
+
+Or
+~~
+
+::
+
+    :~# ./backup.sh
+
+Restore Backups
+^^^^^^^^^^^^^^^
+
+* To restore a **backup**, Go to terminal and access to the machine ssh root@my_domain_site and put these commands::
+
+    :~# docker cp path/to/machine/backups/file.sql.gz container-name:/path/to/container/backups/
+    :~# docker-compose -f ./chatbot_commerce/production.yml down --remove-orphans
+    :~# docker-compose -f ./chatbot_commerce/production.yml up -d
+    :~# docker-compose -f ./chatbot_commerce/production.yml exec -u root postgres restore file.sql.gz
+
+
+Example in this project
+~~~~~~~~~~~~~~~~~~~~~~~
+
+When date of creation backup is 2021_10_22T22_24_24:
+
+::
+
+    :~# docker cp ./backups/backup_2021_10_22T22_24_24.sql.gz chatbot_commerce_postgres_1:/backups/
+    :~# docker-compose -f ./chatbot_commerce/production.yml down --remove-orphans
+    :~# docker-compose -f ./chatbot_commerce/production.yml up -d
+    :~# docker-compose -f ./chatbot_commerce/production.yml exec -u root postgres restore backup_2021_10_22T22_24_24.sql.gz
+
+Or
+~~
+
+::
+
+    :~# ./restoredb.sh
+
 Basic Commands
 --------------
 

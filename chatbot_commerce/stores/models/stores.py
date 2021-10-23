@@ -217,6 +217,7 @@ class StoreAPIKey(AbstractAPIKey):
             email.send()
 
             self.verify = False
+            self.is_active = False
 
         super().save(*args, **kwargs)
         self.__original_email = self.email
