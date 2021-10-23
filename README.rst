@@ -117,6 +117,12 @@ requirements
 
     .. _documentation: https://www.tecmint.com/clear-ram-memory-cache-buffer-and-swap-space-on-linux/
 
+*Or
+
+    In this project you can do this in machine ssh::
+
+    :~# ./clearcache.sh
+
 
 Basic Commands
 --------------
