@@ -31,17 +31,11 @@ Create An Api key
 
     :~# sudo docker-compose -f file.yml run --rm django python manage.py shell
 
-Usually in this project
-~~~~~~~~~~~~~~~~~~~~~~~
-
-::
+* Usually in this project::
 
     :~# sudo docker-compose -f chatbot_commerce/production.yml run --rm django python manage.py shell
 
-In Django shell
-~~~~~~~~~~~~~~~
-
-::
+* In Django shell::
 
     from chatbot_commerce.stores.models import StoreAPIKey
 
@@ -56,19 +50,13 @@ Create Backups
     :~# docker cp container-name:/path/to/container/backups /path/machine/folder
     :~# docker exec --detach container-name rm /path/to/container/backups/*
 
-Usually in this project
-~~~~~~~~~~~~~~~~~~~~~~~
-
-::
+* **Usually in this project**::
 
     :~# docker-compose -f chatbot_commerce/production.yml exec postgres backup
     :~# docker cp chatbot_commerce_postgres_1:/backups ./
     :~# docker exec --detach chatbot_commerce_postgres_1 rm ./backups/*
 
-Or
-~~
-
-::
+* **Or**::
 
     :~# ./backup.sh
 
@@ -82,25 +70,49 @@ Restore Backups
     :~# docker-compose -f ./chatbot_commerce/production.yml up -d
     :~# docker-compose -f ./chatbot_commerce/production.yml exec -u root postgres restore file.sql.gz
 
-
-Example in this project
-~~~~~~~~~~~~~~~~~~~~~~~
-
-When date of creation backup is 2021_10_22T22_24_24:
-
-::
+* Example in this project when date creation backup is 2021_10_22T22_24_24::
 
     :~# docker cp ./backups/backup_2021_10_22T22_24_24.sql.gz chatbot_commerce_postgres_1:/backups/
     :~# docker-compose -f ./chatbot_commerce/production.yml down --remove-orphans
     :~# docker-compose -f ./chatbot_commerce/production.yml up -d
     :~# docker-compose -f ./chatbot_commerce/production.yml exec -u root postgres restore backup_2021_10_22T22_24_24.sql.gz
 
-Or
-~~
-
-::
+* **Or**::
 
     :~# ./restoredb.sh container_name file.sql.gz
+
+Clear Ram And Cache
+^^^^^^^^^^^^^^^^^^^
+
+requirements
+~~~~~~~~~~~~
+
+* Link to documentation for two first step:
+    https://www.ndchost.com/wiki/guides/how-to-create-swap-file-in-linux
+
+* **Warning**
+
+    - A swap file should be the same size as your available physical memory. Having a very large swap file is not a good idea and if you are experiencing frequent crashing, you should expand your physical memory.
+    - Change the count value to the size that you need. You can use the formula (<count>/1024) to determine how many megabytes you will be setting aside for swap. In this example, we are crafting 1GB swap count is in **Kilobyte**.
+
+* First create swap file::
+
+    :~# dd if=/dev/zero of=/swapfile bs=1024 count=1048576
+    :~# chmod 600 /swapfile
+    :~# mkswap /swapfile
+    :~# swapon /swapfile
+
+* Then go to /etc/fstab and add this line on boot::
+
+    /swapfile swap swap defaults 0 0
+
+* To clear cache and ram you need execute this command::
+
+    :~# echo 3 > /proc/sys/vm/drop_caches && swapoff -a && swapon -a
+
+* link to documentation for last step:
+    https://www.tecmint.com/clear-ram-memory-cache-buffer-and-swap-space-on-linux/
+
 
 Basic Commands
 --------------
