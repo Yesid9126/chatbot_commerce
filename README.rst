@@ -27,7 +27,7 @@ Create An Api key
 
 * To create a **new api key**, Go to admin site Sign Up and select Store APIKey's that gonna be en section **STORES** click on **ADD STORE APIKEY** where say Name put the store name that belongs this new api key and provides a e-mail to send verification. then confirm your api key in your email address to active it.
 
-* To create an **old api key**, Go to terminal and access to the machine ssh root@my_domain_site and put these commands::
+* To create an **old api key**, Go to terminal and access to the to the machine ssh and put these commands::
 
     :~# sudo docker-compose -f file.yml run --rm django python manage.py shell
 
@@ -44,7 +44,7 @@ Create An Api key
 Create Backups
 ^^^^^^^^^^^^^^
 
-* To creata a **backup**, Go to terminal and access to the machine ssh root@my_domain_site and put these commands::
+* To creata a **backup**, Go to terminal and access to the to the machine ssh and put these commands::
 
     :~# docker-compose -f file.yml exec service-name backup
     :~# docker cp container-name:/path/to/container/backups /path/machine/folder
@@ -63,7 +63,7 @@ Create Backups
 Restore Backups
 ^^^^^^^^^^^^^^^
 
-* To restore a **backup**, Go to terminal and access to the machine ssh root@my_domain_site and put these commands::
+* To restore a **backup**, Go to terminal and access to the machine ssh and put these commands::
 
     :~# docker cp path/to/machine/backups/file.sql.gz container-name:/path/to/container/backups/
     :~# docker-compose -f ./chatbot_commerce/production.yml down --remove-orphans
@@ -98,7 +98,7 @@ requirements
     - A swap file should be the same size as your available physical memory. Having a very large swap file is not a good idea and if you are experiencing frequent crashing, you should expand your physical memory.
     - Change the count value to the size that you need. You can use the formula (<count>/1024) to determine how many megabytes you will be setting aside for swap. In this example, we are crafting 1GB swap count is in **Kilobyte**.
 
-* First create swap file::
+* First go to terminal and access to the machine ssh and create swap file::
 
     :~# dd if=/dev/zero of=/swapfile bs=1024 count=1048576
     :~# chmod 600 /swapfile
