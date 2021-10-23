@@ -56,7 +56,9 @@ Create Backups
     :~# docker cp chatbot_commerce_postgres_1:/backups ./
     :~# docker exec --detach chatbot_commerce_postgres_1 rm ./backups/*
 
-* **Or**::
+*Or
+
+    In this project you can do this in machine ssh::
 
     :~# ./backup.sh
 
@@ -77,7 +79,9 @@ Restore Backups
     :~# docker-compose -f ./chatbot_commerce/production.yml up -d
     :~# docker-compose -f ./chatbot_commerce/production.yml exec -u root postgres restore backup_2021_10_22T22_24_24.sql.gz
 
-* **Or**::
+*Or
+
+    In this project you can do this in machine ssh::
 
     :~# ./restoredb.sh container_name file.sql.gz
 
