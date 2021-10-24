@@ -184,9 +184,9 @@ Cron
 First you need to set up your TZ do this
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* link to documentation_ of three first step
+* link_ to documentation of three first step
 
-.. _documentation: https://askubuntu.com/questions/54364/how-do-you-set-the-timezone-for-crontab
+.. _link: https://askubuntu.com/questions/54364/how-do-you-set-the-timezone-for-crontab
 
 *  Command to select your time zone::
 
@@ -200,9 +200,7 @@ First you need to set up your TZ do this
 
     :~# timedatectl
 
-* Then just add_ jobs to cron::
-
-.. _add: https://www.cyberciti.biz/faq/how-do-i-add-jobs-to-cron-under-linux-or-unix-oses/
+* Then just add_ jobs to cron .. _add: https://www.cyberciti.biz/faq/how-do-i-add-jobs-to-cron-under-linux-or-unix-oses/::
 
     :~# crontab -e
 
