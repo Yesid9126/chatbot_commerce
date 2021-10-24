@@ -200,23 +200,25 @@ First you need to set up your TZ do this
 
     :~# timedatectl
 
-* Then just add_ jobs to cron .. _add: https://www.cyberciti.biz/faq/how-do-i-add-jobs-to-cron-under-linux-or-unix-oses/::
+* Then just add jobs to cron::
 
     :~# crontab -e
 
-- Inside of file cron do this::
+* Inside of file cron put this::
 
     # m h  dom mon dow   command
-    57 23 * * * ./clearcache.sh
-    53 23 * * 4 ./backup.sh
+    57 23 * * * ./file1.sh
+    53 23 * * 4 ./file2.sh
 
 * Check cron logs events through syslog::
 
-.. _logs: https://linuxhint.com/check-cron-logs-linux/
-
     :~# cat /var/log/syslog | grep cron
 
+* links to add_ jobs and check logs_ from cron
 
+    .. _add: https://www.cyberciti.biz/faq/how-do-i-add-jobs-to-cron-under-linux-or-unix-oses/
+
+    .. _logs: https://linuxhint.com/check-cron-logs-linux/
 
 Basic Commands
 --------------
