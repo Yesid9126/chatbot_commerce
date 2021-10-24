@@ -22,12 +22,14 @@ Moved to settings_.
 Avanced Commands
 ----------------
 
+**Open your machine ssh for all Avanced Commands**
+
 Create An Api key
 ^^^^^^^^^^^^^^^^^
 
 * To create a **new api key**, Go to admin site Sign Up and select Store APIKey's that gonna be en section **STORES** click on **ADD STORE APIKEY** where say Name put the store name that belongs this new api key and provides a e-mail to send verification. then confirm your api key in your email address to active it.
 
-* To create an **old api key**, Go to terminal and access to the to the machine ssh and put these commands::
+* To create an **old api key**, put these commands::
 
     :~# sudo docker-compose -f file.yml run --rm django python manage.py shell
 
@@ -44,7 +46,7 @@ Create An Api key
 Create Backups
 ^^^^^^^^^^^^^^
 
-* To creata a **backup**, Go to terminal and access to the to the machine ssh and put these commands::
+* To creata a **backup**, put these commands::
 
     :~# docker-compose -f file.yml exec service-name backup
     :~# docker cp container-name:/path/to/container/backups /path/machine/folder
@@ -58,14 +60,32 @@ Create Backups
 
 *Or
 
-    In this project you can do this in machine ssh::
+    In this project you can do this::
+
+    :~# nano ./backup.sh
+
+    then put this::
+
+    #! /bin/bash
+
+    # Give permissions with $ sudo chmod +x filename
+
+    # docker exec -t chatbot_commerce_postgres_1 pg_dump -U XIjBSJxMRRouVNXkIGbTiuijaGxlTssa -W Fr5VufGKRQxZRppXQxg1vS22jQsEKftZTo27KmDMsfaazL0kZ5i6dHeWc>
+    # whoami
+    docker-compose -f chatbot_commerce/production.yml exec postgres backup
+    docker cp chatbot_commerce_postgres_1:/backups ./
+    docker exec --detach chatbot_commerce_postgres_1 rm ./backups/*
+
+    cd ./backups && echo *
+
+    execute::
 
     :~# ./backup.sh
 
 Restore Backups
 ^^^^^^^^^^^^^^^
 
-* To restore a **backup**, Go to terminal and access to the machine ssh and put these commands::
+* To restore a **backup**, put these commands::
 
     :~# docker cp path/to/machine/backups/file.sql.gz container-name:/path/to/container/backups/
     :~# docker-compose -f ./chatbot_commerce/production.yml down --remove-orphans
@@ -81,7 +101,25 @@ Restore Backups
 
 *Or
 
-    In this project you can do this in machine ssh::
+    In this project you can do this::
+
+    :~# nano ./restoredb.sh
+
+    then put this::
+
+    #! /bin/bash
+
+    # Give permissions with $ sudo chmod +x filename
+
+    echo 'container:' $1, 'file:' $2
+
+    docker cp ./backups/$2 $1:/backups/
+    docker-compose -f ./chatbot_commerce/production.yml down --remove-orphans
+    docker-compose -f ./chatbot_commerce/production.yml up -d
+    docker-compose -f ./chatbot_commerce/production.yml exec -u root postgres restore $2
+    docker exec --detach chatbot_commerce_postgres_1 rm ./backups/*
+
+    execute::
 
     :~# ./restoredb.sh container_name file.sql.gz
 
@@ -102,7 +140,7 @@ requirements
     - A swap file should be the same size as your available physical memory. Having a very large swap file is not a good idea and if you are experiencing frequent crashing, you should expand your physical memory.
     - Change the count value to the size that you need. You can use the formula (<count>/1024) to determine how many megabytes you will be setting aside for swap. In this example, we are crafting 1GB swap count is in **Kilobyte**.
 
-* First go to terminal and access to the machine ssh and create swap file::
+* First create a swap file::
 
     :~# dd if=/dev/zero of=/swapfile bs=1024 count=1048576
     :~# chmod 600 /swapfile
@@ -123,9 +161,63 @@ requirements
 
 *Or
 
-    In this project you can do this in machine ssh::
+    In this project you can do this::
+
+    :~# nano ./clearcache.sh
+
+    then put this::
+
+    #! /bin/bash
+
+    # Give permissions with $ sudo chmod +x filename
+
+    # Note, we are using "echo 3", but it is not recommended in production instead use "echo 1"
+    echo 3 > /proc/sys/vm/drop_caches && swapoff -a && swapon -a && printf '\n%s\n' 'Ram-cache and Swap Cleared'
+
+    execute::
 
     :~# ./clearcache.sh
+
+Cron
+^^^^
+
+First you need to set up your TZ do this
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* link to documentation_ of three first step
+
+    .. _documentation: https://askubuntu.com/questions/54364/how-do-you-set-the-timezone-for-crontab
+
+*  Command to select your time zone::
+
+    :~# dpkg-reconfigure tzdata
+
+* Follow instructions and then::
+
+    :~# service cron restart
+
+* Verify your date settings::
+
+    :~# timedatectl
+
+* Then just add_ jobs to cron::
+
+    .. _add: https://www.cyberciti.biz/faq/how-do-i-add-jobs-to-cron-under-linux-or-unix-oses/
+
+    :~# crontab -e
+
+    - Inside of file cron do this::
+
+        # m h  dom mon dow   command
+        57 23 * * * ./clearcache.sh
+        53 23 * * 4 ./backup.sh
+
+* Check cron logs events through syslog::
+
+    .. _logs: https://linuxhint.com/check-cron-logs-linux/
+
+    :~# cat /var/log/syslog | grep cron
+
 
 
 Basic Commands
