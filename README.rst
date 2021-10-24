@@ -186,7 +186,7 @@ First you need to set up your TZ do this
 
 * link to documentation_ of three first step
 
-    .. _documentation: https://askubuntu.com/questions/54364/how-do-you-set-the-timezone-for-crontab
+.. _documentation: https://askubuntu.com/questions/54364/how-do-you-set-the-timezone-for-crontab
 
 *  Command to select your time zone::
 
@@ -202,19 +202,19 @@ First you need to set up your TZ do this
 
 * Then just add_ jobs to cron::
 
-    .. _add: https://www.cyberciti.biz/faq/how-do-i-add-jobs-to-cron-under-linux-or-unix-oses/
+.. _add: https://www.cyberciti.biz/faq/how-do-i-add-jobs-to-cron-under-linux-or-unix-oses/
 
     :~# crontab -e
 
-    - Inside of file cron do this::
+- Inside of file cron do this::
 
-        # m h  dom mon dow   command
-        57 23 * * * ./clearcache.sh
-        53 23 * * 4 ./backup.sh
+    # m h  dom mon dow   command
+    57 23 * * * ./clearcache.sh
+    53 23 * * 4 ./backup.sh
 
 * Check cron logs events through syslog::
 
-    .. _logs: https://linuxhint.com/check-cron-logs-linux/
+.. _logs: https://linuxhint.com/check-cron-logs-linux/
 
     :~# cat /var/log/syslog | grep cron
 
