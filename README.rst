@@ -183,15 +183,22 @@ Cron
 First you need to set up your TZ do this
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* link_ to documentation of three first step
+* link_ to documentation of three first third and four step and link to second_ step
 
 .. _link: https://askubuntu.com/questions/54364/how-do-you-set-the-timezone-for-crontab
+
+.. _second: https://www.tecmint.com/set-time-timezone-and-synchronize-time-using-timedatectl-command/
 
 *  Command to select your time zone::
 
     :~# dpkg-reconfigure tzdata
 
 * Follow instructions and then::
+
+    :~# timedatectl set-local-rtc 0
+    :~# timedatectl set-ntp true
+
+* Restart cron::
 
     :~# service cron restart
 
