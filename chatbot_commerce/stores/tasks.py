@@ -22,7 +22,7 @@ app.autodiscover_tasks()
 @app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
     # Calls clear_cache at 23:55.
-    every_23_55, _ = CrontabSchedule.objects.get_or_create(day_of_week='*', hour=23, minute=55)
+    every_23_55, _ = CrontabSchedule.objects.get_or_create(day_of_week='*', hour=23, minute=55, timezone="America/Bogota")
     task_instance, _ = PeriodicTask.objects.get_or_create(name='limpiador', task='clear_cache', defaults=dict(crontab=every_23_55))
 
 
