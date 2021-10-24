@@ -70,7 +70,6 @@ Create Backups
 
         # Give permissions with $ sudo chmod +x filename
 
-        # docker exec -t chatbot_commerce_postgres_1 pg_dump -U XIjBSJxMRRouVNXkIGbTiuijaGxlTssa -W Fr5VufGKRQxZRppXQxg1vS22jQsEKftZTo27KmDMsfaazL0kZ5i6dHeWc>
         # whoami
         docker-compose -f chatbot_commerce/production.yml exec postgres backup
         docker cp chatbot_commerce_postgres_1:/backups ./
