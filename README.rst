@@ -66,17 +66,17 @@ Create Backups
 
     then put this::
 
-    #! /bin/bash
+        #! /bin/bash
 
-    # Give permissions with $ sudo chmod +x filename
+        # Give permissions with $ sudo chmod +x filename
 
-    # docker exec -t chatbot_commerce_postgres_1 pg_dump -U XIjBSJxMRRouVNXkIGbTiuijaGxlTssa -W Fr5VufGKRQxZRppXQxg1vS22jQsEKftZTo27KmDMsfaazL0kZ5i6dHeWc>
-    # whoami
-    docker-compose -f chatbot_commerce/production.yml exec postgres backup
-    docker cp chatbot_commerce_postgres_1:/backups ./
-    docker exec --detach chatbot_commerce_postgres_1 rm ./backups/*
+        # docker exec -t chatbot_commerce_postgres_1 pg_dump -U XIjBSJxMRRouVNXkIGbTiuijaGxlTssa -W Fr5VufGKRQxZRppXQxg1vS22jQsEKftZTo27KmDMsfaazL0kZ5i6dHeWc>
+        # whoami
+        docker-compose -f chatbot_commerce/production.yml exec postgres backup
+        docker cp chatbot_commerce_postgres_1:/backups ./
+        docker exec --detach chatbot_commerce_postgres_1 rm ./backups/*
 
-    cd ./backups && echo *
+        cd ./backups && echo *
 
     execute::
 
@@ -107,17 +107,17 @@ Restore Backups
 
     then put this::
 
-    #! /bin/bash
+        #! /bin/bash
 
-    # Give permissions with $ sudo chmod +x filename
+        # Give permissions with $ sudo chmod +x filename
 
-    echo 'container:' $1, 'file:' $2
+        echo 'container:' $1, 'file:' $2
 
-    docker cp ./backups/$2 $1:/backups/
-    docker-compose -f ./chatbot_commerce/production.yml down --remove-orphans
-    docker-compose -f ./chatbot_commerce/production.yml up -d
-    docker-compose -f ./chatbot_commerce/production.yml exec -u root postgres restore $2
-    docker exec --detach chatbot_commerce_postgres_1 rm ./backups/*
+        docker cp ./backups/$2 $1:/backups/
+        docker-compose -f ./chatbot_commerce/production.yml down --remove-orphans
+        docker-compose -f ./chatbot_commerce/production.yml up -d
+        docker-compose -f ./chatbot_commerce/production.yml exec -u root postgres restore $2
+        docker exec --detach chatbot_commerce_postgres_1 rm ./backups/*
 
     execute::
 
@@ -167,12 +167,12 @@ requirements
 
     then put this::
 
-    #! /bin/bash
+        #! /bin/bash
 
-    # Give permissions with $ sudo chmod +x filename
+        # Give permissions with $ sudo chmod +x filename
 
-    # Note, we are using "echo 3", but it is not recommended in production instead use "echo 1"
-    echo 3 > /proc/sys/vm/drop_caches && swapoff -a && swapon -a && printf '\n%s\n' 'Ram-cache and Swap Cleared'
+        # Note, we are using "echo 3", but it is not recommended in production instead use "echo 1"
+        echo 3 > /proc/sys/vm/drop_caches && swapoff -a && swapon -a && printf '\n%s\n' 'Ram-cache and Swap Cleared'
 
     execute::
 
