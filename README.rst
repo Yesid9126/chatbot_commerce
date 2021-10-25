@@ -213,8 +213,8 @@ First you need to set up your TZ do this
 * Inside of file cron put this::
 
     # m h  dom mon dow   command
-    57 23 * * * ./file1.sh
-    53 23 * * 4 ./file2.sh
+    57 23 * * * /path/to/file1.sh
+    53 23 * * 4 /path/to/file2.sh
 
 * Check cron logs events through syslog::
 
