@@ -12,7 +12,7 @@ class VtexStores:
     def __init__(self, store):
         self.store = store
         self.vtexprice = VtexPriceSku(store=store)
-        self.http = urllib3.HTTPSConnectionPool(headers=self.store.headers, host=f'{self.store.name}.{self.store.url_enviroment}')
+        self.http = urllib3.HTTPSConnectionPool(headers=store.headers, host=f'{store.name}.{store.url_enviroment}')
 
     def _get_resources(self, uri, **kwargs):
         """Get resources for store."""

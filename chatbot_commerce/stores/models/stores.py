@@ -235,6 +235,7 @@ class Store(ChatbootModel):
 
     STORE_TYPE = (
         ('VTEX', 'VTEX'),
+        ('SHOPIFY', 'SHOPIFY'),
     )
 
     # info filter
@@ -315,10 +316,15 @@ class Store(ChatbootModel):
 
     @property
     def headers(self):
-        headers = {
-            "X-VTEX-API-AppKey": f"{self.api_key}",
-            "X-VTEX-API-AppToken": f"{self.api_token}"
-        }
+        if self.store_type == 'VTEX':
+            headers = {
+                "X-VTEX-API-AppKey": f"{self.api_key}",
+                "X-VTEX-API-AppToken": f"{self.api_token}"
+            }
+        elif self.store_type == 'SHOPIFY':
+            headers = {
+                'X-Shopify-Access-Token': f"{self.api_token}",
+            }
         return headers
 
     @property
@@ -328,6 +334,10 @@ class Store(ChatbootModel):
                 "base_url": f'https://{self.name}.{self.url_enviroment}/api',
                 "base_price_url": f'https://api.vtex.com/{self.name}',
                 "status_url": f'https://{self.name}.{self.url_enviroment}/api/catalog_system/pvt/brand/list'
+            }
+        elif self.store_type == 'SHOPIFY':
+            urls = {
+                "base_url": f'https://{self.name}.{self.url_enviroment}/admin/api/2021-10'
             }
         return urls
 

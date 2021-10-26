@@ -1,11 +1,13 @@
 """Product and skus views."""
 
-# Django Rest Framework
+# Django
 from django.db.models import Prefetch
-from rest_framework.generics import get_object_or_404
-from rest_framework import viewsets, mixins
-from rest_framework.response import Response
 from django.http import HttpResponseBadRequest
+
+# Django Rest Framework
+from rest_framework import viewsets, mixins
+from rest_framework.generics import get_object_or_404
+from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_404_NOT_FOUND
 
 # Serializers
@@ -29,8 +31,7 @@ from chatbot_commerce.utils.paginators import page_url
 from django.core.cache import cache
 
 # Runtime
-# from db_python import query_debugger
-
+from db_python import query_debugger
 
 class ProductViewset(mixins.RetrieveModelMixin,
                      mixins.ListModelMixin,
@@ -78,7 +79,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
         self.current_size_position = self.limit - q_offset
         return super().dispatch(request, *args, **kwargs)
 
-    # @query_debugger
+    @query_debugger
     def list(self, request, *args, **kwargs):
         """
         Return all products
@@ -114,7 +115,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
         cache.set(key=cache_key, value=paginated_data, timeout=30)
         return Response(data=paginated_data, status=HTTP_200_OK)
 
-    # @query_debugger
+    @query_debugger
     def retrieve(self, request, *args, **kwargs):
         """
         Return a single product with his skus.
@@ -124,14 +125,16 @@ class ProductViewset(mixins.RetrieveModelMixin,
         try:
             return Response(
                 self.get_serializer(
-                    Product.objects
+                    Product.objects\
+                    .only('external_id', 'name', 'keywords', 'department', 'category', 'sub_category', 'brand')
                     .select_related('department', 'category', 'sub_category', 'brand')
                     .prefetch_related(
                         Prefetch(
                             'skus',
-                            queryset=Skus.objects
+                            queryset=Skus.objects\
+                            .only('serializer_data', 'product')\
                             .filter(**self.skus_filter_data),
-                            to_attr='p_skus'
+                            to_attr='q_skus'
                         ),
                     )
                     .get(store=self.store, external_id=kwargs['pk']),

@@ -43,12 +43,12 @@ def products_skus(self, store_pk):
         products_external_id.reverse()
         count = len(products_external_id)
         products_external_id = products_external_id[self.offset:self.limit]
-        queryset = Product.objects\
+        queryset = Product.objects.only('external_id', 'name', 'keywords', 'department', 'category', 'sub_category', 'brand')\
             .select_related('department', 'category', 'sub_category', 'brand')\
             .prefetch_related(
                 Prefetch(
                     'skus',
-                    queryset=Skus.objects.filter(pk__in=skus_pk, product__external_id__in=products_external_id),
+                    queryset=Skus.objects.only('serializer_data', 'product').filter(pk__in=skus_pk, product__external_id__in=products_external_id),
                     to_attr='q_skus'
                 )
             )\
@@ -92,12 +92,12 @@ def products_skus(self, store_pk):
             products_external_id.reverse()
             count = len(products_external_id)
             products_external_id = products_external_id[self.offset:self.limit]
-            queryset = Product.objects\
+            queryset = Product.objects.only('external_id', 'name', 'keywords', 'department', 'category', 'sub_category', 'brand')\
                 .select_related('department', 'category', 'sub_category', 'brand')\
                 .prefetch_related(
                     Prefetch(
                         'skus',
-                        queryset=Skus.objects.filter(pk__in=skus_pk, product__external_id__in=products_external_id),
+                        queryset=Skus.objects.only('serializer_data', 'product').filter(pk__in=skus_pk, product__external_id__in=products_external_id),
                         to_attr='q_skus'
                     )
                 )\
@@ -126,12 +126,12 @@ def products_skus(self, store_pk):
             products_external_id.reverse()
             count = len(products_external_id)
             products_external_id = products_external_id[self.offset:self.limit]
-            queryset = Product.objects\
+            queryset = Product.objects.only('external_id', 'name', 'keywords', 'department', 'category', 'sub_category', 'brand')\
                 .select_related('department', 'category', 'sub_category', 'brand')\
                 .prefetch_related(
                     Prefetch(
                         'skus',
-                        queryset=Skus.objects.filter(pk__in=skus_pk, product__external_id__in=products_external_id),
+                        queryset=Skus.objects.only('serializer_data', 'product').filter(pk__in=skus_pk, product__external_id__in=products_external_id),
                         to_attr='q_skus'
                     )
                 )\
@@ -151,12 +151,12 @@ def products_skus(self, store_pk):
             products_external_id.reverse()
             count = len(products_external_id)
             products_external_id = products_external_id[self.offset:self.limit]
-            queryset = Product.objects\
+            queryset = Product.objects.only('external_id', 'name', 'keywords', 'department', 'category', 'sub_category', 'brand')\
                 .select_related('department', 'category', 'sub_category', 'brand')\
                 .prefetch_related(
                     Prefetch(
                         'skus',
-                        queryset=Skus.objects.filter(pk__in=skus_pk, product__external_id__in=products_external_id),
+                        queryset=Skus.objects.only('serializer_data', 'product').filter(pk__in=skus_pk, product__external_id__in=products_external_id),
                         to_attr='q_skus'
                     )
                 )\
@@ -172,12 +172,12 @@ def products_skus(self, store_pk):
             products_external_id.reverse()
             count = len(products_external_id)
             products_external_id = products_external_id[self.offset:self.limit]
-            queryset = Product.objects\
+            queryset = Product.objects.only('external_id', 'name', 'keywords', 'department', 'category', 'sub_category', 'brand')\
                 .select_related('department', 'category', 'sub_category', 'brand')\
                 .prefetch_related(
                     Prefetch(
                         'skus',
-                        queryset=Skus.objects.filter(pk__in=skus_pk, product__external_id__in=products_external_id),
+                        queryset=Skus.objects.only('serializer_data', 'product').filter(pk__in=skus_pk, product__external_id__in=products_external_id),
                         to_attr='q_skus'
                     )
                 )\
@@ -192,12 +192,12 @@ def products_skus(self, store_pk):
         products_external_id.reverse()
         count = len(products_external_id)
         products_external_id = products_external_id[self.offset:self.limit]
-        queryset = Product.objects\
+        queryset = Product.objects.only('external_id', 'name', 'keywords', 'department', 'category', 'sub_category', 'brand')\
             .select_related('department', 'category', 'sub_category', 'brand')\
             .prefetch_related(
                 Prefetch(
                     'skus',
-                    queryset=Skus.objects.filter(pk__in=skus_pk, product__external_id__in=products_external_id),
+                    queryset=Skus.objects.only('serializer_data', 'product').filter(pk__in=skus_pk, product__external_id__in=products_external_id),
                     to_attr='q_skus'
                 )
             )\
