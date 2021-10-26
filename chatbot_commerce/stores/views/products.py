@@ -33,6 +33,7 @@ from django.core.cache import cache
 # Runtime
 from db_python import query_debugger
 
+
 class ProductViewset(mixins.RetrieveModelMixin,
                      mixins.ListModelMixin,
                      viewsets.GenericViewSet):
@@ -125,14 +126,14 @@ class ProductViewset(mixins.RetrieveModelMixin,
         try:
             return Response(
                 self.get_serializer(
-                    Product.objects\
+                    Product.objects
                     .only('external_id', 'name', 'keywords', 'department', 'category', 'sub_category', 'brand')
                     .select_related('department', 'category', 'sub_category', 'brand')
                     .prefetch_related(
                         Prefetch(
                             'skus',
-                            queryset=Skus.objects\
-                            .only('serializer_data', 'product')\
+                            queryset=Skus.objects
+                            .only('serializer_data', 'product')
                             .filter(**self.skus_filter_data),
                             to_attr='q_skus'
                         ),
