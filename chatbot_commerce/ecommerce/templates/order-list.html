@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% comment %} {% load humanize %} {% endcomment %}
+
+{% block content %}
+
+<div class="container py-3 flex-grow-1">
+<div class="table-responsive text-nowrap">
+  <h2>Order Summary</h2>
+  <table class="table">
+		<thead>
+			<tr>
+		<th scope="col">#</th>
+		<th scope="col">Item Title</th>
+		<th scope="col">Price</th>
+		<th scope="col">Quantity</th>
+		<th scope="col">Total Item Price</th>
+		</tr>
+	</thead>
+	<tbody>
+	{% for order_item in order.item.all %}
+		<tr>
+			<th scope="row">1</th>
+			<td>{{ order_item.sku_unit.product.name }}</td>
+      {% with order_item.sku_unit.price_set.all|first as price %}
+			<td>${{ price.base_price }}</td>
+      {% endwith %}
+			{% comment %} <td>{{ order_item.sku.price_set.price }}</td> {% endcomment %}
+			<td>
+				<a href="{% url 'ecommerce:remove-one-from-cart' order_item.sku_unit.product.store.name order_item.sku_unit.external_id  %}"><i class="fas fa-minus mr-2"></i></a>
+				{{ order_item.quantity }}
+				<a href="{% url 'ecommerce:add-to-cart' order_item.sku_unit.product.store.name order_item.sku_unit.external_id %}"><i class="fas fa-plus ml-2"></i></a>
+			</td>
+			<td>
+				{% comment %} {% if order_item.item.discount_price %} {% endcomment %}
+					{% comment %} ${{ order_item.get_total_discount_item_price }} {% endcomment %}
+					{% comment %} Saving <span class="badge bg-primary">{{ order_item.get_amount_saved|intcomma }}</span> {% endcomment %}
+				{% comment %} {% else %} {% endcomment %}
+					${{ order_item.price}}
+				{% comment %} {% endif %} {% endcomment %}
+				<a style="color:red" href="{% url 'ecommerce:remove-from-cart' order_item.sku_unit.product.store.name order_item.sku_unit.external_id  %}">
+					<i class="fas fa-trash float-right"></i>
+				</a>
+			</td>
+		</tr>
+		{% empty %}
+		<tr>
+			<td colspan="5">Your car is empty</td>
+		</tr>
+	{% endfor %}
+	{% if object.get_total %}
+
+    {% comment %} {% if object.coupon %}
+      <tr class="bg-light">
+        <td colspan="4"><b><span class="text-success">Coupon</span></b></td>
+        <td><b><span class="text-success">${{ object.coupon.amount }}</span></b></td>
+      </tr>
+    {% endif %} {% endcomment %}
+
+	<tr>
+		<td colspan="4"><b>Order total</b></td>
+		<td><b>${{ object.get_total}}</b></td>
+	</tr>
+	<tr >
+		<td colspan="5">
+		<a class="btn btn-warning float-right ml-3"href='/checkout/'>Proced to Checkout</a>
+		<a class="btn btn-primary float-right"href='/'>Continue shopping</a>
+		</td>
+	</tr>
+	{% endif %}
+	</tbody>
+  </table>
+</div>
+</div>
+
+
+{% endblock content %}

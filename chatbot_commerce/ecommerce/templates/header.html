@@ -1,0 +1,60 @@
+{% load tags %}
+
+<!-- Navbar -->
+<nav class="navbar fixed-top navbar-expand-lg navbar-light white scrolling-navbar">
+  <div class="container">
+
+    <!-- Brand -->
+    <div class="row flex-grow-1">
+      <div class="col-8 col-lg-2">
+        <a class="navbar-brand waves-effect" href="{% url 'ecommerce:home'  store %}">
+          {% if  store == "pilatos21" %}
+          {% comment %} <i class="fas fa-store center" style="color: #2e86c1 ; font-size:30px;"></i> {% endcomment %}
+          <img src="https://pilatos21.vtexassets.com/arquivos/Pilatos-GIF.gif" alt="Simply Easy Learning"
+            style="  width: 100%; height: auto;">
+          {% else %}
+          <strong class="blue-text" style="font-size:18px;">{{ store | title}}</strong><br>
+          {% endif %}
+        </a>
+      </div>
+      <!-- Collapse -->
+      <div class="col-4 col-lg-10 d-flex justify-content-end flex-row">
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Links -->
+        <div class="collapse navbar-collapse justify-content-between" id="navbarSupportedContent">
+
+          <!-- Left -->
+          <ul class="navbar-nav d-flex ">
+            <li class="nav-item">
+              <a class="nav-link waves-effect" href="{% url 'ecommerce:home' store %}">Home
+              </a>
+            </li>
+          </ul>
+          <!-- /Left -->
+
+          <!-- Right -->
+          <ul class="navbar-nav nav-flex-icons  ">
+            <li class="nav-item">
+               <a class="nav-link waves-effect" href="{% url 'ecommerce:order-list' store %}">
+                <span class="badge red z-depth-1 mr-1">{{ request|count_items }}</span>
+                <i class="fas fa-shopping-cart"></i>
+                <span class="clearfix d-none d-sm-inline-block"> Cart </span>
+              </a>
+            </li>
+            <li class="nav-item">
+              {% comment %} <a class="nav-link waves-effect" href="{% url 'about'%}">About {% endcomment %}
+                <span class="sr-only">(current)</span>
+              </a>
+            </li>
+          </ul>
+          <!-- /Right -->
+
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
