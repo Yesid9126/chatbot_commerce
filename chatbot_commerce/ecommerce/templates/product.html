@@ -54,7 +54,7 @@
 
             <p class="lead font-weight-bold">Description</p>
 
-            <p>{{ object.product.description|replace1 }} </p>
+            <p>{{ object.product.description|safe }} </p>
               <a href="{% url 'ecommerce:add-to-cart' object.product.store.name object.external_id  %}" class="btn btn-primary btn-md my-0 p" >
                 Add to cart
                 <i class="fas fa-shopping-cart ml-1"></i>
