@@ -17,7 +17,9 @@ class HomeView(ListView):
     paginate_by = 16
 
     def get_queryset(self):
-        skus = Skus.objects.filter(product__store__name=self.kwargs["store"])
+        skus = Skus.objects.filter(product__store__name=self.kwargs["store"]).order_by(
+            "created"
+        )
         return skus
 
     def get_context_data(self, **kwargs):
@@ -109,7 +111,6 @@ def add_to_car(request, external_id, store, *args, **kwargs):
 
         order_item.save()
         messages.info(request, "This item cuantity was updated")
-    # return redirect("ecommerce:order-list" )
     return redirect("ecommerce:order-list", store=store)
 
 
