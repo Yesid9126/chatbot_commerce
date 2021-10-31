@@ -208,19 +208,21 @@ First you need to set up your TZ do this
 
 * Then just add jobs to cron::
 
-    :~# crontab -e
+    :~# nano /etc/crontab
 
 * Inside of file cron put this::
 
-    # m h  dom mon dow   command
-    57 23 * * * /path/to/file1.sh
-    53 23 * * 4 /path/to/file2.sh
+    # m h  dom mon dow    user      type         command
+    54  23  *   *    *     root    /bin/bash    /path/to/file1.sh
+    57  23  *   *    *     root    /bin/bash    /path/to/file2.sh
 
 * Check cron logs events through syslog::
 
     :~# cat /var/log/syslog | grep cron
 
-* links to add_ jobs and check logs_ from cron
+* links to add_ jobs and check logs_ from cron and recommendations_
+
+    .. _recommendations: https://stackoverflow.com/questions/20582224/shell-script-not-running-via-crontab-but-runs-fine-manually
 
     .. _add: https://www.cyberciti.biz/faq/how-do-i-add-jobs-to-cron-under-linux-or-unix-oses/
 

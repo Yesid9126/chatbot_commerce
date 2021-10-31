@@ -3,6 +3,7 @@
 from slugify import slugify
 # Django
 from django.db import models
+from django.contrib.postgres.fields import ArrayField
 from django.utils.translation import gettext as _
 
 
@@ -33,7 +34,6 @@ class ChatbootModel(models.Model):
         abstract = True
 
         get_latest_by = 'created'
-        ordering = ['-created', '-modified']
 
 
 class BaseRawAbstract(ChatbootModel):
@@ -49,15 +49,48 @@ class BaseRawAbstract(ChatbootModel):
         abstract = True
 
 
+class BaseExternalIdAbstract(models.Model):
+
+    external_id = ArrayField(models.CharField(max_length=250), default=list)
+
+    class Meta:
+        """Meta option"""
+        abstract = True
+
+
+class BaseSlugnameAbstract(ChatbootModel):
+
+    # Filter data
+    name = models.CharField(
+        _("Name"),
+        max_length=500,
+        null=True, blank=True, unique=True
+    )
+    slug_name = models.SlugField(
+        max_length=255,
+        null=True, blank=True, unique=True
+    )
+
+    def save(self, *args, **kwargs):
+        self.slug_name = slugify(self.name, separator="_")
+        return super().save(*args, **kwargs)
+
+    class Meta:
+        """Meta option."""
+        abstract = True
+
+
 class BaseAbstract(BaseRawAbstract):
 
     # Filter data
     name = models.CharField(
+        _("Name"),
         max_length=500,
         null=True, blank=True
     )
     external_id = models.BigIntegerField(
-        _("External ID")
+        _("External ID"),
+        null=True, blank=True
     )
 
     class Meta:
@@ -68,10 +101,6 @@ class BaseAbstract(BaseRawAbstract):
 class AbstractCategory(BaseAbstract):
 
     # Filter data
-    slug_name = models.SlugField(
-        max_length=255,
-        null=True, blank=True
-    )
     title = models.TextField(
         null=True, blank=True
     )
@@ -83,10 +112,6 @@ class AbstractCategory(BaseAbstract):
 
     def __str__(self):
         return self.name
-
-    def save(self, *args, **kwargs):
-        self.slug_name = slugify(self.name, separator="_")
-        return super().save(*args, **kwargs)
 
     class Meta:
         """Meta option."""

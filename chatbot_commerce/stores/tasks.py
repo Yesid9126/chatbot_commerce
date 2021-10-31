@@ -13,7 +13,7 @@ from chatbot_commerce.utils.tasks import create_products_vtex_store, get_departm
 import gc
 
 # Models
-from chatbot_commerce.stores.models import Store
+from chatbot_commerce.stores.models import Store, TypeStore
 from django.db import connections, transaction
 from django_celery_beat.models import PeriodicTask, CrontabSchedule
 
@@ -21,6 +21,9 @@ app = Celery()
 app.autodiscover_tasks()
 @app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
+    STORE_TYPE = ('VTEX', 'SHOPIFY',)
+    for store_type in STORE_TYPE:
+        TypeStore.objects.get_or_create(name=store_type)
     # Calls clear_cache at 23:55.
     every_23_55, _ = CrontabSchedule.objects.get_or_create(day_of_week='*', hour=23, minute=55, timezone="America/Bogota")
     task_instance, _ = PeriodicTask.objects.get_or_create(name='limpiador', task='clear_cache', defaults=dict(crontab=every_23_55))
@@ -45,7 +48,7 @@ def store_begining(store, *args, **kwargs):
 
     # Validations
     try:
-        store = Store.objects.get(pk=store)
+        store = Store.objects.select_related('store_type').get(pk=store)
     except Exception as message:
         return f'error: store no match, message_error: {message}'
     if store.sync_status:

@@ -3,7 +3,7 @@
 # Django
 from django.contrib import admin
 # Models
-from chatbot_commerce.stores.models import Store, SaleChannel, Seller, SkuSeller, StoreAPIKey
+from chatbot_commerce.stores.models import Store, SaleChannel, Seller, SkuSeller, StoreAPIKey, TypeStore
 from rest_framework_api_key.models import APIKey
 from rest_framework_api_key.admin import APIKeyModelAdmin
 
@@ -62,6 +62,7 @@ class SaleChannelAdmin(admin.ModelAdmin):
 
 
 admin.site.unregister(APIKey)
+admin.site.register(TypeStore)
 @admin.register(StoreAPIKey)
 class StoreAPIKeyAdmin(APIKeyModelAdmin):
     """Store api key model admin."""

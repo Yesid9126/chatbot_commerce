@@ -5,7 +5,7 @@ from django.urls import include, path, re_path
 from django.views import defaults as default_views
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
-from chatbot_commerce.stores.views import successfuly_email, email_is_active, testing
+from chatbot_commerce.stores.views import successfuly_email, email_is_active
 # from rest_framework.documentation import include_docs_urls
 # from db_python import product_list
 
@@ -28,7 +28,7 @@ urlpatterns = [
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     path('confirm/email/<uidb64>/<token>/', email_is_active, name='email-activate'),
     path('successfuly/email/', successfuly_email, name='email-successfuly'),
-    path('test/', testing)
+    # path('test/', testing)
     # path('prueba/', product_list)
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

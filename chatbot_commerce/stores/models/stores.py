@@ -18,7 +18,7 @@ from rest_framework_api_key.crypto import KeyGenerator, concatenate, split
 from django_celery_beat.models import PeriodicTask, CrontabSchedule
 
 # utilities
-from chatbot_commerce.utils.models import ChatbootModel, BaseAbstract, BaseRawAbstract
+from chatbot_commerce.utils.models import ChatbootModel, BaseAbstract, BaseRawAbstract, BaseSlugnameAbstract
 from django.utils.translation import gettext as _
 from django.dispatch import receiver
 from django.db.models.signals import post_save
@@ -230,19 +230,20 @@ class StoreAPIKey(AbstractAPIKey):
         default_related_name = "keys"
 
 
+class TypeStore(BaseSlugnameAbstract):
+    """Store types model."""
+
+    api_version = models.CharField(null=True, blank=True, max_length=250, verbose_name=_("Api version"))
+
+    def __str__(self) -> str:
+        return self.name
+
+
 class Store(ChatbootModel):
     """Stores model."""
 
-    STORE_TYPE = (
-        ('VTEX', 'VTEX'),
-        ('SHOPIFY', 'SHOPIFY'),
-    )
-
     # info filter
-    store_type = models.CharField(
-        _("Type of store"),
-        max_length=500, choices=STORE_TYPE
-    )
+    store_type = models.ForeignKey('stores.TypeStore', verbose_name=_("Type store"), on_delete=models.CASCADE)
     name = models.CharField(
         _("Name of store"),
         max_length=255
@@ -278,10 +279,10 @@ class Store(ChatbootModel):
         default=False
     )
     api_key = models.CharField(
-        max_length=500
+        max_length=500, null=True, blank=True
     )
     api_token = models.CharField(
-        max_length=500
+        max_length=500, null=True, blank=True
     )
 
     # Filter manage
@@ -313,15 +314,16 @@ class Store(ChatbootModel):
     class Meta:
         verbose_name = "Store"
         verbose_name_plural = "Stores"
+        default_related_name = 'stores'
 
     @property
     def headers(self):
-        if self.store_type == 'VTEX':
+        if self.store_type.name == 'VTEX':
             headers = {
                 "X-VTEX-API-AppKey": f"{self.api_key}",
                 "X-VTEX-API-AppToken": f"{self.api_token}"
             }
-        elif self.store_type == 'SHOPIFY':
+        elif self.store_type.name == 'SHOPIFY':
             headers = {
                 'X-Shopify-Access-Token': f"{self.api_token}",
             }
@@ -329,15 +331,16 @@ class Store(ChatbootModel):
 
     @property
     def urls(self):
-        if self.store_type == 'VTEX':
+        if self.store_type.name == 'VTEX':
             urls = {
                 "base_url": f'https://{self.name}.{self.url_enviroment}/api',
                 "base_price_url": f'https://api.vtex.com/{self.name}',
                 "status_url": f'https://{self.name}.{self.url_enviroment}/api/catalog_system/pvt/brand/list'
             }
-        elif self.store_type == 'SHOPIFY':
+        elif self.store_type.name == 'SHOPIFY':
             urls = {
-                "base_url": f'https://{self.name}.{self.url_enviroment}/admin/api/2021-10'
+                "base_url": f'https://{self.name}.{self.url_enviroment}/admin/api/{self.store_type.api_version}',
+                "status_url": f"https://{self.name}.{self.url_enviroment}/admin/api/2021-10/collection_listings.json"
             }
         return urls
 

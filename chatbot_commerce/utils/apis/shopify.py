@@ -17,15 +17,17 @@ class ShopifyStores:
     def _get_resources(self, uri, **kwargs):
         """Get resources for store."""
         url = "{}/{}".format(self.store.urls['base_url'], uri)
+        print(url)
         lr = []
         while 1:
             r = self.http.request(method='GET', url=url)
-            link = r.headers.get('Link').split(',')[-1].strip()
-            if 'rel="next"' in link:
+            lr.append(r)
+            link = r.headers.get('Link')
+            if link and 'rel="next"' in link:
+                link = link.split(',')[-1].strip()
                 url = link[1:link.find('>')]
             else:
                 break
-            lr.append(r)
         return lr
 
     def _get_json_resource(self, uri, **kwargs):
@@ -40,7 +42,7 @@ class ShopifyStores:
             for response in list_response:
                 if response.status in [requests.codes.ok]:
                     try:
-                        response_json += json.loads(response.data.decode('utf-8'))
+                        response_json += [json.loads(response.data.decode('utf-8'))]
                     except ValueError as e:
                         response_json = {
                             "status_code": response.status,
@@ -56,22 +58,38 @@ class ShopifyStores:
         except urllib3.exceptions.RequestError as e:
             status_code = getattr(e.response, "status_code", 406)
             reason = getattr(e.response, "reason", str(e))
-            response_json = {
-                "status_code": status_code,
-                "message": reason,
-            }
+            response_json.append(
+                {
+                    "status_code": status_code,
+                    "message": reason,
+                }
+            )
         return response_json
 
-    def collections(self, **kwargs):
-        uri = f'collection_listings.json?limit=250'
+    def collections(self, query_params, **kwargs):
+        uri = f'collection_listings.json'
+        if query_params:
+            uri = '?'.join((uri, query_params,))
         method = 'get'
         return self._get_json_resource(
             uri,
             method=method
         )
 
-    def products(self, **kwargs):
-        uri = f'product_listings.json?limit=100'
+    def products(self, query_params, **kwargs):
+        uri = f'products.json'
+        if query_params:
+            uri = '?'.join((uri, query_params,))
+        method = 'get'
+        return self._get_json_resource(
+            uri,
+            method=method
+        )
+
+    def product_listings(self, query_params, **kwargs):
+        uri = f'product_listings.json'
+        if query_params:
+            uri = '?'.join((uri, query_params,))
         method = 'get'
         return self._get_json_resource(
             uri,

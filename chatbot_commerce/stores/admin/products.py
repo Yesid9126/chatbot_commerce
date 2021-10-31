@@ -23,28 +23,30 @@ from chatbot_commerce.stores.models import (
 class SubcategoryAdmin(admin.ModelAdmin):
     """Subcategory model admin."""
 
-    list_display = ['name', 'slug_name', 'category']
+    list_display = ('name', 'slug_name',)
     search_fields = ['name', 'slug_name']
+    readonly_fields = ('name', 'slug_name', 'stores', 'external_id',)
 
 
 @admin.register(Category)
 class CategoriesAdmin(admin.ModelAdmin):
-    list_display = ('name', 'slug_name', 'department',)
+    list_display = ('name', 'slug_name',)
     search_fields = ['name', 'slug_name']
-    list_filter = ['department']
-    readonly_fields = list_display
+    readonly_fields = ('name', 'slug_name', 'stores', 'subcategories', 'external_id',)
 
 
 @admin.register(Department)
 class DepartmentsAdmin(admin.ModelAdmin):
     list_display = ['name', 'slug_name']
     search_fields = ['name', 'slug_name']
+    readonly_fields = ('categories', 'stores', 'external_id',)
 
 
 @admin.register(Brand)
 class BrandAdmin(admin.ModelAdmin):
     list_display = ['name', 'slug_name']
     search_fields = ['name', 'slug_name']
+    readonly_fields = ('stores', 'external_id',)
 
 
 class InlineSkus(admin.TabularInline):
@@ -67,8 +69,8 @@ class ProductAdmin(admin.ModelAdmin):
 
 @admin.register(Image)
 class ImagesAdmin(admin.ModelAdmin):
-    list_display = ('sku', 'image_url',)
-    readonly_fields = list_display
+    list_display = ('image_url',)
+    readonly_fields = ('image_url', 'skus', 'products', 'store',)
 
 
 class InlineImageAdmin(admin.TabularInline):
@@ -138,13 +140,13 @@ class PriceAdmin(admin.ModelAdmin):
 class AttributeAdmin(admin.ModelAdmin):
     """Price model admin."""
 
-    readonly_fields = ('sku', 'attribute_type',)
-    list_display = ['sku_id', 'sku', 'attribute_type', 'value']
+    readonly_fields = ('skus', 'attribute_type',)
+    list_display = ['sku_id', 'attribute_type', 'value']
     search_fields = ['value']
 
     def sku_id(self, obj):
         """Sku id."""
-        return obj.sku.external_id
+        return obj.skus.values_list('external_id', flat=True)
 
 
 # admin.site.register(Attribute)

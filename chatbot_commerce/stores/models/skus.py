@@ -112,9 +112,9 @@ class Skus(BaseAbstract):
             'seller_id': seller,
             'sku_name': self.name,
             'total_quantity': self.total_quantity,
-            'images': list(self.images.values_list('image_url', flat=True)),
+            'images': list(Image.objects.filter(skus=self.pk).values_list('image_url', flat=True)),
             'price': price,
-            'attributes': list(self.attributes.values('value', attribute_name=models.F('attribute_type__name'))),
+            'attributes': list(Attribute.objects.filter(skus=self.pk).values('value', attribute_name=models.F('attribute_type__name'))),
             'is_active': self.is_active
         }
         return super().save(*args, **kwargs)
@@ -140,10 +140,19 @@ class Image(ChatbootModel):
         max_length=50,
         null=True, blank=True
     )
+    position = models.IntegerField(null=True, blank=True)
+    width = models.BigIntegerField(null=True, blank=True)
+    height = models.BigIntegerField(null=True, blank=True)
 
     # Relationship filter
-    sku = models.ForeignKey(
-        "stores.Skus", on_delete=models.CASCADE
+    store = models.ForeignKey(
+        "stores.Store", verbose_name=_("Store"), on_delete=models.CASCADE
+    )
+    products = models.ManyToManyField(
+        "stores.Product", verbose_name=_('Products'), related_name='product_images'
+    )
+    skus = models.ManyToManyField(
+        "stores.Skus", verbose_name=_('Skus')
     )
 
     # Url data
@@ -178,7 +187,7 @@ class Price(BaseRawAbstract):
     )
 
     # Filter data
-    base_price = models.BigIntegerField(
+    base_price = models.FloatField(
         _('Base price'),
         null=True, blank=True
     )
@@ -216,7 +225,7 @@ class FixedPrice(BaseRawAbstract):
         _('Trade porlice ID'),
         max_length=50
     )
-    value = models.BigIntegerField(
+    value = models.FloatField(
         _('Value'),
         null=True, blank=True
     )
@@ -299,6 +308,7 @@ class AttributeType(ChatbootModel):
 
     def save(self, *args, **kwargs):
         self.slug_name = slugify(self.name, separator="_")
+        self.name = self.name.strip().capitalize()
         return super().save(*args, **kwargs)
 
     class Meta:
@@ -316,8 +326,8 @@ class Attribute(BaseRawAbstract):
     )
 
     # Relationship filter
-    sku = models.ForeignKey(
-        'stores.Skus', on_delete=models.CASCADE
+    skus = models.ManyToManyField(
+        'stores.Skus', verbose_name=_("Skus")
     )
     attribute_type = models.ForeignKey(
         'stores.AttributeType', on_delete=models.CASCADE

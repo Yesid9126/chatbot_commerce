@@ -191,7 +191,7 @@ class DepartmentsViewset(mixins.ListModelMixin,
                             ),
                             to_attr='q_categories')
                     )
-                data = [
+                data = {
                     {
                         'pk': deparment.external_id,
                         'name': deparment.name,
@@ -209,7 +209,7 @@ class DepartmentsViewset(mixins.ListModelMixin,
 
                     }
                     for deparment in queryset
-                ]
+                }
             elif Category.objects.filter(**search).exists():
                 queryset = Category.objects\
                     .select_related('department')\
@@ -219,7 +219,7 @@ class DepartmentsViewset(mixins.ListModelMixin,
                             'subcategories',
                             to_attr='q_subcategories')
                     )
-                data = [
+                data = {
                     {
                         'pk': category.external_id,
                         'name': category.name,
@@ -230,12 +230,12 @@ class DepartmentsViewset(mixins.ListModelMixin,
                         ]
                     }
                     for category in queryset
-                ]
+                }
             elif Subcategory.objects.filter(**search).exists():
                 queryset = Subcategory.objects\
                     .select_related('category__department')\
                     .filter(category__department__store=self.store, **search)
-                data = [
+                data = {
                     {
                         'pk': subcategory.external_id,
                         'name': subcategory.name,
@@ -243,7 +243,7 @@ class DepartmentsViewset(mixins.ListModelMixin,
                         'category': subcategory.category.name
                     }
                     for subcategory in queryset
-                ]
+                }
             else:
                 return Response(data=[], status=HTTP_404_NOT_FOUND)
             cache.set(key=cache_key, value=data, timeout=360)
@@ -262,7 +262,7 @@ class DepartmentsViewset(mixins.ListModelMixin,
                     ),
                     to_attr='q_categories')
             )
-        data = [
+        data = {
             {
                 'pk': deparment.external_id,
                 'name': deparment.name,
@@ -280,7 +280,7 @@ class DepartmentsViewset(mixins.ListModelMixin,
 
             }
             for deparment in queryset
-        ]
+        }
         cache.set(key=cache_key, value=data, timeout=360)
         return Response(
             data=data,

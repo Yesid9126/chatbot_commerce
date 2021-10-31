@@ -5,14 +5,14 @@ from django.db import models
 from django.contrib.postgres.search import SearchVectorField
 
 # utilities
-from chatbot_commerce.utils.models import AbstractCategory
+from chatbot_commerce.utils.models import AbstractCategory, BaseSlugnameAbstract, BaseExternalIdAbstract
 from django.utils.translation import gettext as _
 
 
-class Brand(AbstractCategory):
-    store = models.ForeignKey(
-        "stores.Store", verbose_name=_("Store"), on_delete=models.CASCADE,
-        default=None, null=True
+class Brand(BaseSlugnameAbstract, BaseExternalIdAbstract):
+
+    stores = models.ManyToManyField(
+        to='stores.Store',
     )
 
     class Meta:
@@ -26,16 +26,17 @@ class Product(AbstractCategory):
 
     # Filter data
     is_visible = models.BooleanField(
-        default=False,
+        default=False, null=True, blank=True
     )
     is_active = models.BooleanField(
         _('Is active'),
-        default=True,
+        default=True, null=True, blank=True
     )
     show_without_stock = models.BooleanField(
         _('Without stock'),
-        default=False
+        default=False, null=True, blank=True
     )
+    handle = models.CharField(null=True, blank=True, max_length=250)
 
     # Extra filter data
     keywords = models.TextField(
