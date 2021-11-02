@@ -63,7 +63,7 @@ def get_departments(store):
         for department in departments:
             children = department['children']
             departament_obj, _ = Department.objects.get_or_create(
-                name=department.get('name'),
+                name=department.get('name').strip().capitalize(),
             )
             e_id = department.get("Id")
             e_id = "".join((store.store_type.name, store.name, str(e_id),))
@@ -73,7 +73,7 @@ def get_departments(store):
             departament_obj.stores.add(store)
             for category in children:
                 category_obj, _ = Category.objects.get_or_create(
-                    name=category.get('name'),
+                    name=category.get('name').strip().capitalize(),
                 )
                 e_id = category.get("Id")
                 e_id = "".join((store.store_type.name, store.name, str(e_id),))
@@ -86,7 +86,7 @@ def get_departments(store):
                 if sub_categories:
                     for subcategory in sub_categories:
                         subcategory_obj, _ = Subcategory.objects.get_or_create(
-                            name=subcategory.get('name'),
+                            name=subcategory.get('name').strip().capitalize(),
                         )
                         e_id = subcategory.get("Id")
                         e_id = "".join((store.store_type.name, store.name, str(e_id),))
@@ -94,14 +94,15 @@ def get_departments(store):
                             subcategory_obj.external_id.append(e_id)
                             subcategory_obj.save()
                         subcategory_obj.stores.add(store)
+                        departament_obj.subcategories.add(category_obj)
                         category_obj.subcategories.add(subcategory_obj)
     elif store.store_type.name == 'SHOPIFY':
         shopify = ShopifyStores(store=store)
         product_array = shopify.products(query_params='limit=250&fields=product_type')
-        departments = {department_dict.get('product_type').strip().capitalize() for product_dict in product_array for department_dict in product_dict.get('products')}
+        departments = {department_dict.get('product_type') for product_dict in product_array for department_dict in product_dict.get('products')}
         departments = {
             Department.objects.get_or_create(
-                name=department,
+                name=department.strip().capitalize(),
             )
             for department in departments
         }

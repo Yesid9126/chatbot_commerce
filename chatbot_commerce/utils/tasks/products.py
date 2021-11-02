@@ -19,51 +19,11 @@ import gc
 
 
 def update_or_create_product(store, product, product_id):
-    if store.store_type.name == 'VTEX':
-        name = product.get('Name')
-        if name:
-            department = Department.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('DepartmentId')}"], stores=store).last()
-            category = Category.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('CategoryId')}"], stores=store).last()
-            sub_category = Subcategory.objects.prefetch_related(Prefetch('categories', queryset=Category.objects.filter(stores=store), to_attr='q_categories')).filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('CategoryId')}"], stores=store).last()
-            brand = Brand.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('BrandId')}"], stores=store).last()
-            if not category:
-                if sub_category:
-                    category = sub_category.q_categories[-1]
-            try:
-                product_instance, _ = Product.objects.update_or_create(
-                    store=store,
-                    external_id=product_id,
-                    defaults={
-                        'name': name,
-                        'department': department,
-                        'sub_category': sub_category,
-                        'category': category,
-                        'brand': brand,
-                        'search': ' '.join([name, *[cat.name for cat in [department, category, sub_category, brand] if cat]]),
-                        'link_id': product.get('LinkId'),
-                        'reference_id': product.get('RefId'),
-                        'is_visible': product.get('IsVisible'),
-                        'description': product.get('Description'),
-                        'description_short': product.get('DescriptionShort'),
-                        'keywords': product.get('KeyWords'),
-                        'title': product.get('Title'),
-                        'is_active': product.get('IsActive'),
-                        'meta_tag_description': product.get('MetaTagDescription'),
-                        'show_without_stock': product.get('ShowWithoutStock'),
-                        'raw_json': product,
-                    }
-                )
-            except Exception as e:
-                error = {
-                    'message': e,
-                    'product_id': product_id,
-                }
-                print(error)
     if store.store_type.name == 'SHOPIFY':
         name = product.get('title')
         if name:
             department = Department.objects.filter(name=product.get('product_type')).last()
-            brand = Brand.objects.filter(name=product.get('vendor')).last()
+            brand = Brand.objects.filter(name=product.get('vendor').strip().capitalize()).last()
             try:
                 product_instance, _ = Product.objects.update_or_create(
                     store=store,
@@ -104,13 +64,112 @@ def update_or_create_product(store, product, product_id):
                     'product_id': product_id,
                 }
                 print(error)
+
+    elif store.store_type.name == 'VTEX':
+        name = product.get('Name')
+        if name:
+            department = Department.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('DepartmentId')}"], stores=store).last()
+            category = Category.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('CategoryId')}"], stores=store).last()
+            sub_category = Subcategory.objects.prefetch_related(Prefetch('categories', queryset=Category.objects.filter(stores=store), to_attr='q_categories')).filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('CategoryId')}"], stores=store).last()
+            brand = Brand.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('BrandId')}"], stores=store).last()
+            if not category:
+                if sub_category:
+                    category = sub_category.q_categories[-1]
+            try:
+                product_instance, _ = Product.objects.update_or_create(
+                    store=store,
+                    external_id=product_id,
+                    defaults={
+                        'name': name,
+                        'department': department,
+                        'sub_category': sub_category,
+                        'category': category,
+                        'brand': brand,
+                        'search': ' '.join([name, *[cat.name for cat in [department, category, sub_category, brand] if cat]]),
+                        'link_id': product.get('LinkId'),
+                        'reference_id': product.get('RefId'),
+                        'is_visible': product.get('IsVisible'),
+                        'description': product.get('Description'),
+                        'description_short': product.get('DescriptionShort'),
+                        'keywords': product.get('KeyWords'),
+                        'title': product.get('Title'),
+                        'is_active': product.get('IsActive'),
+                        'meta_tag_description': product.get('MetaTagDescription'),
+                        'show_without_stock': product.get('ShowWithoutStock'),
+                        'raw_json': product,
+                    }
+                )
+            except Exception as e:
+                error = {
+                    'message': e,
+                    'product_id': product_id,
+                }
+                print(error)
+
     return None
 
 
 def update_or_create_sku(product_instance, product_id, sku, store):
     s = []
     extra_data_search = []
-    if store.store_type.name == 'VTEX':
+    if store.store_type.name == 'SHOPIFY':
+        sku_name = sku.get('title')
+        sku_name = ' '.join((sku_name, sku.get('sku'),))
+        sku_instance, _ = Skus.objects.update_or_create(
+            external_id=sku.get('id'),
+            product=product_instance,
+            defaults={
+                'name': sku_name,
+                'is_active': sku.get('available'),
+                'packaged_width': sku.get('weight'),
+                'packaged_weight': sku.get('weight_unit'),
+                'total_quantity': sku.get('inventory_quantity'),
+                'raw_json': sku
+            }
+        )
+        image = Image.objects.filter(image_id=sku.get('image_id'), store=store).last()
+        if image:
+            image.skus.add(sku_instance)
+        price = sku.get('price')
+        if price:
+            price_instance, _ = Price.objects.update_or_create(
+                sku=sku_instance,
+                defaults={
+                    "base_price": price,
+                    "raw_json": {'price': price, 'formatted_price': sku.get('formatted_price'), 'compare_at_price': sku.get('compare_at_price')}
+                }
+            )
+        sku_specifications_array = sku.get('option_values')
+        if sku_specifications_array:
+            for dic in sku_specifications_array:
+                name = dic.get('name')
+                attribute_type_instance, _ = AttributeType.objects.get_or_create(
+                    store=store,
+                    name=name.strip().capitalize()
+                )
+                value = dic.get('value')
+                if value:
+                    attribute_instance, _ = Attribute.objects.get_or_create(
+                        attribute_type=attribute_type_instance,
+                        value=value,
+                    )
+                    attribute_instance.skus.add(sku_instance)
+                    s.append(value)
+            sku_specifications_array.clear()
+        if s:
+            s = ' '.join(s)
+            s_replaced = s.replace(',', ' ').replace('.', ' ')
+            s = ' '.join((s, s_replaced,))
+            # sku_instance.search_attributes = s
+            extra_data_search.append(s)
+        if sku_name:
+            extra_data_search.append(sku_name)
+        sku_instance.search = ' '.join((product_instance.search, *extra_data_search,))
+        sku_instance.save()
+        extra_data_search.clear()
+        del s
+
+    elif store.store_type.name == 'VTEX':
         # Create or update sku
         try:
             # Get instance
@@ -273,59 +332,6 @@ def update_or_create_sku(product_instance, product_id, sku, store):
             }
             print(error)
 
-    elif store.store_type.name == 'SHOPIFY':
-        sku_name = sku.get('title')
-        sku_name = ' '.join((sku_name, sku.get('sku'),))
-        sku_instance, _ = Skus.objects.update_or_create(
-            external_id=sku.get('id'),
-            product=product_instance,
-            defaults={
-                'name': sku_name,
-                'is_active': sku.get('available'),
-                'packaged_width': sku.get('weight'),
-                'packaged_weight': sku.get('weight_unit'),
-                'total_quantity': sku.get('inventory_quantity'),
-                'raw_json': sku
-            }
-        )
-        price = sku.get('price')
-        if price:
-            price_instance, _ = Price.objects.update_or_create(
-                sku=sku_instance,
-                defaults={
-                    "base_price": price,
-                    "raw_json": {'price': price, 'formatted_price': sku.get('formatted_price'), 'compare_at_price': sku.get('compare_at_price')}
-                }
-            )
-        sku_specifications_array = sku.get('option_values')
-        if sku_specifications_array:
-            for dic in sku_specifications_array:
-                name = dic.get('name')
-                attribute_type_instance, _ = AttributeType.objects.get_or_create(
-                    store=store,
-                    name=name.strip().capitalize()
-                )
-                value = dic.get('value')
-                if value:
-                    attribute_instance, _ = Attribute.objects.get_or_create(
-                        attribute_type=attribute_type_instance,
-                        value=value,
-                    )
-                    attribute_instance.skus.add(sku_instance)
-                    s.append(value)
-            sku_specifications_array.clear()
-        if s:
-            s = ' '.join(s)
-            s_replaced = s.replace(',', ' ').replace('.', ' ')
-            s = ' '.join((s, s_replaced,))
-            # sku_instance.search_attributes = s
-            extra_data_search.append(s)
-        if sku_name:
-            extra_data_search.append(sku_name)
-        sku_instance.search = ' '.join((product_instance.search, *extra_data_search,))
-        sku_instance.save()
-        extra_data_search.clear()
-        del s
     return None
 
 

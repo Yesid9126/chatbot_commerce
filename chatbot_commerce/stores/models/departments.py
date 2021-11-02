@@ -17,6 +17,8 @@ class Department(BaseSlugnameAbstract, BaseExternalIdAbstract):
 
     categories = models.ManyToManyField('stores.Category', verbose_name=_("Categories"))
 
+    subcategories = models.ManyToManyField('stores.Subcategory', verbose_name=_("Subcategories"))
+
     class Meta:
         verbose_name = "Department"
         verbose_name_plural = "Departments"

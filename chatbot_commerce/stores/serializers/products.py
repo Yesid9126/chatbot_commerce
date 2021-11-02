@@ -15,6 +15,7 @@ class ProductModelSerializer(serializers.ModelSerializer):
     brand = serializers.SerializerMethodField('get_brand')
     tree_categories = serializers.SerializerMethodField('get_tree_categories')
     product_id = serializers.IntegerField(source='external_id')
+    images = serializers.SerializerMethodField(method_name='get_images')
 
     class Meta:
         """Meta class."""
@@ -26,9 +27,13 @@ class ProductModelSerializer(serializers.ModelSerializer):
             'keywords',
             'brand',
             'tree_categories',
+            'images',
             'skus',
         ]
         read_only_fields = fields
+
+    def get_images(self, obj):
+        return [image.image_url for image in obj.q_images]
 
     def get_skus(self, obj):
         return [sku.serializer_data for sku in obj.q_skus]
