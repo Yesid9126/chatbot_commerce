@@ -190,14 +190,14 @@ class DepartmentsViewset(mixins.ListModelMixin,
                         Prefetch(
                             'categories',
                             queryset=Category.objects
-                                .only('name', 'department',)
-                                .filter(store=self.store)
-                                .prefetch_related(
-                                    Prefetch(
-                                        'subcategories',
-                                        queryset=Subcategory.objects.only('name', 'category',).filter(category__store=self.store),
-                                        to_attr='q_subcategories'
-                                    )
+                            .only('name', 'department',)
+                            .filter(store=self.store)
+                            .prefetch_related(
+                                Prefetch(
+                                    'subcategories',
+                                    queryset=Subcategory.objects.only('name', 'category',).filter(category__store=self.store),
+                                    to_attr='q_subcategories'
+                                )
                             ),
                             to_attr='q_categories'
                         )
@@ -235,7 +235,6 @@ class DepartmentsViewset(mixins.ListModelMixin,
                     )\
                     .filter(store=self.store, **search)
 
-
                 data = [
                     {
                         'name': category.department.name,
@@ -262,12 +261,12 @@ class DepartmentsViewset(mixins.ListModelMixin,
                 data = [
                     {
                         'name': subcategory.category.department.name,
-                        'categories':[
+                        'categories': [
                             {
                                 'name': subcategory.category.name,
                                 'subcategories': [
                                     {
-                                    'name': subcategory.name,
+                                        'name': subcategory.name,
                                     }
                                 ]
                             }
@@ -335,7 +334,7 @@ class BrandsViewset(mixins.ListModelMixin,
     def dispatch(self, request, *args, **kwargs):
         slug_name = kwargs['store_slug_name']
         self.store = get_object_or_404(Store.objects.select_related('store_type'), name=slug_name)
-        self.queryset = Brand.objects.filter(store=self.store)
+        self.queryset = Brand.objects.filter(stores=self.store)
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):

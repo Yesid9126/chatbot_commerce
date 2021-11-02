@@ -5,7 +5,6 @@ from django.db import models
 
 # utilities
 from chatbot_commerce.utils.models import BaseSlugnameAbstract, BaseExternalIdAbstract, BaseAbstract
-from django.utils.translation import gettext as _
 
 
 class Department(BaseSlugnameAbstract, BaseExternalIdAbstract):
