@@ -23,23 +23,23 @@ from chatbot_commerce.stores.models import (
 class SubcategoryAdmin(admin.ModelAdmin):
     """Subcategory model admin."""
 
-    list_display = ('name', 'slug_name',)
-    search_fields = ['name', 'slug_name']
-    readonly_fields = ('name', 'slug_name', 'stores', 'external_id',)
+    list_display = ('name',)
+    search_fields = ('name',)
+    readonly_fields = ('name', 'category', 'external_id',)
 
 
 @admin.register(Category)
 class CategoriesAdmin(admin.ModelAdmin):
-    list_display = ('name', 'slug_name',)
-    search_fields = ['name', 'slug_name']
-    readonly_fields = ('name', 'slug_name', 'stores', 'subcategories', 'external_id',)
+    list_display = ('name',)
+    search_fields = ('name',)
+    readonly_fields = ('name', 'store', 'department', 'external_id',)
 
 
 @admin.register(Department)
 class DepartmentsAdmin(admin.ModelAdmin):
     list_display = ['name', 'slug_name']
     search_fields = ['name', 'slug_name']
-    readonly_fields = ('categories', 'stores', 'external_id',)
+    readonly_fields = ('stores', 'external_id',)
 
 
 @admin.register(Brand)

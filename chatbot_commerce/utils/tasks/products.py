@@ -69,8 +69,8 @@ def update_or_create_product(store, product, product_id):
         name = product.get('Name')
         if name:
             department = Department.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('DepartmentId')}"], stores=store).last()
-            category = Category.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('CategoryId')}"], stores=store).last()
-            sub_category = Subcategory.objects.prefetch_related(Prefetch('categories', queryset=Category.objects.filter(stores=store), to_attr='q_categories')).filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('CategoryId')}"], stores=store).last()
+            category = Category.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('CategoryId')}"], store=store).last()
+            sub_category = Subcategory.objects.prefetch_related(Prefetch('categories', queryset=Category.objects.filter(store=store), to_attr='q_categories')).filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('CategoryId')}"], category__store=store).last()
             brand = Brand.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('BrandId')}"], stores=store).last()
             if not category:
                 if sub_category:

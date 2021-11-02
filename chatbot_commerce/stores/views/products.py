@@ -184,16 +184,18 @@ class DepartmentsViewset(mixins.ListModelMixin,
             if Department.objects.filter(**search, stores=self.store).exists():
 
                 queryset = Department.objects\
+                    .only('name',)\
                     .filter(**search, stores=self.store)\
                     .prefetch_related(
                         Prefetch(
                             'categories',
                             queryset=Category.objects
-                                .filter(stores=self.store)
+                                .only('name', 'department',)
+                                .filter(store=self.store)
                                 .prefetch_related(
                                     Prefetch(
                                         'subcategories',
-                                        queryset=Subcategory.objects.filter(stores=self.store),
+                                        queryset=Subcategory.objects.only('name', 'category',).filter(category__store=self.store),
                                         to_attr='q_subcategories'
                                     )
                             ),
@@ -206,7 +208,6 @@ class DepartmentsViewset(mixins.ListModelMixin,
                         'name': deparment.name,
                         'categories': [
                             {
-                                'pk': category.external_id,
                                 'name': category.name,
                                 'subcategories': [
                                     {'name': subcategory.name}
@@ -220,26 +221,24 @@ class DepartmentsViewset(mixins.ListModelMixin,
                     for deparment in queryset
                 ]
 
-            elif Category.objects.filter(**search, stores=self.store).exists():
+            elif Category.objects.filter(**search, store=self.store).exists():
 
                 queryset = Category.objects\
-                    .filter(stores=self.store, **search)\
+                    .only('name', 'department',)\
+                    .select_related('department')\
                     .prefetch_related(
                         Prefetch(
-                            'departments',
-                            queryset=Department.objects.filter(stores=self.store),
-                            to_attr='q_departments'
-                        ),
-                        Prefetch(
                             'subcategories',
-                            queryset=Subcategory.objects.filter(stores=self.store),
+                            queryset=Subcategory.objects.only('name', 'category').filter(category__store=self.store),
                             to_attr='q_subcategories'
                         )
-                    )
+                    )\
+                    .filter(store=self.store, **search)
+
 
                 data = [
                     {
-                        'name': department.name,
+                        'name': category.department.name,
                         'categories': [
                             {
                                 'name': category.name,
@@ -250,35 +249,22 @@ class DepartmentsViewset(mixins.ListModelMixin,
                             }
                         ]
                     }
-                    for category in queryset for department in category.q_departments
+                    for category in queryset
                 ]
 
-            elif Subcategory.objects.filter(**search, stores=self.store).exists():
+            elif Subcategory.objects.filter(**search, category__store=self.store).exists():
 
                 queryset = Subcategory.objects\
-                    .prefetch_related(
-                        Prefetch(
-                            'categories',
-                            queryset=Category.objects\
-                                .prefetch_related(
-                                    Prefetch(
-                                        'departments',
-                                        queryset=Department.objects.filter(stores=self.store),
-                                        to_attr='q_departments'
-                                    )
-                                )\
-                                .filter(stores=self.store),
-                            to_attr='q_categories'
-                        )
-                    )\
-                    .filter(stores=self.store, **search)
+                    .only('name', 'category',)\
+                    .select_related('category__department')\
+                    .filter(category__store=self.store, **search)
 
                 data = [
                     {
-                        'name': department.name,
+                        'name': subcategory.category.department.name,
                         'categories':[
                             {
-                                'name': category.name,
+                                'name': subcategory.category.name,
                                 'subcategories': [
                                     {
                                     'name': subcategory.name,
@@ -287,7 +273,7 @@ class DepartmentsViewset(mixins.ListModelMixin,
                             }
                         ]
                     }
-                    for subcategory in queryset for category in subcategory.q_categories for department in category.q_departments
+                    for subcategory in queryset
                 ]
 
             else:
@@ -297,15 +283,18 @@ class DepartmentsViewset(mixins.ListModelMixin,
             return Response(data=data, status=HTTP_200_OK)
 
         queryset = Department.objects\
+            .only('name',)\
             .filter(stores=self.store)\
             .prefetch_related(
                 Prefetch(
                     'categories',
                     queryset=Category.objects
-                    .filter(stores=self.store)
+                    .only('name', 'department',)
+                    .filter(store=self.store)
                     .prefetch_related(
                         Prefetch(
                             'subcategories',
+                            queryset=Subcategory.objects.only('name', 'category',).filter(category__store=self.store),
                             to_attr='q_subcategories'
                         )
                     ),

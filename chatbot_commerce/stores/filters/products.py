@@ -126,6 +126,6 @@ def products_skus(self, store_pk):
                 to_attr='q_images'
             )
     )\
-        .filter(external_id__in=products_external_id, store_id=store_pk).order_by('-external_id')
+    .filter(external_id__in=products_external_id, store_id=store_pk).order_by('-external_id')
 
     return queryset, count

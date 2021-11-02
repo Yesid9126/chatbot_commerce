@@ -4,7 +4,7 @@
 from django.db import models
 
 # utilities
-from chatbot_commerce.utils.models import BaseSlugnameAbstract, BaseExternalIdAbstract
+from chatbot_commerce.utils.models import BaseSlugnameAbstract, BaseExternalIdAbstract, BaseAbstract
 from django.utils.translation import gettext as _
 
 
@@ -15,24 +15,26 @@ class Department(BaseSlugnameAbstract, BaseExternalIdAbstract):
         to='stores.Store', related_name='store_departments'
     )
 
-    categories = models.ManyToManyField('stores.Category', verbose_name=_("Categories"))
-
-    subcategories = models.ManyToManyField('stores.Subcategory', verbose_name=_("Subcategories"))
-
     class Meta:
         verbose_name = "Department"
         verbose_name_plural = "Departments"
         default_related_name = 'departments'
 
 
-class Category(BaseSlugnameAbstract, BaseExternalIdAbstract):
+class Category(BaseAbstract):
     """Departaments categories."""
 
-    stores = models.ManyToManyField(
-        to='stores.Store', related_name='store_categories'
+    store = models.ForeignKey(
+        to='stores.Store', on_delete=models.CASCADE, related_name='store_categories'
     )
 
-    subcategories = models.ManyToManyField('stores.Subcategory', verbose_name=_("Subcategories"))
+    department = models.ForeignKey(
+        to='stores.Department', on_delete=models.SET_NULL, null=True
+    )
+
+    raw_json = None
+
+    serializer_data = None
 
     class Meta:
         verbose_name = "Category"
@@ -40,12 +42,16 @@ class Category(BaseSlugnameAbstract, BaseExternalIdAbstract):
         default_related_name = 'categories'
 
 
-class Subcategory(BaseSlugnameAbstract, BaseExternalIdAbstract):
+class Subcategory(BaseAbstract):
     """Category subcategory."""
 
-    stores = models.ManyToManyField(
-        to='stores.Store', related_name='store_subcategories'
+    category = models.ForeignKey(
+        to='stores.Category', on_delete=models.SET_NULL, null=True
     )
+
+    raw_json = None
+
+    serializer_data = None
 
     class Meta:
         verbose_name = "Subcategory"

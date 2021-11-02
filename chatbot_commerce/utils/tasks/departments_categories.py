@@ -51,7 +51,6 @@ def get_sc_sellers(store, task=None):
                 print(f'error: channel: {channel}, sales_channel: {sales_channel}')
             if channel_id == 1 or channel_id == '1':
                 sales_channel.clear()
-                break
         sales_channel.clear()
 
 
@@ -61,41 +60,38 @@ def get_departments(store):
         vtex = VtexStores(store=store)
         departments = vtex.departments_categories()
         for department in departments:
-            children = department['children']
-            departament_obj, _ = Department.objects.get_or_create(
+            department_obj, _ = Department.objects.get_or_create(
                 name=department.get('name').strip().capitalize(),
             )
-            e_id = department.get("Id")
+            e_id = department.get("id")
             e_id = "".join((store.store_type.name, store.name, str(e_id),))
-            if e_id not in departament_obj.external_id:
-                departament_obj.external_id.append(e_id)
-                departament_obj.save()
-            departament_obj.stores.add(store)
+            if e_id not in department_obj.external_id:
+                department_obj.external_id.append(e_id)
+                department_obj.save()
+            department_obj.stores.add(store)
+
+            children = department['children']
             for category in children:
-                category_obj, _ = Category.objects.get_or_create(
-                    name=category.get('name').strip().capitalize(),
+                category_obj, _ = Category.objects.update_or_create(
+                    external_id=category.get('id'),
+                    store=store,
+                    department=department_obj,
+                    defaults={
+                        'name': category.get('name')
+                    }
                 )
-                e_id = category.get("Id")
-                e_id = "".join((store.store_type.name, store.name, str(e_id),))
-                if e_id not in category_obj.external_id:
-                    category_obj.external_id.append(e_id)
-                    category_obj.save()
-                category_obj.stores.add(store)
-                departament_obj.categories.add(category_obj)
+
                 sub_categories = category.get('children')
                 if sub_categories:
                     for subcategory in sub_categories:
-                        subcategory_obj, _ = Subcategory.objects.get_or_create(
-                            name=subcategory.get('name').strip().capitalize(),
+                        subcategory_obj, _ = Subcategory.objects.update_or_create(
+                            external_id=subcategory.get('id'),
+                            category=category_obj,
+                            defaults={
+                                'name': subcategory.get('name')
+                            }
                         )
-                        e_id = subcategory.get("Id")
-                        e_id = "".join((store.store_type.name, store.name, str(e_id),))
-                        if e_id not in subcategory_obj.external_id:
-                            subcategory_obj.external_id.append(e_id)
-                            subcategory_obj.save()
-                        subcategory_obj.stores.add(store)
-                        departament_obj.subcategories.add(category_obj)
-                        category_obj.subcategories.add(subcategory_obj)
+
     elif store.store_type.name == 'SHOPIFY':
         shopify = ShopifyStores(store=store)
         product_array = shopify.products(query_params='limit=250&fields=product_type')
