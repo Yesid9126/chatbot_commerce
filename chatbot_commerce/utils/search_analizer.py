@@ -1,12 +1,10 @@
-# Models
-from stores.models import SearchAnalizer
-
 # Utils
 import time
 
 
-def search_analizer_manager(self):
-    obj, _ = SearchAnalizer.objects.get_or_create(store=self.store, search=self.search, defaults={'date_count': {'count': 0}})
+def search_analizer_manager(self, obj):
+    """"""
+
     year, month, day, hour = time.strftime('%Y-%m-%d-%H').split('-')
     count = 'count'
     try:
@@ -60,3 +58,4 @@ def search_analizer_manager(self):
             obj.date_count[count] += 1
             obj.date_count[year][count] += 1
             obj.date_count[year][month][count] += 1
+    obj.save()

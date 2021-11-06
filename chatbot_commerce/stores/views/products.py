@@ -26,6 +26,7 @@ from chatbot_commerce.stores.models import (
     Store, Brand, Department, Category, Subcategory,
     Product,
     Skus, AttributeType, Image,
+    SearchAnalizer,
 )
 
 # Paginator
@@ -103,7 +104,8 @@ class ProductViewset(mixins.RetrieveModelMixin,
         if paginated_data:
 
             if self.search:
-                search_analizer_manager(self=self)
+                obj, _ = SearchAnalizer.objects.get_or_create(store=self.store, search=self.search, defaults={'date_count': {'count': 0}})
+                search_analizer_manager(self=self, obj=obj)
 
             return Response(data=paginated_data, status=HTTP_200_OK)
 
@@ -131,7 +133,8 @@ class ProductViewset(mixins.RetrieveModelMixin,
         }
         cache.set(key=cache_key, value=paginated_data, timeout=30)
         if self.search:
-            search_analizer_manager(self=self)
+            obj, _ = SearchAnalizer.objects.get_or_create(store=self.store, search=self.search, defaults={'date_count': {'count': 0}})
+            search_analizer_manager(self=self, obj=obj)
         return Response(data=paginated_data, status=HTTP_200_OK)
 
     @query_debugger
