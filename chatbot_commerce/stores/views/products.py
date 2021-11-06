@@ -22,7 +22,11 @@ from rest_framework.filters import SearchFilter
 from chatbot_commerce.stores.filters import ProductFilterSet, products_skus
 
 # Models
-from chatbot_commerce.stores.models import Product, Department, Store, AttributeType, Skus, Brand, Category, Subcategory, Image
+from chatbot_commerce.stores.models import (
+    Store, Brand, Department, Category, Subcategory,
+    Product,
+    Skus, AttributeType, Image,
+)
 
 # Paginator
 from chatbot_commerce.utils.paginators import page_url
@@ -32,6 +36,7 @@ from django.core.cache import cache
 
 # Runtime
 from db_python import query_debugger
+from chatbot_commerce.utils.search_analizer import search_analizer_manager
 
 
 class ProductViewset(mixins.RetrieveModelMixin,
@@ -46,8 +51,10 @@ class ProductViewset(mixins.RetrieveModelMixin,
 
     # @query_debugger
     def dispatch(self, request, *args, **kwargs):
+
         slug_name = kwargs['store_slug_name']
         self.store = get_object_or_404(Store.objects.select_related('store_type'), name=slug_name)
+        self.search = self.request.GET.get('search')
         self.skus_filter_data = {
             # 'search_attributes' if key == 'attributes' else\
             'search_vector' if key == 'search' else\
@@ -78,6 +85,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
         self.offset = q_offset + limit*(self.page - 1)
         self.limit = self.offset + limit
         self.current_size_position = self.limit - q_offset
+
         return super().dispatch(request, *args, **kwargs)
 
     @query_debugger
@@ -88,22 +96,30 @@ class ProductViewset(mixins.RetrieveModelMixin,
         search = Put a keyword like name category or department to filter whith it
         example... search = jeans azul L
         """
+
         base_url = self.request.build_absolute_uri()
         cache_key = base_url.replace('?', '').replace('&', '').replace('/', '').lower()
         paginated_data = cache.get(key=cache_key)
         if paginated_data:
+
+            if self.search:
+                search_analizer_manager(self=self)
+
             return Response(data=paginated_data, status=HTTP_200_OK)
+
         store_pk = self.store.pk
         query, count = products_skus(self, store_pk=store_pk)
         differ = self.limit - count
         page_size = self.limit - self.offset
         if differ > -1:
             page_size = page_size - differ
+
         data = self.get_serializer(query, many=True, read_only=True).data
         try:
             assert(data != [])
         except AssertionError:
             return HttpResponseBadRequest(self.page_error)
+
         next_link, previous_link = page_url(page=self.page, base_url=base_url, differ=differ)
         count -= self.limit - self.current_size_position
         paginated_data = {
@@ -114,6 +130,8 @@ class ProductViewset(mixins.RetrieveModelMixin,
             'results': data
         }
         cache.set(key=cache_key, value=paginated_data, timeout=30)
+        if self.search:
+            search_analizer_manager(self=self)
         return Response(data=paginated_data, status=HTTP_200_OK)
 
     @query_debugger
@@ -123,6 +141,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
 
         Parameters.
         """
+
         try:
             return Response(
                 self.get_serializer(
