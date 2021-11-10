@@ -131,6 +131,9 @@ def update_or_create_sku(product_instance, product_id, sku, store):
         if image:
             image.skus.add(sku_instance)
         price = sku.get('price')
+        if isinstance(price, str):
+            price = float(price)
+
         if price:
             price_instance, _ = Price.objects.update_or_create(
                 sku=sku_instance,
@@ -139,6 +142,7 @@ def update_or_create_sku(product_instance, product_id, sku, store):
                     "raw_json": {'price': price, 'formatted_price': sku.get('formatted_price'), 'compare_at_price': sku.get('compare_at_price')}
                 }
             )
+            s.append(str(int(price)))
         sku_specifications_array = sku.get('option_values')
         if sku_specifications_array:
             for dic in sku_specifications_array:
@@ -217,6 +221,9 @@ def update_or_create_sku(product_instance, product_id, sku, store):
                     )
             sellers_array.clear()
             price = sku.get('price')
+            if isinstance(price, str):
+                price = float(price)
+
             images_array = sku.get('Images')
             sku_specifications_array = sku.get('SkuSpecifications')
             sku.clear()
@@ -259,7 +266,7 @@ def update_or_create_sku(product_instance, product_id, sku, store):
                         }
                     )
                     if base_price:
-                        s.append(int(base_price))
+                        s.append(str(int(base_price)))
                     fixed_prices = price.get('fixedPrices')
                     if fixed_prices and price_instance:
                         for fixedprice_dic in fixed_prices:
@@ -422,11 +429,6 @@ def create_products_vtex_store(store, limit=False):
                 break
         sc.clear()
         sub_skus_ids.clear()
-        # Delete skus that don't have a product
-        Product.objects.update(search_vector=SearchVector('search'))
-        Skus.objects.filter(product=None).delete()
-        Skus.objects.update(search_vector=SearchVector('search'))
-        gc.collect()
     elif store.store_type.name == 'SHOPIFY':
         shopify = ShopifyStores(store=store)
         array = shopify.product_listings(query_params='limit=100')
@@ -435,4 +437,9 @@ def create_products_vtex_store(store, limit=False):
                 product_id = product.get('product_id')
                 if product_id:
                     update_or_create_product(store=store, product=product, product_id=product_id)
+    # Delete skus that don't have a product
+    Product.objects.update(search_vector=SearchVector('search'))
+    Skus.objects.filter(product=None).delete()
+    Skus.objects.update(search_vector=SearchVector('search'))
+    gc.collect()
     return True
