@@ -485,16 +485,16 @@ class SkuSeller(BaseRawAbstract):
         default_related_name = 'sku_seller'
 
 
-class SearchAnalizer(ChatbootModel):
+# class SearchAnalizer(ChatbootModel):
 
-    store = models.ForeignKey("stores.Store", verbose_name=_("Store"), on_delete=models.SET_NULL, null=True)
-    search = models.TextField(_("Search"), editable=False)
+#     store = models.ForeignKey("stores.Store", verbose_name=_("Store"), on_delete=models.SET_NULL, null=True)
+#     search = models.TextField(_("Search"), editable=False)
 
-    # Filter date
-    # year = ArrayField(base_field=models.CharField(max_length=4))
-    # year_month = ArrayField(base_field=models.CharField(max_length=7))
-    # year_month_day = ArrayField(base_field=models.CharField(max_length=10))
-    # year_month_day_hour = ArrayField(base_field=models.CharField(max_length=13))
+#     # Filter date
+#     # year = ArrayField(base_field=models.CharField(max_length=4))
+#     # year_month = ArrayField(base_field=models.CharField(max_length=7))
+#     # year_month_day = ArrayField(base_field=models.CharField(max_length=10))
+#     # year_month_day_hour = ArrayField(base_field=models.CharField(max_length=13))
 
-    # Filter date json
-    date_count = models.JSONField(_("Count by date"))
+#     # Filter date json
+#     date_count = models.JSONField(_("Count by date"))

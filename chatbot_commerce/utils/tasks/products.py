@@ -247,16 +247,19 @@ def update_or_create_sku(product_instance, product_id, sku, store):
             # Create price for sku
             try:
                 if price:
+                    base_price = price.get('basePrice')
                     price_instance, _ = Price.objects.update_or_create(
                         sku=sku_instance,
                         defaults={
                             "list_price": price.get('listPrice'),
                             "cost_price": price.get('costPrice'),
                             "markup": price.get('markup'),
-                            "base_price": price.get('basePrice'),
+                            "base_price": base_price,
                             "raw_json": price
                         }
                     )
+                    if base_price:
+                        s.append(int(base_price))
                     fixed_prices = price.get('fixedPrices')
                     if fixed_prices and price_instance:
                         for fixedprice_dic in fixed_prices:

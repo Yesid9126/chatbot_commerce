@@ -26,7 +26,7 @@ from chatbot_commerce.stores.models import (
     Store, Brand, Department, Category, Subcategory,
     Product,
     Skus, AttributeType, Image,
-    SearchAnalizer,
+    # SearchAnalizer,
 )
 
 # Paginator
@@ -37,7 +37,7 @@ from django.core.cache import cache
 
 # Runtime
 from db_python import query_debugger
-from chatbot_commerce.utils.search_analizer import search_analizer_manager
+# from chatbot_commerce.utils.search_analizer import search_analizer_manager
 
 
 class ProductViewset(mixins.RetrieveModelMixin,
@@ -55,7 +55,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
 
         slug_name = kwargs['store_slug_name']
         self.store = get_object_or_404(Store.objects.select_related('store_type'), name=slug_name)
-        self.search = self.request.GET.get('search')
+        # self.search = self.request.GET.get('search')
         self.skus_filter_data = {
             # 'search_attributes' if key == 'attributes' else\
             'search_vector' if key == 'search' else\
@@ -103,9 +103,9 @@ class ProductViewset(mixins.RetrieveModelMixin,
         paginated_data = cache.get(key=cache_key)
         if paginated_data:
 
-            if self.search:
-                obj, _ = SearchAnalizer.objects.get_or_create(store=self.store, search=self.search, defaults={'date_count': {'count': 0}})
-                search_analizer_manager(self=self, obj=obj)
+            # if self.search:
+            #     obj, _ = SearchAnalizer.objects.get_or_create(store=self.store, search=self.search, defaults={'date_count': {'count': 0}})
+            #     search_analizer_manager(self=self, obj=obj)
 
             return Response(data=paginated_data, status=HTTP_200_OK)
 
@@ -132,9 +132,9 @@ class ProductViewset(mixins.RetrieveModelMixin,
             'results': data
         }
         cache.set(key=cache_key, value=paginated_data, timeout=30)
-        if self.search:
-            obj, _ = SearchAnalizer.objects.get_or_create(store=self.store, search=self.search, defaults={'date_count': {'count': 0}})
-            search_analizer_manager(self=self, obj=obj)
+        # if self.search:
+        #     obj, _ = SearchAnalizer.objects.get_or_create(store=self.store, search=self.search, defaults={'date_count': {'count': 0}})
+        #     search_analizer_manager(self=self, obj=obj)
         return Response(data=paginated_data, status=HTTP_200_OK)
 
     @query_debugger
