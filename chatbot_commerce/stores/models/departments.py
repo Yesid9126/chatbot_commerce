@@ -14,6 +14,9 @@ class Department(BaseSlugnameAbstract, BaseExternalIdAbstract):
         to='stores.Store', related_name='store_departments'
     )
 
+    def __str__(self) -> str:
+        return self.name
+
     class Meta:
         verbose_name = "Department"
         verbose_name_plural = "Departments"
@@ -35,6 +38,9 @@ class Category(BaseAbstract):
 
     serializer_data = None
 
+    def __str__(self) -> str:
+        return self.name
+
     class Meta:
         verbose_name = "Category"
         verbose_name_plural = "Categories"
@@ -51,6 +57,9 @@ class Subcategory(BaseAbstract):
     raw_json = None
 
     serializer_data = None
+
+    def __str__(self) -> str:
+        return self.name
 
     class Meta:
         verbose_name = "Subcategory"

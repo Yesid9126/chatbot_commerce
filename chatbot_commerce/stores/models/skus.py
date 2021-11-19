@@ -334,7 +334,7 @@ class Attribute(BaseRawAbstract):
     )
 
     def __str__(self):
-        return f'{self.sku.name}: {self.attribute_type}: {self.value}'
+        return f'{self.attribute_type}: {self.value}'
 
     class Meta:
         """Meta class"""

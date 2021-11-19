@@ -18,10 +18,19 @@ class ShopifyStores:
         """Get resources for store."""
         url = "{}/{}".format(self.store.urls['base_url'], uri)
         print(url)
-        lr = []
+        lr = list()
         while 1:
             r = self.http.request(method='GET', url=url)
-            lr.append(r)
+            try:
+                if r.status in [requests.codes.ok]:
+                    response_json = list(json.loads(r.data.decode('utf-8')).values())[0]
+                    lr += response_json
+            except ValueError as e:
+                response_json = {
+                    "status_code": r.status,
+                    "message": e,
+                }
+                break
             link = r.headers.get('Link')
             if link and 'rel="next"' in link:
                 link = link.split(',')[-1].strip()
@@ -32,24 +41,11 @@ class ShopifyStores:
 
     def _get_json_resource(self, uri, **kwargs):
         try:
-            response_json = {}
             method = kwargs.pop('method')
             if method == 'get':
-                list_response = self._get_resources(uri, **kwargs)
+                response_json = self._get_resources(uri, **kwargs)
             else:
                 pass
-            response_json = []
-            for response in list_response:
-                if response.status in [requests.codes.ok]:
-                    try:
-                        response_json += [json.loads(response.data.decode('utf-8'))]
-                    except ValueError as e:
-                        response_json = {
-                            "status_code": response.status,
-                            "message": e,
-                        }
-                        break
-            return response_json
         except urllib3.exceptions.ConnectTimeoutError as i:
             response_json = {
                 "status_code": 504,
@@ -58,12 +54,10 @@ class ShopifyStores:
         except urllib3.exceptions.RequestError as e:
             status_code = getattr(e.response, "status_code", 406)
             reason = getattr(e.response, "reason", str(e))
-            response_json.append(
-                {
-                    "status_code": status_code,
-                    "message": reason,
-                }
-            )
+            response_json = {
+                "status_code": status_code,
+                "message": reason,
+            }
         return response_json
 
     def collections(self, query_params, **kwargs):

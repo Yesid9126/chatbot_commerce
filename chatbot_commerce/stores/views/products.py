@@ -35,7 +35,8 @@ from chatbot_commerce.utils.paginators import page_url
 # Cache
 from django.core.cache import cache
 
-# Runtime
+# Utils
+from random import shuffle
 from db_python import query_debugger
 # from chatbot_commerce.utils.search_analizer import search_analizer_manager
 
@@ -74,7 +75,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
             q_offset = 0
 
         self.page = 1
-        self.page_error = Exception('Page not found try with a number int() with base 10: page > 0')
+        self.page_error = Exception('Page not found or try with a number int() with base 10: page > 0')
         if 'page' in self.skus_filter_data:
             try:
                 page = int(self.skus_filter_data.pop('page'))
@@ -119,6 +120,8 @@ class ProductViewset(mixins.RetrieveModelMixin,
         data = self.get_serializer(query, many=True, read_only=True).data
         try:
             assert(data != [])
+            if self.store.store_type.name == 'VTEX':
+                shuffle(data)
         except AssertionError:
             return HttpResponseBadRequest(self.page_error)
 

@@ -1,7 +1,6 @@
 """list of product with their skus."""
 
 # Models
-from django.db.models.query import Prefetch
 from chatbot_commerce.stores.models import (
     Skus, Product, Price, FixedPrice, DateRange,
     Brand, Category, Department,
@@ -69,12 +68,12 @@ def update_or_create_product(store, product, product_id):
         name = product.get('Name')
         if name:
             department = Department.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('DepartmentId')}"], stores=store).last()
-            category = Category.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('CategoryId')}"], store=store).last()
-            sub_category = Subcategory.objects.prefetch_related(Prefetch('categories', queryset=Category.objects.filter(store=store), to_attr='q_categories')).filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('CategoryId')}"], category__store=store).last()
+            sub_category = Subcategory.objects.select_related('category').filter(external_id=product.get('CategoryId'), category__store=store).last()
             brand = Brand.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('BrandId')}"], stores=store).last()
-            if not category:
-                if sub_category:
-                    category = sub_category.q_categories[-1]
+            if sub_category:
+                category = sub_category.category
+            else:
+                category = Category.objects.filter(external_id=product.get('CategoryId'), store=store).last()
             try:
                 product_instance, _ = Product.objects.update_or_create(
                     store=store,
@@ -362,7 +361,7 @@ async def get_skus_and_products_dicts(sc, loop, vtex, skus=[], products_created=
     return skus_dicts, products_dicts
 
 
-def create_products_vtex_store(store, limit=False):
+def create_products_store(store, limit=False):
     """Creation of product available in the store."""
 
     if store.store_type.name == 'VTEX':
@@ -431,12 +430,13 @@ def create_products_vtex_store(store, limit=False):
         sub_skus_ids.clear()
     elif store.store_type.name == 'SHOPIFY':
         shopify = ShopifyStores(store=store)
-        array = shopify.product_listings(query_params='limit=100')
-        for product_dicts in array:
-            for product in product_dicts.get('product_listings'):
-                product_id = product.get('product_id')
-                if product_id:
-                    update_or_create_product(store=store, product=product, product_id=product_id)
+        product_array = shopify.product_listings(query_params='limit=250')
+        [
+            update_or_create_product(
+                store=store, product=product_dict, product_id=product_dict.get('product_id')
+            )
+            for product_dict in product_array
+        ]
     # Delete skus that don't have a product
     Product.objects.update(search_vector=SearchVector('search'))
     Skus.objects.filter(product=None).delete()

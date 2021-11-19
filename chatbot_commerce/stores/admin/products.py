@@ -60,10 +60,13 @@ class InlineSkus(admin.TabularInline):
 class ProductAdmin(admin.ModelAdmin):
     """Product model admin."""
 
-    list_display = ('external_id', 'name', 'store', 'sub_category', 'department', 'category', 'brand',)
-    search_fields = ['name', 'external_id']
-    list_filter = ['is_active']
-    readonly_fields = list_display
+    list_select_related = ('store', 'department', 'category', 'sub_category', 'brand',)
+    list_display = ('external_id', 'name', 'is_active', 'store', 'brand', 'department', 'category', 'sub_category',)
+    list_display_links = ('external_id', 'name',)
+    search_fields = ('name', 'external_id', 'department', 'brand', 'category', 'sub_category',)
+    list_filter = ('store__store_type', 'is_active', 'store',)
+    exclude_fields = ('search_vector', 'search', 'link_id', 'reference_id', 'show_without_stock',)
+    readonly_fields = ('external_id', 'name', 'is_active', 'store', 'brand', 'department', 'category', 'sub_category', 'raw_json', 'serializer_data', 'search_vector',)
     inlines = [InlineSkus]
 
 
@@ -91,7 +94,7 @@ class InlinePriceAdmin(admin.TabularInline):
 class SkusAdmin(admin.ModelAdmin):
     """Sku's model admin."""
 
-    readonly_fields = ('raw_json', 'product',)
+    readonly_fields = ('raw_json', 'product', 'search_vector',)
     list_display = ['external_id', 'name', 'total_quantity']
     search_fields = ['external_id', 'name']
     list_filter = ['is_active', 'is_inventoried', 'reference_stock_id']

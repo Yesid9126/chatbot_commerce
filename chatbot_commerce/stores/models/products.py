@@ -15,6 +15,9 @@ class Brand(BaseSlugnameAbstract, BaseExternalIdAbstract):
         to='stores.Store',
     )
 
+    def __str__(self) -> str:
+        return f'{self.name}'
+
     class Meta:
         verbose_name = 'Brand'
         verbose_name_plural = 'Brands'

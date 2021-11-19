@@ -1,11 +1,10 @@
+# Django
 from django_filters.rest_framework import FilterSet
 from django_filters import filters
 
-from chatbot_commerce.stores.models import Product, Skus
-
+# Models
+from chatbot_commerce.stores.models import Product, Skus, Image
 from django.db.models import Q, Prefetch
-
-from chatbot_commerce.stores.models.skus import Image
 
 # from db_python import query_debugger
 
@@ -126,6 +125,5 @@ def products_skus(self, store_pk):
                 to_attr='q_images'
             )
     )\
-        .filter(external_id__in=products_external_id, store_id=store_pk).order_by('-external_id')
-
+        .filter(external_id__in=products_external_id, store_id=store_pk)
     return queryset, count

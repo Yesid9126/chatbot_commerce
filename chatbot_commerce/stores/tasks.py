@@ -9,7 +9,7 @@ from django.core.cache import cache
 
 
 # Utils
-from chatbot_commerce.utils.tasks import create_products_vtex_store, get_departments, get_brands, get_sc_sellers
+from chatbot_commerce.utils.tasks import create_products_store, get_departments, get_brands, get_sc_sellers
 import gc
 
 # Models
@@ -63,7 +63,7 @@ def store_begining(store, *args, **kwargs):
     gc.collect()
     get_departments(store)
     gc.collect()
-    create_products_vtex_store(store=store, limit=True)
+    create_products_store(store=store, limit=True)
     gc.collect()
 
     return True
@@ -93,7 +93,7 @@ def principal_periodic_task(*args, **kwargs):
         gc.collect()
         get_departments(store)
         gc.collect()
-        create_products_vtex_store(store=store)
+        create_products_store(store=store)
         gc.collect()
 
     except Exception as message:

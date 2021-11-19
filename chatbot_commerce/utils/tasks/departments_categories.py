@@ -95,7 +95,7 @@ def get_departments(store):
     elif store.store_type.name == 'SHOPIFY':
         shopify = ShopifyStores(store=store)
         product_array = shopify.products(query_params='limit=250&fields=product_type')
-        departments = {department_dict.get('product_type') for product_dict in product_array for department_dict in product_dict.get('products')}
+        departments = {product_dict.get('product_type') for product_dict in product_array}
         departments = {
             Department.objects.get_or_create(
                 name=department.strip().capitalize(),
@@ -126,7 +126,7 @@ def get_brands(store):
     elif store.store_type.name == 'SHOPIFY':
         shopify = ShopifyStores(store=store)
         product_array = shopify.products(query_params='limit=250&fields=vendor')
-        brands = {vendor_dict.get('vendor').strip().capitalize() for product_dict in product_array for vendor_dict in product_dict.get('products')}
+        brands = {product_dict.get('vendor') for product_dict in product_array}
 
         brands = {
             Brand.objects.get_or_create(
