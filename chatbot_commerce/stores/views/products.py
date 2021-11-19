@@ -37,7 +37,7 @@ from django.core.cache import cache
 
 # Utils
 from random import shuffle
-from db_python import query_debugger
+# from db_python import query_debugger
 # from chatbot_commerce.utils.search_analizer import search_analizer_manager
 
 
@@ -90,7 +90,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
 
         return super().dispatch(request, *args, **kwargs)
 
-    @query_debugger
+    # @query_debugger
     def list(self, request, *args, **kwargs):
         """
         Return all products
@@ -140,7 +140,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
         #     search_analizer_manager(self=self, obj=obj)
         return Response(data=paginated_data, status=HTTP_200_OK)
 
-    @query_debugger
+    # @query_debugger
     def retrieve(self, request, *args, **kwargs):
         """
         Return a single product with his skus.
