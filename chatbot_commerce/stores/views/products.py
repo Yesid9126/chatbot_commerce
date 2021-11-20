@@ -36,7 +36,7 @@ from chatbot_commerce.utils.paginators import page_url
 from django.core.cache import cache
 
 # Utils
-from random import shuffle
+# from random import shuffle
 # from db_python import query_debugger
 # from chatbot_commerce.utils.search_analizer import search_analizer_manager
 
@@ -56,7 +56,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
 
         slug_name = kwargs['store_slug_name']
         self.store = get_object_or_404(Store.objects.select_related('store_type'), name=slug_name)
-        # self.search = self.request.GET.get('search')
+        self.search = self.request.GET.get('search')
         self.skus_filter_data = {
             # 'search_attributes' if key == 'attributes' else\
             'search_vector' if key == 'search' else\
@@ -100,15 +100,15 @@ class ProductViewset(mixins.RetrieveModelMixin,
         """
 
         base_url = self.request.build_absolute_uri()
-        cache_key = base_url.replace('?', '').replace('&', '').replace('/', '').lower()
-        paginated_data = cache.get(key=cache_key)
-        if paginated_data:
+        # cache_key = base_url.replace('?', '').replace('&', '').replace('/', '').lower()
+        # paginated_data = cache.get(key=cache_key)
+        # if paginated_data:
 
-            # if self.search:
-            #     obj, _ = SearchAnalizer.objects.get_or_create(store=self.store, search=self.search, defaults={'date_count': {'count': 0}})
-            #     search_analizer_manager(self=self, obj=obj)
+        #     # if self.search:
+        #     #     obj, _ = SearchAnalizer.objects.get_or_create(store=self.store, search=self.search, defaults={'date_count': {'count': 0}})
+        #     #     search_analizer_manager(self=self, obj=obj)
 
-            return Response(data=paginated_data, status=HTTP_200_OK)
+        #     return Response(data=paginated_data, status=HTTP_200_OK)
 
         store_pk = self.store.pk
         query, count = products_skus(self, store_pk=store_pk)
@@ -120,8 +120,8 @@ class ProductViewset(mixins.RetrieveModelMixin,
         data = self.get_serializer(query, many=True, read_only=True).data
         try:
             assert(data != [])
-            if self.store.store_type.name == 'VTEX':
-                shuffle(data)
+            # if self.store.store_type.name == 'VTEX':
+            #     shuffle(data)
         except AssertionError:
             return HttpResponseBadRequest(self.page_error)
 
@@ -134,7 +134,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
             'previous_link': previous_link,
             'results': data
         }
-        cache.set(key=cache_key, value=paginated_data, timeout=30)
+        # cache.set(key=cache_key, value=paginated_data, timeout=30)
         # if self.search:
         #     obj, _ = SearchAnalizer.objects.get_or_create(store=self.store, search=self.search, defaults={'date_count': {'count': 0}})
         #     search_analizer_manager(self=self, obj=obj)

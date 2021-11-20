@@ -6,6 +6,9 @@ from django_filters import filters
 from chatbot_commerce.stores.models import Product, Skus, Image
 from django.db.models import Q, Prefetch
 
+# Utils
+from random import shuffle
+from django.core.cache import cache
 # from db_python import query_debugger
 
 
@@ -101,15 +104,26 @@ def products_skus(self, store_pk):
     skus_pk = Skus.objects\
         .filter(*sku_q, **sku_d)\
         .values_list('pk', flat=True)
+    data = cache.get(key=self.search)
+    if data:
+        count = data.get('count')
+        products_external_id = data.get('products_external_id')
 
-    product_is_active = product_d.get('is_active')
-    if product_is_active:
-        products_external_id = list(set(Product.objects.filter(skus__in=skus_pk, is_active=True).values_list('external_id', flat=True)))
     else:
-        products_external_id = list(set(Product.objects.filter(skus__in=skus_pk).values_list('external_id', flat=True)))
-    products_external_id = sorted(products_external_id)
-    products_external_id.reverse()
-    count = len(products_external_id)
+        product_is_active = product_d.get('is_active')
+        if product_is_active:
+            products_external_id = list(set(Product.objects.filter(skus__in=skus_pk, is_active=True).values_list('external_id', flat=True)))
+        else:
+            products_external_id = list(set(Product.objects.filter(skus__in=skus_pk).values_list('external_id', flat=True)))
+        # products_external_id = sorted(products_external_id)
+        products_external_id = shuffle(products_external_id)
+        # products_external_id.reverse()
+        count = len(products_external_id)
+        data = {
+            'products_external_id': products_external_id,
+            'count': count
+        }
+        cache.set(key=self.search, value=data, timeout=60 * 15)
     products_external_id = products_external_id[self.offset:self.limit]
     queryset = Product.objects.only('external_id', 'name', 'keywords', 'department', 'category', 'sub_category', 'brand')\
         .select_related('department', 'category', 'sub_category', 'brand')\
