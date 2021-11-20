@@ -21,12 +21,11 @@ django-filter
 djangorestframework  # https://github.com/encode/django-rest-framework
 django-cors-headers # https://github.com/adamchainz/django-cors-headers
 coreapi  # https://github.com/core-api/python-client
-cython
 drf-yasg
 django-jsoneditor
 djangorestframework-api-key
 openpyxl
-aiohttp
+numpy
 
 # Swagger
 drf-yasg

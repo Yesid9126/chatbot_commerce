@@ -7,7 +7,7 @@ from chatbot_commerce.stores.models import Product, Skus, Image
 from django.db.models import Q, Prefetch
 
 # Utils
-from random import sample
+from numpy.random import shuffle
 from django.core.cache import cache
 # from db_python import query_debugger
 
@@ -117,7 +117,7 @@ def products_skus(self, store_pk):
             products_external_id = list(set(Product.objects.filter(skus__in=skus_pk).values_list('external_id', flat=True)))
         # products_external_id = sorted(products_external_id)
         count = len(products_external_id)
-        products_external_id = sample(products_external_id, count)
+        shuffle(products_external_id)
         # products_external_id.reverse()
         data = {
             'products_external_id': products_external_id,
