@@ -31,7 +31,6 @@ def setup_periodic_tasks(sender, **kwargs):
 
 @app.task(name='clear_cache')
 def clear_cache(*args, **kwargs):
-    print('funcion 2')
     # This works as advertised on the memcached cache:
     cache.clear()
     # This manually purges the SQLite cache:
