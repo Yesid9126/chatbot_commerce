@@ -36,7 +36,7 @@ from chatbot_commerce.utils.paginators import page_url
 from django.core.cache import cache
 
 # Utils
-# from random import shuffle
+# from random import sample
 # from db_python import query_debugger
 # from chatbot_commerce.utils.search_analizer import search_analizer_manager
 
