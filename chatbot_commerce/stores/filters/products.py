@@ -115,16 +115,16 @@ def products_skus(self, store_pk):
             skus_pk = Skus.objects\
                 .filter(*sku_q, **sku_d, product__is_active=True)\
                 .values_list('pk', flat=True)
-            products_pk = list(Skus.objects\
-                .filter(*sku_q, **sku_d, product__is_active=True)\
-                .values_list('product', flat=True))
+            products_pk = list(Skus.objects
+                               .filter(*sku_q, **sku_d, product__is_active=True)
+                               .values_list('product', flat=True))
         else:
             skus_pk = Skus.objects\
                 .filter(*sku_q, **sku_d)\
                 .values_list('pk', flat=True)
-            products_pk = list(Skus.objects\
-                .filter(*sku_q, **sku_d)\
-                .values_list('product', flat=True))
+            products_pk = list(Skus.objects
+                               .filter(*sku_q, **sku_d)
+                               .values_list('product', flat=True))
         # products_external_id = sorted(products_external_id)
         count = len(products_pk)
         shuffle(products_pk)
