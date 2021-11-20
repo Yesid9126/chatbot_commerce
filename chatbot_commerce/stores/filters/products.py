@@ -101,9 +101,6 @@ def products_skus(self, store_pk):
         sku_q = list()
         sku_d = self.skus_filter_data | {'product__store': store_pk}
 
-    skus_pk = Skus.objects\
-        .filter(*sku_q, **sku_d)\
-        .values_list('pk', flat=True)
     data = cache.get(key=self.search)
     if data:
         count = data.get('count')
