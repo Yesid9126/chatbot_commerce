@@ -104,6 +104,7 @@ def products_skus(self, store_pk):
     data = cache.get(key=self.search)
     if data:
         count = data.get('count')
+        skus_pk = data.get('skus_pk')
         products_pk = data.get('products_pk')
 
     else:
@@ -128,6 +129,7 @@ def products_skus(self, store_pk):
         # products_external_id.reverse()
         data = {
             'products_pk': products_pk,
+            'skus_pk': skus_pk,
             'count': count
         }
         cache.set(key=self.search, value=data, timeout=60 * 15)
