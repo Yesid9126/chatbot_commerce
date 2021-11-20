@@ -107,30 +107,40 @@ def products_skus(self, store_pk):
     data = cache.get(key=self.search)
     if data:
         count = data.get('count')
-        products_external_id = data.get('products_external_id')
+        products_pk = data.get('products_pk')
 
     else:
         product_is_active = product_d.get('is_active')
         if product_is_active:
-            products_external_id = list(set(Product.objects.filter(skus__in=skus_pk, is_active=True).values_list('external_id', flat=True)))
+            skus_pk = Skus.objects\
+                .filter(*sku_q, **sku_d, product__is_active=True)\
+                .values_list('pk', flat=True)
+            products_pk = list(Skus.objects\
+                .filter(*sku_q, **sku_d, product__is_active=True)\
+                .values_list('product', flat=True))
         else:
-            products_external_id = list(set(Product.objects.filter(skus__in=skus_pk).values_list('external_id', flat=True)))
+            skus_pk = Skus.objects\
+                .filter(*sku_q, **sku_d)\
+                .values_list('pk', flat=True)
+            products_pk = list(Skus.objects\
+                .filter(*sku_q, **sku_d)\
+                .values_list('product', flat=True))
         # products_external_id = sorted(products_external_id)
-        count = len(products_external_id)
-        shuffle(products_external_id)
+        count = len(products_pk)
+        shuffle(products_pk)
         # products_external_id.reverse()
         data = {
-            'products_external_id': products_external_id,
+            'products_pk': products_pk,
             'count': count
         }
         cache.set(key=self.search, value=data, timeout=60 * 15)
-    products_external_id = products_external_id[self.offset:self.limit]
+    products_pk = products_pk[self.offset:self.limit]
     queryset = Product.objects.only('external_id', 'name', 'keywords', 'department', 'category', 'sub_category', 'brand')\
         .select_related('department', 'category', 'sub_category', 'brand')\
         .prefetch_related(
             Prefetch(
                 'skus',
-                queryset=Skus.objects.only('serializer_data', 'product').filter(pk__in=skus_pk, product__external_id__in=products_external_id),
+                queryset=Skus.objects.only('serializer_data', 'product').filter(pk__in=skus_pk, product__pk__in=products_pk),
                 to_attr='q_skus'
             ),
             Prefetch(
@@ -139,5 +149,5 @@ def products_skus(self, store_pk):
                 to_attr='q_images'
             )
     )\
-        .filter(external_id__in=products_external_id, store_id=store_pk)
+        .filter(pk__in=products_pk)
     return queryset, count
