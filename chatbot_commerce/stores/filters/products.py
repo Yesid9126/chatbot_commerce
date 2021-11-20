@@ -116,7 +116,7 @@ def products_skus(self, store_pk):
         else:
             products_external_id = list(set(Product.objects.filter(skus__in=skus_pk).values_list('external_id', flat=True)))
         # products_external_id = sorted(products_external_id)
-        products_external_id = shuffle(products_external_id)
+        shuffle(products_external_id)
         # products_external_id.reverse()
         count = len(products_external_id)
         data = {
