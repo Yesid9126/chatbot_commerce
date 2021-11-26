@@ -57,7 +57,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
         slug_name = kwargs['store_slug_name']
         self.store = get_object_or_404(Store.objects.select_related('store_type'), name=slug_name)
         search = self.request.GET.get('search')
-        self.search = search.replace(' ','').lower() if search else None
+        self.search = search.replace(' ', '').lower() if search else None
         self.skus_filter_data = {
             # 'search_attributes' if key == 'attributes' else\
             'search_vector' if key == 'search' else\

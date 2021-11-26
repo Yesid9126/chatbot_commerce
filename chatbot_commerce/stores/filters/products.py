@@ -111,19 +111,19 @@ def products_skus(self, store_pk):
     else:
         product_is_active = product_d.get('is_active')
         if product_is_active:
-            skus_pk = set(Skus.objects\
-                .filter(*sku_q, **sku_d, product__is_active=True)\
-                .values_list('pk', flat=True))
+            skus_pk = set(Skus.objects
+                          .filter(*sku_q, **sku_d, product__is_active=True)
+                          .values_list('pk', flat=True))
             products_pk = list(set(Skus.objects
-                               .filter(*sku_q, **sku_d, product__is_active=True)
-                               .values_list('product', flat=True)))
+                                   .filter(*sku_q, **sku_d, product__is_active=True)
+                                   .values_list('product', flat=True)))
         else:
-            skus_pk = set(Skus.objects\
-                .filter(*sku_q, **sku_d)\
-                .values_list('pk', flat=True))
+            skus_pk = set(Skus.objects
+                          .filter(*sku_q, **sku_d)
+                          .values_list('pk', flat=True))
             products_pk = list(set(Skus.objects
-                               .filter(*sku_q, **sku_d)
-                               .values_list('product', flat=True)))
+                                   .filter(*sku_q, **sku_d)
+                                   .values_list('product', flat=True)))
         # products_external_id = sorted(products_external_id)
         count = len(products_pk)
         # shuffle(products_pk)
