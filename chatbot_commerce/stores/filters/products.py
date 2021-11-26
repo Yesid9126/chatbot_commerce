@@ -128,12 +128,13 @@ def products_skus(self, store_pk):
         count = len(products_pk)
         # shuffle(products_pk)
         # products_external_id.reverse()
-        data = {
-            'products_pk': products_pk,
-            'skus_pk': skus_pk,
-            'count': count
-        }
-        cache.set(key=self.search, value=data, timeout=60 * 60)
+        if count:
+            data = {
+                'products_pk': products_pk,
+                'skus_pk': skus_pk,
+                'count': count
+            }
+            cache.set(key=self.search, value=data, timeout=60 * 60)
     products_pk = products_pk[self.offset:self.limit]
     queryset = Product.objects.only('external_id', 'name', 'keywords', 'department', 'category', 'sub_category', 'brand')\
         .select_related('department', 'category', 'sub_category', 'brand')\
