@@ -36,6 +36,7 @@ from chatbot_commerce.utils.paginators import page_url
 from django.core.cache import cache
 
 # Utils
+from numpy.random import shuffle
 # from random import sample
 # from db_python import query_debugger
 # from chatbot_commerce.utils.search_analizer import search_analizer_manager
@@ -121,6 +122,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
         data = self.get_serializer(query, many=True, read_only=True).data
         try:
             assert(data != [])
+            shuffle(data)
             # if self.store.store_type.name == 'VTEX':
             #     shuffle(data)
         except AssertionError:
