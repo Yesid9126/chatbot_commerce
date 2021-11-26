@@ -106,6 +106,7 @@ def products_skus(self, store_pk):
         count = data.get('count')
         skus_pk = data.get('skus_pk')
         products_pk = data.get('products_pk')
+        shuffle(products_pk)
 
     else:
         product_is_active = product_d.get('is_active')
@@ -125,14 +126,14 @@ def products_skus(self, store_pk):
                                .values_list('product', flat=True)))
         # products_external_id = sorted(products_external_id)
         count = len(products_pk)
-        shuffle(products_pk)
+        # shuffle(products_pk)
         # products_external_id.reverse()
         data = {
             'products_pk': products_pk,
             'skus_pk': skus_pk,
             'count': count
         }
-        cache.set(key=self.search, value=data, timeout=60 * 15)
+        cache.set(key=self.search, value=data, timeout=60 * 60)
     products_pk = products_pk[self.offset:self.limit]
     queryset = Product.objects.only('external_id', 'name', 'keywords', 'department', 'category', 'sub_category', 'brand')\
         .select_related('department', 'category', 'sub_category', 'brand')\
