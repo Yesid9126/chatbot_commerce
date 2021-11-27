@@ -71,11 +71,11 @@ Create Backups
         # Give permissions with $ sudo chmod +x filename
 
         # whoami
-        docker-compose -f chatbot_commerce/production.yml exec postgres backup
-        docker cp chatbot_commerce_postgres_1:/backups ./
-        docker exec --detach chatbot_commerce_postgres_1 rm ./backups/*
+        /usr/local/bin/docker-compose -f /root/chatbot_commerce/production.yml exec postgres backup
+        /bin/docker cp chatbot_commerce_postgres_1:/backups/ /root/
+        /bin/docker exec --detach chatbot_commerce_postgres_1 rm ./backups/*
 
-        cd ./backups && echo *
+        echo /root/backups/*
 
     execute::
 
@@ -112,11 +112,12 @@ Restore Backups
 
         echo 'container:' $1, 'file:' $2
 
-        docker cp ./backups/$2 $1:/backups/
-        docker-compose -f ./chatbot_commerce/production.yml down --remove-orphans
-        docker-compose -f ./chatbot_commerce/production.yml up -d
-        docker-compose -f ./chatbot_commerce/production.yml exec -u root postgres restore $2
-        docker exec --detach chatbot_commerce_postgres_1 rm ./backups/*
+        /bin/docker cp ./backups/$2 $1:/backups/
+        /usr/local/bin/docker-compose -f ./chatbot_commerce/production.yml down --remove-orphans
+        /usr/local/bin/docker-compose -f ./chatbot_commerce/production.yml up -d
+        /usr/local/bin/docker-compose -f ./chatbot_commerce/production.yml exec -u root postgres restore $2
+        /bin/docker exec --detach chatbot_commerce_postgres_1 rm ./backups/*
+
 
     execute::
 
