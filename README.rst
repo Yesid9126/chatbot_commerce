@@ -166,12 +166,10 @@ requirements
 
     then put this::
 
-        #! /bin/bash
-
         # Give permissions with $ sudo chmod +x filename
 
         # Note, we are using "echo 3", but it is not recommended in production instead use "echo 1"
-        echo 3 > /proc/sys/vm/drop_caches && swapoff -a && swapon -a && printf '\n%s\n' 'Ram-cache and Swap Cleared'
+        echo 3 > /proc/sys/vm/drop_caches && /sbin/swapoff -a && /sbin/swapon -a && printf '\n%s\n' 'Ram-cache and Swap Cleared'
 
     execute::
 
@@ -212,9 +210,9 @@ First you need to set up your TZ do this
 
 * Inside of file cron put this::
 
-    # m h  dom mon dow    user      type         command
-    54  23  *   *    *     root    /bin/bash    /path/to/file1.sh
-    57  23  *   *    *     root    /bin/bash    /path/to/file2.sh
+    # m h  dom mon dow     type         command
+    59  23  *   *    *   /bin/sh    /path/to/file1.sh
+    57  23  *   *    *   /bin/sh    /path/to/file2.sh
 
 * Check cron logs events through syslog::
 
