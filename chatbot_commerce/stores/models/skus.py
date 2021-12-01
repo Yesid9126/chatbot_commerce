@@ -22,9 +22,8 @@ class Skus(BaseAbstract):
     is_inventoried = models.BooleanField(
         default=False, null=True, blank=True
     )
-    total_quantity = models.CharField(
+    total_quantity = models.PositiveBigIntegerField(
         'Quantity sku',
-        max_length=255,
         null=True, blank=True
     )
     # search_attributes = models.TextField(_("Attributes search"), blank=True, null=True)
@@ -89,6 +88,8 @@ class Skus(BaseAbstract):
         default=False, null=True, blank=True
     )
 
+    sku_price = models.PositiveBigIntegerField(verbose_name='Price', null=True, blank=True)
+
     def __str__(self):
         """Return sku id."""
         return f'{self.name}'
@@ -104,8 +105,9 @@ class Skus(BaseAbstract):
         price = self.price.first()
         if price:
             price = price.serializer_data
-        else:
-            price = None
+            self.sku_price = price['base_price']
+        # else:
+        #     price = None
 
         self.serializer_data = {
             'sku_id': self.external_id,

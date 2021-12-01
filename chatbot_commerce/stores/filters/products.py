@@ -15,7 +15,8 @@ from django.core.cache import cache
 class ProductFilterSet(FilterSet):
 
     # attributes = filters.CharFilter(field_name='name')
-    stock_quantity = filters.CharFilter(field_name='name')
+    budget = filters.NumberFilter(field_name='name', lookup_expr='lte')
+    stock_quantity = filters.NumberFilter(field_name='name', lookup_expr='gte')
     offset = filters.CharFilter(field_name='name')
     limit = filters.CharFilter(field_name='name')
     page = filters.CharFilter(field_name='name')

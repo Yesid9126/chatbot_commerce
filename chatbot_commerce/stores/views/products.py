@@ -62,8 +62,9 @@ class ProductViewset(mixins.RetrieveModelMixin,
         self.skus_filter_data = {
             # 'search_attributes' if key == 'attributes' else\
             'search_vector' if key == 'search' else\
-            'total_quantity' if key == 'stock_quantity' else\
-            key: value for key, value in self.request.GET.items() if key in ('stock_quantity', 'search', 'offset', 'limit', 'page')
+            'total_quantity__gte' if key == 'stock_quantity' else\
+            'sku_price__lte' if key == 'budget' else\
+            key: value for key, value in self.request.GET.items() if key in ('stock_quantity', 'search', 'budget', 'offset', 'limit', 'page')
         }
 
         if 'limit' in self.skus_filter_data:
