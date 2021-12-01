@@ -40,32 +40,32 @@ def products_skus(self, store_pk):
     product_d = dict()
     # Apply filter products
     if self.store.apply_filter_enable_products and self.store.apply_filter_enable_skus and self.store.apply_filter_image and self.store.apply_filter_price:
-        sku_q = [~Q(images=None), ~Q(price=None)]
-        sku_d = self.skus_filter_data | {'price__base_price__gt': 0, 'total_quantity__gt': 0, 'is_active': True, 'product__store': store_pk}
+        sku_q = [~Q(images=None), ~Q(sku_price=None), ~Q(sku_price=0), ~Q(total_quantity=0)]
+        sku_d = self.skus_filter_data | {'is_active': True, 'product__store': store_pk}
         product_d['is_active'] = True
 
     elif self.store.apply_filter_enable_products or self.store.apply_filter_enable_skus or self.store.apply_filter_image or self.store.apply_filter_price:
         if self.store.apply_filter_enable_products:
             if self.store.apply_filter_enable_skus:
                 if self.store.apply_filter_image:
-                    sku_q = [~Q(images=None)]
-                    sku_d = self.skus_filter_data | {'total_quantity__gt': 0, 'is_active': True, 'product__store': store_pk}
+                    sku_q = [~Q(images=None), ~Q(total_quantity=0)]
+                    sku_d = self.skus_filter_data | {'is_active': True, 'product__store': store_pk}
                 elif self.store.apply_filter_price:
-                    sku_q = [~Q(price=None)]
-                    sku_d = self.skus_filter_data | {'price__base_price__gt': 0, 'total_quantity__gt': 0, 'is_active': True, 'product__store': store_pk}
+                    sku_q = [~Q(sku_price=None), Q(sku_price=0), ~Q(total_quantity=0)]
+                    sku_d = self.skus_filter_data | {'is_active': True, 'product__store': store_pk}
                 else:
-                    sku_q = list()
-                    sku_d = self.skus_filter_data | {'price__base_price__gt': 0, 'total_quantity__gt': 0, 'is_active': True, 'product__store': store_pk}
+                    sku_q = [Q(sku_price=0), ~Q(total_quantity=0)]
+                    sku_d = self.skus_filter_data | {'is_active': True, 'product__store': store_pk}
             elif self.store.apply_filter_image:
                 if self.store.apply_filter_price:
-                    sku_q = [~Q(images=None), ~Q(price=None)]
-                    sku_d = self.skus_filter_data | {'price__base_price__gt': 0, 'product__store': store_pk}
+                    sku_q = [~Q(images=None), ~Q(sku_price=None), Q(sku_price=0)]
+                    sku_d = self.skus_filter_data | {'product__store': store_pk}
                 else:
                     sku_q = [~Q(images=None)]
                     sku_d = self.skus_filter_data | {'product__store': store_pk}
             elif self.store.apply_filter_price:
-                sku_q = [~Q(price=None)]
-                sku_d = self.skus_filter_data | {'price__base_price__gt': 0, 'product__store': store_pk}
+                sku_q = [~Q(sku_price=None), Q(sku_price=0)]
+                sku_d = self.skus_filter_data | {'product__store': store_pk}
             else:
                 sku_q = list()
                 sku_d = self.skus_filter_data | {'product__store': store_pk}
@@ -74,35 +74,35 @@ def products_skus(self, store_pk):
         elif self.store.apply_filter_enable_skus:
             if self.store.apply_filter_image:
                 if self.store.apply_filter_price:
-                    sku_q = [~Q(images=None), ~Q(price=None)]
-                    sku_d = self.skus_filter_data | {'price__base_price__gt': 0, 'total_quantity__gt': 0, 'is_active': True, 'product__store': store_pk}
+                    sku_q = [~Q(images=None), ~Q(sku_price=None), Q(sku_price=0), ~Q(total_quantity=0)]
+                    sku_d = self.skus_filter_data | {'is_active': True, 'product__store': store_pk}
                 else:
-                    sku_q = [~Q(images=None)]
-                    sku_d = self.skus_filter_data | {'total_quantity__gt': 0, 'is_active': True, 'product__store': store_pk}
+                    sku_q = [~Q(images=None), ~Q(total_quantity=0)]
+                    sku_d = self.skus_filter_data | {'is_active': True, 'product__store': store_pk}
             elif self.store.apply_filter_price:
-                sku_q = [~Q(price=None)]
-                sku_d = self.skus_filter_data | {'price__base_price__gt': 0, 'total_quantity__gt': 0, 'is_active': True, 'product__store': store_pk}
+                sku_q = [~Q(sku_price=None), Q(sku_price=0), ~Q(total_quantity=0)]
+                sku_d = self.skus_filter_data | {'is_active': True, 'product__store': store_pk}
             else:
-                sku_q = list()
-                sku_d = self.skus_filter_data | {'total_quantity__gt': 0, 'is_active': True, 'product__store': store_pk}
+                sku_q = [~Q(total_quantity=0)]
+                sku_d = self.skus_filter_data | {'is_active': True, 'product__store': store_pk}
 
         elif self.store.apply_filter_image:
             if self.store.apply_filter_price:
-                sku_q = [~Q(images=None), ~Q(price=None)]
-                sku_d = self.skus_filter_data | {'price__base_price__gt': 0, 'product__store': store_pk}
+                sku_q = [~Q(images=None), ~Q(sku_price=None), Q(sku_price=0)]
+                sku_d = self.skus_filter_data | {'product__store': store_pk}
             else:
                 sku_q = [~Q(images=None)]
                 sku_d = self.skus_filter_data | {'product__store': store_pk}
 
         else:
-            sku_q = [~Q(price=None)]
-            sku_d = self.skus_filter_data | {'price__base_price__gt': 0, 'product__store': store_pk}
+            sku_q = [~Q(sku_price=None), Q(sku_price=0)]
+            sku_d = self.skus_filter_data | {'product__store': store_pk}
 
     else:
         sku_q = list()
         sku_d = self.skus_filter_data | {'product__store': store_pk}
 
-    data = cache.get(key=self.search)
+    data = cache.get(key=self.cache_key)
     if data:
         count = data.get('count')
         skus_pk = data.get('skus_pk')
@@ -135,7 +135,7 @@ def products_skus(self, store_pk):
                 'skus_pk': skus_pk,
                 'count': count
             }
-            cache.set(key=self.search, value=data, timeout=60 * 60)
+            cache.set(key=self.cache_key, value=data, timeout=60 * 60)
     products_pk = products_pk[self.offset:self.limit]
     queryset = Product.objects.only('external_id', 'name', 'keywords', 'department', 'category', 'sub_category', 'brand')\
         .select_related('department', 'category', 'sub_category', 'brand')\
