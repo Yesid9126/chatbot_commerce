@@ -88,7 +88,7 @@ class Skus(BaseAbstract):
         default=False, null=True, blank=True
     )
 
-    sku_price = models.PositiveBigIntegerField(verbose_name='Price', null=True, blank=True)
+    sku_price = models.FloatField(verbose_name='Price', null=True, blank=True)
 
     def __str__(self):
         """Return sku id."""
