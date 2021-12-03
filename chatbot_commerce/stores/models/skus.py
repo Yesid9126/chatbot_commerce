@@ -88,7 +88,7 @@ class Skus(BaseAbstract):
         default=False, null=True, blank=True
     )
 
-    sku_price = models.PositiveBigIntegerField(verbose_name='Price', null=True, blank=True)
+    sku_price = models.FloatField(verbose_name='Price', null=True, blank=True)
 
     def __str__(self):
         """Return sku id."""
@@ -125,7 +125,7 @@ class Skus(BaseAbstract):
         verbose_name = "Sku"
         verbose_name_plural = "Sku's"
         default_related_name = 'skus'
-        indexes = [models.Index(fields=['is_active', 'external_id'])]
+        indexes = [models.Index(fields=['is_active', 'external_id', 'total_quantity', 'sku_price', 'search_vector'])]
 
 
 class Image(ChatbootModel):
