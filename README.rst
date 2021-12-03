@@ -86,17 +86,19 @@ Restore Backups
 
 * To restore a **backup**, put these commands::
 
-    :~# docker cp path/to/machine/backups/file.sql.gz container-name:/path/to/container/backups/
     :~# docker-compose -f ./chatbot_commerce/production.yml down --remove-orphans
-    :~# docker-compose -f ./chatbot_commerce/production.yml up -d
+    :~# docker-compose -f ./chatbot_commerce/production.yml up -d container-name
+    :~# docker cp path/to/machine/backups/file.sql.gz container-name:/path/to/container/backups/
     :~# docker-compose -f ./chatbot_commerce/production.yml exec -u root postgres restore file.sql.gz
+    :~# docker-compose -f ./chatbot_commerce/production.yml up -d
 
 * Example in this project when date creation backup is 2021_10_22T22_24_24::
 
     :~# docker cp ./backups/backup_2021_10_22T22_24_24.sql.gz chatbot_commerce_postgres_1:/backups/
     :~# docker-compose -f ./chatbot_commerce/production.yml down --remove-orphans
-    :~# docker-compose -f ./chatbot_commerce/production.yml up -d
+    :~# docker-compose -f ./chatbot_commerce/production.yml up -d chatbot_commerce_postgres_1
     :~# docker-compose -f ./chatbot_commerce/production.yml exec -u root postgres restore backup_2021_10_22T22_24_24.sql.gz
+    :~# docker-compose -f ./chatbot_commerce/production.yml up -d
 
 *Or
 
@@ -112,11 +114,12 @@ Restore Backups
 
         echo 'container:' $1, 'file:' $2
 
-        /bin/docker cp ./backups/$2 $1:/backups/
         /usr/local/bin/docker-compose -f ./chatbot_commerce/production.yml down --remove-orphans
-        /usr/local/bin/docker-compose -f ./chatbot_commerce/production.yml up -d
+        /usr/local/bin/docker-compose -f ./chatbot_commerce/production.yml up -d postgres
+        /bin/docker cp /root/backups/$2 $1:/backups/
         /usr/local/bin/docker-compose -f ./chatbot_commerce/production.yml exec -u root postgres restore $2
         /bin/docker exec --detach chatbot_commerce_postgres_1 rm ./backups/*
+        /usr/local/bin/docker-compose -f ./chatbot_commerce/production.yml up -d
 
 
     execute::
@@ -208,6 +211,8 @@ First you need to set up your TZ do this
 * Then just add jobs to cron::
 
     :~# nano /etc/crontab
+    or
+    :~# crontab -e
 
 * Inside of file cron put this::
 
