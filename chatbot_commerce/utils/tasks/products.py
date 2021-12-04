@@ -386,7 +386,7 @@ def create_products_store(store, limit=False):
         skus_ids = list(set(skus_ids))
         skus_ids.reverse()
 
-        sub_skus_ids = [skus_ids[i:i+1000] for i in range(0, len(skus_ids), 1000)]
+        sub_skus_ids = [skus_ids[i:i+10000] for i in range(0, len(skus_ids), 10000)]
         skus_ids.clear()
         products_created = []
         gc.collect()
