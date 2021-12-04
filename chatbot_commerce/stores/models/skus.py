@@ -94,8 +94,8 @@ class Skus(BaseAbstract):
         """Return sku id."""
         return f'{self.name}'
 
-    def save(self, *args, **kwargs):
-
+    @property
+    def get_serializer_data(self):
         array_sku_seller = list(self.sku_seller.values_list('seller__seller_id', flat=True))
         if array_sku_seller:
             seller = array_sku_seller[0]
@@ -119,7 +119,7 @@ class Skus(BaseAbstract):
             'attributes': list(Attribute.objects.filter(skus=self.pk).values('value', attribute_name=models.F('attribute_type__name'))),
             'is_active': self.is_active
         }
-        return super().save(*args, **kwargs)
+        return self.save()
 
     class Meta:
         verbose_name = "Sku"

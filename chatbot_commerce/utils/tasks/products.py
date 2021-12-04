@@ -17,8 +17,9 @@ import asyncio
 import gc
 
 
-def update_or_create_product(store, product, product_id):
+def update_or_create_product(store, product):
     if store.store_type.name == 'SHOPIFY':
+        product_id = product.get('product_id')
         name = product.get('title')
         if name:
             department = Department.objects.filter(name=product.get('product_type')).last()
@@ -55,8 +56,7 @@ def update_or_create_product(store, product, product_id):
                         }
                     )
                     image.products.add(product_instance)
-                for sku in product.get('variants'):
-                    update_or_create_sku(product_instance=product_instance, product_id=product_id, store=store, sku=sku)
+                map(lambda sku: update_or_create_sku(product_instance=product_instance, product_id=product_id, store=store, sku=sku), product.get('variants'))
             except Exception as e:
                 error = {
                     'message': e,
@@ -65,6 +65,7 @@ def update_or_create_product(store, product, product_id):
                 print(error)
 
     elif store.store_type.name == 'VTEX':
+        product_id = product.get('Id')
         name = product.get('Name')
         if name:
             department = Department.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('DepartmentId')}"], stores=store).last()
@@ -105,10 +106,10 @@ def update_or_create_product(store, product, product_id):
                 }
                 print(error)
 
-    return None
+    return product_id
 
 
-def update_or_create_sku(product_instance, product_id, sku, store):
+def update_or_create_sku(store, sku, product_instance=None, product_id=None):
     s = []
     extra_data_search = []
     if store.store_type.name == 'SHOPIFY':
@@ -173,9 +174,14 @@ def update_or_create_sku(product_instance, product_id, sku, store):
         del s
 
     elif store.store_type.name == 'VTEX':
+        product_id = sku.get('ProductId')
+        # Get product instance
+        if product_id:
+            product_instance = Product.objects.filter(store=store, external_id=product_id).last()
         # Create or update sku
         try:
             # Get instance
+            assert(product_instance, 'Product not found')
             sku_name = sku.get('NameComplete')
             sku_instance, _ = Skus.objects.update_or_create(
                 external_id=sku.get('Id'),
@@ -370,25 +376,25 @@ def create_products_store(store, limit=False):
 
         # Get Sales channels in db
         sc = list(SaleChannel.objects.filter(store=store).values_list('external_id', flat=True))
-        skus_ids = []
+        skus_ids = set()
         for sc_id in sc:
             page = 1
             while 1:
                 add = vtex.get_list_skus_by_storeid(store_id=sc_id, page=page)
                 if add == {} or add == []:
                     break
-                skus_ids += add
+                skus_ids |= set(add)
                 page += 1
             if sc_id == 1:
                 break
 
         # Order by new-old
-        skus_ids = list(set(skus_ids))
+        skus_ids = list(skus_ids)
         skus_ids.reverse()
 
         sub_skus_ids = [skus_ids[i:i+10000] for i in range(0, len(skus_ids), 10000)]
         skus_ids.clear()
-        products_created = []
+        products_created = set()
         gc.collect()
         for ids in sub_skus_ids:
             loop = asyncio.new_event_loop()
@@ -398,31 +404,10 @@ def create_products_store(store, limit=False):
             gc.collect()
             print(f'round: skus = {len(skus)}, products = {len(products)}')
             if products:
-                for product in products:
-                    product_id = product.get('Id')
-                    if product_id:
-                        update_or_create_product(store=store, product=product, product_id=product_id)
-                        if product_id not in products_created:
-                            products_created.append(product_id)
+                products_created |= set(map(lambda product: update_or_create_product(store=store, product=product), products))
             products.clear()
             if skus:
-                product_instance = None
-                for sku_dict in skus:
-                    product_id = sku_dict.get('ProductId')
-                    # Get product instance
-                    if product_id:
-
-                        # Getting a product instance if there's not one already
-                        if not product_instance:
-                            product_instance = Product.objects.filter(store=store, external_id=product_id).last()
-
-                        # Changing product instance
-                        elif product_id != product_instance.external_id:
-                            product_instance = Product.objects.filter(store=store, external_id=product_id).last()
-
-                        if product_instance:
-                            # Update sku
-                            update_or_create_sku(product_instance=product_instance, product_id=product_id, sku=sku_dict, store=store)
+                map(lambda sku: update_or_create_sku(store=store, sku=sku), skus)
             skus.clear()
             if limit:
                 break
@@ -431,15 +416,11 @@ def create_products_store(store, limit=False):
     elif store.store_type.name == 'SHOPIFY':
         shopify = ShopifyStores(store=store)
         product_array = shopify.product_listings(query_params='limit=250')
-        [
-            update_or_create_product(
-                store=store, product=product_dict, product_id=product_dict.get('product_id')
-            )
-            for product_dict in product_array
-        ]
+        map(lambda product: update_or_create_product(store=store, product=product), product_array)
     # Delete skus that don't have a product
     Product.objects.update(search_vector=SearchVector('search'))
     Skus.objects.filter(product=None).delete()
     Skus.objects.update(search_vector=SearchVector('search'))
+    map(lambda sku: sku.get_serializer_data, Skus.objects.all())
     gc.collect()
     return True
