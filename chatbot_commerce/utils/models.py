@@ -6,6 +6,41 @@ from django.db import models
 from django.contrib.postgres.fields import ArrayField
 from django.utils.translation import gettext as _
 
+from collections import defaultdict
+from django.apps import apps
+
+class BulkCreator:
+    """
+    Class to create bulk objects
+    """
+
+    def __init__(self, chunk_size=100):
+        self.bulk_objects = defaultdict(list)
+        self.chunk_size = chunk_size
+
+    def add_object(self, model, obj):
+        """
+        Add object to bulk objects
+        :param model: Model
+        :param obj: Object
+        :return:
+        """
+        self.bulk_objects[model].append(obj)
+
+    def create_bulk(self):
+        """
+        Create bulk objects
+        :return:
+        """
+        for model, objects in self.bulk_objects.items():
+            model_class = apps.get_model('chatbot_commerce', model)
+            model_class.objects.bulk_create(objects)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.create_bulk()
 
 class ChatbootModel(models.Model):
     """Chatboot commerce base model.

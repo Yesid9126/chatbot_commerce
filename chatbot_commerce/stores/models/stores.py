@@ -22,7 +22,7 @@ from django_celery_beat.models import PeriodicTask, CrontabSchedule
 from chatbot_commerce.utils.models import ChatbootModel, BaseAbstract, BaseRawAbstract, BaseSlugnameAbstract
 from django.utils.translation import gettext as _
 from django.dispatch import receiver
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.conf import settings
 import requests
 import typing
@@ -377,6 +377,12 @@ def execute_task(sender, instance, *args, **kwargs):
             print(message)
 
     if instance.status is False or instance.sync_status is False:
+        PeriodicTask.objects.filter(name=f'{instance.name} create & update', task='principal_periodic_task').delete()
+
+@receiver(post_delete, sender=Store)
+def delete_task(sender, instance, *args, **kwargs):
+    task = PeriodicTask.objects.filter(name=f'{instance.name} create & update', task='principal_periodic_task').exists()
+    if task:
         PeriodicTask.objects.filter(name=f'{instance.name} create & update', task='principal_periodic_task').delete()
 
 

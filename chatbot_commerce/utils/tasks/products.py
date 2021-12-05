@@ -15,6 +15,7 @@ from chatbot_commerce.utils.apis import VtexStores, ShopifyStores
 # Utils
 import asyncio
 import gc
+# from chatbot_commerce.utils.models.bulk_creator import BulkCreator
 
 
 def update_or_create_product(store, product):
@@ -68,45 +69,45 @@ def update_or_create_product(store, product):
 
     elif store.store_type.name == 'VTEX':
         product_id = product.get('Id')
-        name = product.get('Name')
-        if name:
-            department = Department.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('DepartmentId')}"], stores=store).last()
-            sub_category = Subcategory.objects.select_related('category').filter(external_id=product.get('CategoryId'), category__store=store).last()
-            brand = Brand.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('BrandId')}"], stores=store).last()
-            if sub_category:
-                category = sub_category.category
-            else:
-                category = Category.objects.filter(external_id=product.get('CategoryId'), store=store).last()
-            try:
-                product_instance, _ = Product.objects.update_or_create(
-                    store=store,
-                    external_id=product_id,
-                    defaults={
-                        'name': name,
-                        'department': department,
-                        'sub_category': sub_category,
-                        'category': category,
-                        'brand': brand,
-                        'search': ' '.join([name, *[cat.name for cat in [department, category, sub_category, brand] if cat]]),
-                        'link_id': product.get('LinkId'),
-                        'reference_id': product.get('RefId'),
-                        'is_visible': product.get('IsVisible'),
-                        'description': product.get('Description'),
-                        'description_short': product.get('DescriptionShort'),
-                        'keywords': product.get('KeyWords'),
-                        'title': product.get('Title'),
-                        'is_active': product.get('IsActive'),
-                        'meta_tag_description': product.get('MetaTagDescription'),
-                        'show_without_stock': product.get('ShowWithoutStock'),
-                        'raw_json': {**product},
-                    }
-                )
-            except Exception as e:
-                error = {
-                    'message': e,
-                    'product_id': product_id,
-                }
-                print(error)
+    #     name = product.get('Name')
+    #     if name:
+    #         department = Department.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('DepartmentId')}"], stores=store).last()
+    #         sub_category = Subcategory.objects.select_related('category').filter(external_id=product.get('CategoryId'), category__store=store).last()
+    #         brand = Brand.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('BrandId')}"], stores=store).last()
+    #         if sub_category:
+    #             category = sub_category.category
+    #         else:
+    #             category = Category.objects.filter(external_id=product.get('CategoryId'), store=store).last()
+    #         try:
+    #             product_instance, _ = Product.objects.update_or_create(
+    #                 store=store,
+    #                 external_id=product_id,
+    #                 defaults={
+    #                     'name': name,
+    #                     'department': department,
+    #                     'sub_category': sub_category,
+    #                     'category': category,
+    #                     'brand': brand,
+    #                     'search': ' '.join([name, *[cat.name for cat in [department, category, sub_category, brand] if cat]]),
+    #                     'link_id': product.get('LinkId'),
+    #                     'reference_id': product.get('RefId'),
+    #                     'is_visible': product.get('IsVisible'),
+    #                     'description': product.get('Description'),
+    #                     'description_short': product.get('DescriptionShort'),
+    #                     'keywords': product.get('KeyWords'),
+    #                     'title': product.get('Title'),
+    #                     'is_active': product.get('IsActive'),
+    #                     'meta_tag_description': product.get('MetaTagDescription'),
+    #                     'show_without_stock': product.get('ShowWithoutStock'),
+    #                     'raw_json': {**product},
+    #                 }
+    #             )
+    #         except Exception as e:
+    #             error = {
+    #                 'message': e,
+    #                 'product_id': product_id,
+    #             }
+    #             print(error)
 
     return product_id
 
@@ -184,29 +185,31 @@ def update_or_create_sku(store, sku, product_instance=None, product_id=None):
         # Create or update sku
         try:
             # Get instance
-            assert product_instance, 'Sku not found'
+            assert product_instance, 'Product not found'
             sku_name = sku.get('NameComplete')
-            sku_instance, _ = Skus.objects.update_or_create(
-                external_id=sku.get('Id'),
-                product=product_instance,
-                defaults={
-                    'name': sku_name,
-                    'is_active': sku.get('IsActive'),
-                    'ref_id': sku.get('RefId'),
-                    'packaged_height': sku.get('Height'),
-                    'packaged_length': sku.get('Length'),
-                    'packaged_width': sku.get('Width'),
-                    'packaged_weight': sku.get('WeightKg'),
-                    'is_kit': sku.get('IsKit'),
-                    'comercial_condition_id': sku.get('CommercialConditionId'),
-                    'manufacter_code': sku.get('ManufacturerCode'),
-                    'reference_stock_id': sku.get('ReferenceStockKeepingUnitId'),
-                    'is_inventoried': sku.get('IsInventoried'),
-                    'is_transported': sku.get('IsTransported'),
-                    'total_quantity': sku.get('total_quantity'),
-                    'raw_json': {**sku}
-                }
-            )
+            sku_instance = Skus.objects.filter(external_id=sku.get('Id'), product=product_instance).last()
+            assert sku_instance, 'Sku not found'
+            # sku_instance, _ = Skus.objects.update_or_create(
+            #     external_id=sku.get('Id'),
+            #     product=product_instance,
+            #     defaults={
+            #         'name': sku_name,
+            #         'is_active': sku.get('IsActive'),
+            #         'ref_id': sku.get('RefId'),
+            #         'packaged_height': sku.get('Height'),
+            #         'packaged_length': sku.get('Length'),
+            #         'packaged_width': sku.get('Width'),
+            #         'packaged_weight': sku.get('WeightKg'),
+            #         'is_kit': sku.get('IsKit'),
+            #         'comercial_condition_id': sku.get('CommercialConditionId'),
+            #         'manufacter_code': sku.get('ManufacturerCode'),
+            #         'reference_stock_id': sku.get('ReferenceStockKeepingUnitId'),
+            #         'is_inventoried': sku.get('IsInventoried'),
+            #         'is_transported': sku.get('IsTransported'),
+            #         'total_quantity': sku.get('total_quantity'),
+            #         'raw_json': {**sku}
+            #     }
+            # )
 
             # Get Sales channels of sku
             sc_ids = sku.get('SalesChannels')
@@ -240,21 +243,16 @@ def update_or_create_sku(store, sku, product_instance=None, product_id=None):
             try:
                 if images_array:
                     for image_dict in images_array:
-                        image_url = image_dict.get('ImageUrl')
-                        if image_url:
-                            name = image_dict.get('ImageName')
-                            image_instance, _ = Image.objects.update_or_create(
-                                store=store,
-                                image_id=image_dict.get('FileId'),
-                                defaults={
-                                    'name': name,
-                                    'image_url': image_url
-                                }
-                            )
-                            image_instance.skus.add(sku_instance)
-                            image_instance.products.add(product_instance)
-                        else:
-                            print(f'error: {images_array}')
+                        image_instance, _ = Image.objects.update_or_create(
+                            store=store,
+                            image_id=image_dict.get('FileId'),
+                            defaults={
+                                'name': image_dict.get('ImageName'),
+                                'image_url': image_dict.get('ImageUrl')
+                            }
+                        )
+                        image_instance.skus.add(sku_instance)
+                        image_instance.products.add(product_instance)
                     images_array.clear()
             except Exception as message:
                 print(f'message: {message} imagenes')
@@ -394,11 +392,14 @@ def create_products_store(store, limit=False):
         # Order by new-old
         skus_ids = list(skus_ids)
         skus_ids.reverse()
+        assert len(skus_ids) > 0, 'No skus found'
 
-        sub_skus_ids = [skus_ids[i:i+10000] for i in range(0, len(skus_ids), 10000)]
+        sub_skus_ids = [skus_ids[i:i+1000] for i in range(0, len(skus_ids), 1000)]
         skus_ids.clear()
         products_created = set()
         gc.collect()
+        if store.store_type.name == 'VTEX':
+            Product.objects.filter(store=store).delete()
         for ids in sub_skus_ids:
             loop = asyncio.new_event_loop()
             skus, products = loop.run_until_complete(get_skus_and_products_dicts(loop=loop, vtex=vtex, sc=sc, skus=ids, products_created=products_created))
@@ -407,9 +408,63 @@ def create_products_store(store, limit=False):
             gc.collect()
             print(f'round: skus = {len(skus)}, products = {len(products)}')
             if products:
+                if store.store_type.name == 'VTEX':
+                    bulk_products = list(
+                        map(lambda product:
+                            Product(
+                                store=store,
+                                external_id=product.get('Id'),
+                                name=product.get('Name'),
+                                department=Department.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('DepartmentId')}"], stores=store).last(),
+                                sub_category=Subcategory.objects.select_related('category').filter(external_id=product.get('CategoryId'), category__store=store).last(),
+                                category=Subcategory.objects.select_related('category').filter(external_id=product.get('CategoryId'), category__store=store).last().category if Subcategory.objects.filter(external_id=product.get('CategoryId'), category__store=store).exists() else Category.objects.filter(external_id=product.get('CategoryId'), store=store).last(),
+                                brand=Brand.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('BrandId')}"], stores=store).last(),
+                                search=' '.join([product.get('Name'), *[cat.name for cat in [Department.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('DepartmentId')}"], stores=store).last(), Subcategory.objects.select_related('category').filter(external_id=product.get('CategoryId'), category__store=store).last().category if Subcategory.objects.filter(external_id=product.get('CategoryId'), category__store=store).exists() else Category.objects.filter(external_id=product.get('CategoryId'), store=store).last(), Subcategory.objects.select_related('category').filter(external_id=product.get('CategoryId'), category__store=store).last(), Brand.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('BrandId')}"], stores=store).last()] if cat]]),
+                                link_id=product.get('LinkId'),
+                                reference_id=product.get('RefId'),
+                                is_visible=product.get('IsVisible'),
+                                description=product.get('Description'),
+                                description_short=product.get('DescriptionShort'),
+                                keywords=product.get('KeyWords'),
+                                title=product.get('Title'),
+                                is_active=product.get('IsActive'),
+                                meta_tag_description=product.get('MetaTagDescription'),
+                                show_without_stock=product.get('ShowWithoutStock'),
+                                raw_json={**product},
+                            ),
+                            products
+                        )
+                    )
+                    Product.objects.bulk_create(bulk_products)
                 products_created |= set(map(lambda product: update_or_create_product(store=store, product=product), products))
             products.clear()
             if skus:
+                if store.store_type.name == 'VTEX':
+                    bulk_skus = list(
+                        map(lambda sku:
+                            Skus(
+                                product = Product.objects.filter(store=store, external_id=sku.get('ProductId')).last(),
+                                external_id=sku.get('Id'),
+                                name = sku.get('NameComplete'),
+                                is_active = sku.get('IsActive'),
+                                ref_id = sku.get('RefId'),
+                                packaged_height = sku.get('Height'),
+                                packaged_length = sku.get('Length'),
+                                packaged_width = sku.get('Width'),
+                                packaged_weight = sku.get('WeightKg'),
+                                is_kit = sku.get('IsKit'),
+                                comercial_condition_id = sku.get('CommercialConditionId'),
+                                manufacter_code = sku.get('ManufacturerCode'),
+                                reference_stock_id = sku.get('ReferenceStockKeepingUnitId'),
+                                is_inventoried = sku.get('IsInventoried'),
+                                is_transported = sku.get('IsTransported'),
+                                total_quantity = sku.get('total_quantity'),
+                                raw_json = {**sku}
+                            ),
+                            skus
+                        )
+                    )
+                    Skus.objects.bulk_create(bulk_skus)
                 set(map(lambda sku: update_or_create_sku(store=store, sku=sku), skus))
             if limit:
                 break
