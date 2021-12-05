@@ -5,7 +5,7 @@
 from celery import Celery
 
 # Cache
-from django.core.cache import cache
+# from django.core.cache import cache
 
 
 # Utils
@@ -14,8 +14,8 @@ import gc
 
 # Models
 from chatbot_commerce.stores.models import Store, TypeStore
-from django.db import connections, transaction
-from django_celery_beat.models import PeriodicTask, CrontabSchedule
+# from django.db import connections, transaction
+# from django_celery_beat.models import PeriodicTask, CrontabSchedule
 
 app = Celery()
 app.autodiscover_tasks()
@@ -25,20 +25,20 @@ def setup_periodic_tasks(sender, **kwargs):
     for store_type in STORE_TYPE:
         TypeStore.objects.get_or_create(name=store_type)
     # Calls clear_cache at 23:55.
-    every_23_55, _ = CrontabSchedule.objects.get_or_create(day_of_week='*', hour=23, minute=55, timezone="America/Bogota")
-    task_instance, _ = PeriodicTask.objects.get_or_create(name='limpiador', task='clear_cache', defaults=dict(crontab=every_23_55))
+    # every_23_55, _ = CrontabSchedule.objects.get_or_create(day_of_week='*', hour=23, minute=55, timezone="America/Bogota")
+    # task_instance, _ = PeriodicTask.objects.get_or_create(name='limpiador', task='clear_cache', defaults=dict(crontab=every_23_55))
 
 
-@app.task(name='clear_cache')
-def clear_cache(*args, **kwargs):
-    # This works as advertised on the memcached cache:
-    cache.clear()
-    # This manually purges the SQLite cache:
-    cursor = connections['cache_database'].cursor()
-    cursor.execute('DELETE FROM cache_table')
-    transaction.commit_unless_managed(using='cache_database')
-    gc.collect()
-    return True
+# @app.task(name='clear_cache')
+# def clear_cache(*args, **kwargs):
+#     # This works as advertised on the memcached cache:
+#     cache.clear()
+#     # This manually purges the SQLite cache:
+#     cursor = connections['cache_database'].cursor()
+#     cursor.execute('DELETE FROM cache_table')
+#     transaction.commit_unless_managed(using='cache_database')
+#     gc.collect()
+#     return True
 
 
 @app.task(name='store_begining')

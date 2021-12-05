@@ -18,6 +18,8 @@ import gc
 
 
 def update_or_create_product(store, product):
+    """Update or create a product."""
+
     if store.store_type.name == 'SHOPIFY':
         product_id = product.get('product_id')
         name = product.get('title')
@@ -41,7 +43,7 @@ def update_or_create_product(store, product):
                         'handle': product.get('handle'),
                         'is_active': product.get('available'),
                         'meta_tag_description': product.get('tags'),
-                        'raw_json': product,
+                        'raw_json': {**product},
                     }
                 )
                 for image in product.get('images'):
@@ -56,7 +58,7 @@ def update_or_create_product(store, product):
                         }
                     )
                     image.products.add(product_instance)
-                map(lambda sku: update_or_create_sku(product_instance=product_instance, product_id=product_id, store=store, sku=sku), product.get('variants'))
+                set(map(lambda sku: update_or_create_sku(product_instance=product_instance, product_id=product_id, store=store, sku=sku), product.get('variants')))
             except Exception as e:
                 error = {
                     'message': e,
@@ -96,7 +98,7 @@ def update_or_create_product(store, product):
                         'is_active': product.get('IsActive'),
                         'meta_tag_description': product.get('MetaTagDescription'),
                         'show_without_stock': product.get('ShowWithoutStock'),
-                        'raw_json': product,
+                        'raw_json': {**product},
                     }
                 )
             except Exception as e:
@@ -110,6 +112,7 @@ def update_or_create_product(store, product):
 
 
 def update_or_create_sku(store, sku, product_instance=None, product_id=None):
+    """Update or create a sku."""
     s = []
     extra_data_search = []
     if store.store_type.name == 'SHOPIFY':
@@ -124,7 +127,7 @@ def update_or_create_sku(store, sku, product_instance=None, product_id=None):
                 'packaged_width': sku.get('weight'),
                 'packaged_weight': sku.get('weight_unit'),
                 'total_quantity': sku.get('inventory_quantity'),
-                'raw_json': sku
+                'raw_json': {**sku}
             }
         )
         image = Image.objects.filter(image_id=sku.get('image_id'), store=store).last()
@@ -181,7 +184,7 @@ def update_or_create_sku(store, sku, product_instance=None, product_id=None):
         # Create or update sku
         try:
             # Get instance
-            assert(product_instance, 'Product not found')
+            assert product_instance, 'Sku not found'
             sku_name = sku.get('NameComplete')
             sku_instance, _ = Skus.objects.update_or_create(
                 external_id=sku.get('Id'),
@@ -201,7 +204,7 @@ def update_or_create_sku(store, sku, product_instance=None, product_id=None):
                     'is_inventoried': sku.get('IsInventoried'),
                     'is_transported': sku.get('IsTransported'),
                     'total_quantity': sku.get('total_quantity'),
-                    'raw_json': sku
+                    'raw_json': {**sku}
                 }
             )
 
@@ -220,7 +223,7 @@ def update_or_create_sku(store, sku, product_instance=None, product_id=None):
                         sku=sku_instance, seller=seller_instance,
                         defaults={
                             'is_active': seller_dict.get('IsActive'),
-                            'raw_json': seller_dict
+                            'raw_json': {**seller_dict}
                         }
 
                     )
@@ -267,7 +270,7 @@ def update_or_create_sku(store, sku, product_instance=None, product_id=None):
                             "cost_price": price.get('costPrice'),
                             "markup": price.get('markup'),
                             "base_price": base_price,
-                            "raw_json": price
+                            "raw_json": {**price}
                         }
                     )
                     if base_price:
@@ -282,7 +285,7 @@ def update_or_create_sku(store, sku, product_instance=None, product_id=None):
                                     "value": fixedprice_dic["value"],
                                     "list_price": fixedprice_dic["listPrice"],
                                     "min_quantity": fixedprice_dic["minQuantity"],
-                                    "raw_json": fixedprice_dic
+                                    "raw_json": {**fixedprice_dic}
                                 }
                             )
                             daterange_dic = fixedprice_dic.get('dateRange')
@@ -293,7 +296,7 @@ def update_or_create_sku(store, sku, product_instance=None, product_id=None):
                                     defaults={
                                         'date_time_from': daterange_dic.get('from'),
                                         'date_time_to': daterange_dic.get('to'),
-                                        "raw_json": daterange_dic
+                                        "raw_json": {**daterange_dic}
                                     }
                                 )
                                 fixedprice_instance.save()
@@ -392,7 +395,7 @@ def create_products_store(store, limit=False):
         skus_ids = list(skus_ids)
         skus_ids.reverse()
 
-        sub_skus_ids = [skus_ids[i:i+10000] for i in range(0, len(skus_ids), 10000)]
+        sub_skus_ids = [skus_ids[i:i+10] for i in range(0, len(skus_ids), 10)]
         skus_ids.clear()
         products_created = set()
         gc.collect()
@@ -407,8 +410,7 @@ def create_products_store(store, limit=False):
                 products_created |= set(map(lambda product: update_or_create_product(store=store, product=product), products))
             products.clear()
             if skus:
-                map(lambda sku: update_or_create_sku(store=store, sku=sku), skus)
-            skus.clear()
+                set(map(lambda sku: update_or_create_sku(store=store, sku=sku), skus))
             if limit:
                 break
         sc.clear()
@@ -416,11 +418,11 @@ def create_products_store(store, limit=False):
     elif store.store_type.name == 'SHOPIFY':
         shopify = ShopifyStores(store=store)
         product_array = shopify.product_listings(query_params='limit=250')
-        map(lambda product: update_or_create_product(store=store, product=product), product_array)
+        set(map(lambda product: update_or_create_product(store=store, product=product), product_array))
     # Delete skus that don't have a product
     Product.objects.update(search_vector=SearchVector('search'))
     Skus.objects.filter(product=None).delete()
     Skus.objects.update(search_vector=SearchVector('search'))
-    map(lambda sku: sku.get_serializer_data, Skus.objects.all())
+    set(map(lambda sku: sku.get_serializer_data, Skus.objects.all()))
     gc.collect()
     return True
