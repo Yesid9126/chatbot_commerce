@@ -341,7 +341,7 @@ def create_products_store(store, limit=False):
         skus_ids.reverse()
         assert len(skus_ids) > 0, 'No skus found'
 
-        sub_skus_ids = [skus_ids[i:i+10000] for i in range(0, len(skus_ids), 10000)]
+        sub_skus_ids = [skus_ids[i:i+1000] for i in range(0, len(skus_ids), 1000)]
         skus_ids.clear()
         products_created = set()
         gc.collect()
@@ -430,9 +430,12 @@ def create_products_store(store, limit=False):
         product_array = shopify.product_listings(query_params='limit=250')
         set(map(lambda product: update_or_create_product(store=store, product=product), product_array))
     # Delete skus that don't have a product
+    needed()
+    gc.collect()
+    return True
+
+def needed():
     Product.objects.update(search_vector=SearchVector('search'))
     Skus.objects.filter(product=None).delete()
     Skus.objects.update(search_vector=SearchVector('search'))
     set(map(lambda sku: sku.get_serializer_data, Skus.objects.all()))
-    gc.collect()
-    return True
