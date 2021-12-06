@@ -9,6 +9,7 @@ from django.utils.translation import gettext as _
 from collections import defaultdict
 from django.apps import apps
 
+
 class BulkCreator:
     """
     Class to create bulk objects
@@ -41,6 +42,7 @@ class BulkCreator:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.create_bulk()
+
 
 class ChatbootModel(models.Model):
     """Chatboot commerce base model.

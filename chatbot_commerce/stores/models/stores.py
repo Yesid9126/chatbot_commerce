@@ -379,6 +379,7 @@ def execute_task(sender, instance, *args, **kwargs):
     if instance.status is False or instance.sync_status is False:
         PeriodicTask.objects.filter(name=f'{instance.name} create & update', task='principal_periodic_task').delete()
 
+
 @receiver(post_delete, sender=Store)
 def delete_task(sender, instance, *args, **kwargs):
     task = PeriodicTask.objects.filter(name=f'{instance.name} create & update', task='principal_periodic_task').exists()

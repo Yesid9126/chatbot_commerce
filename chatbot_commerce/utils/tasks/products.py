@@ -367,8 +367,20 @@ def create_products_store(store, limit=False):
                                 category=Subcategory.objects.select_related('category').filter(external_id=product.get('CategoryId'), category__store=store).last().category if Subcategory.objects.filter(
                                     external_id=product.get('CategoryId'), category__store=store).exists() else Category.objects.filter(external_id=product.get('CategoryId'), store=store).last(),
                                 brand=Brand.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('BrandId')}"], stores=store).last(),
-                                search=' '.join([product.get('Name'), *[cat.name for cat in [Department.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('DepartmentId')}"], stores=store).last(), Subcategory.objects.select_related('category').filter(external_id=product.get('CategoryId'), category__store=store).last().category if Subcategory.objects.filter(external_id=product.get(
-                                    'CategoryId'), category__store=store).exists() else Category.objects.filter(external_id=product.get('CategoryId'), store=store).last(), Subcategory.objects.select_related('category').filter(external_id=product.get('CategoryId'), category__store=store).last(), Brand.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('BrandId')}"], stores=store).last()] if cat]]),
+                                search=' '.join(
+                                    [
+                                        product.get('Name'),
+                                        *[cat.name for cat in
+                                            [
+                                                Department.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('DepartmentId')}"], stores=store).last(),
+                                                Subcategory.objects.select_related('category').filter(external_id=product.get('CategoryId'), category__store=store).last().category if Subcategory.objects.filter(
+                                                    external_id=product.get('CategoryId'), category__store=store).exists() else Category.objects.filter(external_id=product.get('CategoryId'), store=store).last(),
+                                                Subcategory.objects.select_related('category').filter(external_id=product.get('CategoryId'), category__store=store).last(
+                                                ), Brand.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('BrandId')}"], stores=store).last()
+                                            ] if cat
+                                          ]
+                                    ]
+                                ),
                                 link_id=product.get('LinkId'),
                                 reference_id=product.get('RefId'),
                                 is_visible=product.get('IsVisible'),
@@ -412,7 +424,7 @@ def create_products_store(store, limit=False):
                                 raw_json={**sku}
                             ),
                             skus
-                        )
+                            )
                     )
                     Skus.objects.bulk_create(bulk_skus)
                     loop = asyncio.new_event_loop()
@@ -433,6 +445,7 @@ def create_products_store(store, limit=False):
     needed()
     gc.collect()
     return True
+
 
 def needed():
     Product.objects.update(search_vector=SearchVector('search'))
