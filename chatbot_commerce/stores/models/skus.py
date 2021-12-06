@@ -24,7 +24,7 @@ class Skus(BaseAbstract):
     )
     total_quantity = models.PositiveBigIntegerField(
         'Quantity sku',
-        null=True, blank=True
+        null=True, blank=True, default=0
     )
     # search_attributes = models.TextField(_("Attributes search"), blank=True, null=True)
     search = models.TextField(
