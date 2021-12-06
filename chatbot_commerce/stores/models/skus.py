@@ -169,6 +169,7 @@ class Image(ChatbootModel):
 
         verbose_name = 'Image'
         verbose_name_plural = "Image's"
+        unique_together = ('image_id', 'store',)
         default_related_name = 'images'
 
 
@@ -316,6 +317,7 @@ class AttributeType(ChatbootModel):
     class Meta:
         verbose_name = 'Attribute type'
         verbose_name_plural = "Attribute type's"
+        unique_together = ('name', 'store',)
         default_related_name = 'attributes_type'
 
 
@@ -343,4 +345,5 @@ class Attribute(BaseRawAbstract):
 
         verbose_name = "Attribute"
         verbose_name_plural = "Attributes"
+        unique_together = ('attribute_type', 'value',)
         default_related_name = 'attributes'

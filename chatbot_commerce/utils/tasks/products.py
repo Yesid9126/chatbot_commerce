@@ -69,45 +69,6 @@ def update_or_create_product(store, product):
 
     elif store.store_type.name == 'VTEX':
         product_id = product.get('Id')
-    #     name = product.get('Name')
-    #     if name:
-    #         department = Department.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('DepartmentId')}"], stores=store).last()
-    #         sub_category = Subcategory.objects.select_related('category').filter(external_id=product.get('CategoryId'), category__store=store).last()
-    #         brand = Brand.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('BrandId')}"], stores=store).last()
-    #         if sub_category:
-    #             category = sub_category.category
-    #         else:
-    #             category = Category.objects.filter(external_id=product.get('CategoryId'), store=store).last()
-    #         try:
-    #             product_instance, _ = Product.objects.update_or_create(
-    #                 store=store,
-    #                 external_id=product_id,
-    #                 defaults={
-    #                     'name': name,
-    #                     'department': department,
-    #                     'sub_category': sub_category,
-    #                     'category': category,
-    #                     'brand': brand,
-    #                     'search': ' '.join([name, *[cat.name for cat in [department, category, sub_category, brand] if cat]]),
-    #                     'link_id': product.get('LinkId'),
-    #                     'reference_id': product.get('RefId'),
-    #                     'is_visible': product.get('IsVisible'),
-    #                     'description': product.get('Description'),
-    #                     'description_short': product.get('DescriptionShort'),
-    #                     'keywords': product.get('KeyWords'),
-    #                     'title': product.get('Title'),
-    #                     'is_active': product.get('IsActive'),
-    #                     'meta_tag_description': product.get('MetaTagDescription'),
-    #                     'show_without_stock': product.get('ShowWithoutStock'),
-    #                     'raw_json': {**product},
-    #                 }
-    #             )
-    #         except Exception as e:
-    #             error = {
-    #                 'message': e,
-    #                 'product_id': product_id,
-    #             }
-    #             print(error)
 
     return product_id
 
@@ -189,27 +150,6 @@ def update_or_create_sku(store, sku, product_instance=None, product_id=None):
             sku_name = sku.get('NameComplete')
             sku_instance = Skus.objects.filter(external_id=sku.get('Id'), product=product_instance).last()
             assert sku_instance, 'Sku not found'
-            # sku_instance, _ = Skus.objects.update_or_create(
-            #     external_id=sku.get('Id'),
-            #     product=product_instance,
-            #     defaults={
-            #         'name': sku_name,
-            #         'is_active': sku.get('IsActive'),
-            #         'ref_id': sku.get('RefId'),
-            #         'packaged_height': sku.get('Height'),
-            #         'packaged_length': sku.get('Length'),
-            #         'packaged_width': sku.get('Width'),
-            #         'packaged_weight': sku.get('WeightKg'),
-            #         'is_kit': sku.get('IsKit'),
-            #         'comercial_condition_id': sku.get('CommercialConditionId'),
-            #         'manufacter_code': sku.get('ManufacturerCode'),
-            #         'reference_stock_id': sku.get('ReferenceStockKeepingUnitId'),
-            #         'is_inventoried': sku.get('IsInventoried'),
-            #         'is_transported': sku.get('IsTransported'),
-            #         'total_quantity': sku.get('total_quantity'),
-            #         'raw_json': {**sku}
-            #     }
-            # )
 
             # Get Sales channels of sku
             sc_ids = sku.get('SalesChannels')
@@ -222,7 +162,7 @@ def update_or_create_sku(store, sku, product_instance=None, product_id=None):
             for seller_dict in sellers_array:
                 seller_instance = Seller.objects.filter(store=store, seller_id=seller_dict.get('SellerId')).first()
                 if seller_instance:
-                    SkuSeller.objects.update_or_create(
+                    SkuSeller.objects.get_or_create(
                         sku=sku_instance, seller=seller_instance,
                         defaults={
                             'is_active': seller_dict.get('IsActive'),
@@ -243,7 +183,7 @@ def update_or_create_sku(store, sku, product_instance=None, product_id=None):
             try:
                 if images_array:
                     for image_dict in images_array:
-                        image_instance, _ = Image.objects.update_or_create(
+                        image_instance, _ = Image.objects.get_or_create(
                             store=store,
                             image_id=image_dict.get('FileId'),
                             defaults={
@@ -261,7 +201,7 @@ def update_or_create_sku(store, sku, product_instance=None, product_id=None):
             try:
                 if price:
                     base_price = price.get('basePrice')
-                    price_instance, _ = Price.objects.update_or_create(
+                    price_instance, _ = Price.objects.get_or_create(
                         sku=sku_instance,
                         defaults={
                             "list_price": price.get('listPrice'),
@@ -276,7 +216,7 @@ def update_or_create_sku(store, sku, product_instance=None, product_id=None):
                     fixed_prices = price.get('fixedPrices')
                     if fixed_prices and price_instance:
                         for fixedprice_dic in fixed_prices:
-                            fixedprice_instance, _ = FixedPrice.objects.update_or_create(
+                            fixedprice_instance, _ = FixedPrice.objects.get_or_create(
                                 price=price_instance,
                                 trade_policy_id=fixedprice_dic["tradePolicyId"],
                                 defaults={
@@ -368,6 +308,13 @@ async def get_skus_and_products_dicts(sc, loop, vtex, skus=[], products_created=
     return skus_dicts, products_dicts
 
 
+async def create_extra_data_skus(loop, store, skus=[]):
+    # Get dicts skus
+    asynciofunctions_skus = [loop.run_in_executor(None, update_or_create_sku, store, sku) for sku in skus]
+    [await asynciofunction_sku for asynciofunction_sku in asynciofunctions_skus]
+    asynciofunctions_skus.clear()
+
+
 def create_products_store(store, limit=False):
     """Creation of product available in the store."""
 
@@ -417,9 +364,11 @@ def create_products_store(store, limit=False):
                                 name=product.get('Name'),
                                 department=Department.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('DepartmentId')}"], stores=store).last(),
                                 sub_category=Subcategory.objects.select_related('category').filter(external_id=product.get('CategoryId'), category__store=store).last(),
-                                category=Subcategory.objects.select_related('category').filter(external_id=product.get('CategoryId'), category__store=store).last().category if Subcategory.objects.filter(external_id=product.get('CategoryId'), category__store=store).exists() else Category.objects.filter(external_id=product.get('CategoryId'), store=store).last(),
+                                category=Subcategory.objects.select_related('category').filter(external_id=product.get('CategoryId'), category__store=store).last().category if Subcategory.objects.filter(
+                                    external_id=product.get('CategoryId'), category__store=store).exists() else Category.objects.filter(external_id=product.get('CategoryId'), store=store).last(),
                                 brand=Brand.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('BrandId')}"], stores=store).last(),
-                                search=' '.join([product.get('Name'), *[cat.name for cat in [Department.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('DepartmentId')}"], stores=store).last(), Subcategory.objects.select_related('category').filter(external_id=product.get('CategoryId'), category__store=store).last().category if Subcategory.objects.filter(external_id=product.get('CategoryId'), category__store=store).exists() else Category.objects.filter(external_id=product.get('CategoryId'), store=store).last(), Subcategory.objects.select_related('category').filter(external_id=product.get('CategoryId'), category__store=store).last(), Brand.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('BrandId')}"], stores=store).last()] if cat]]),
+                                search=' '.join([product.get('Name'), *[cat.name for cat in [Department.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('DepartmentId')}"], stores=store).last(), Subcategory.objects.select_related('category').filter(external_id=product.get('CategoryId'), category__store=store).last().category if Subcategory.objects.filter(external_id=product.get(
+                                    'CategoryId'), category__store=store).exists() else Category.objects.filter(external_id=product.get('CategoryId'), store=store).last(), Subcategory.objects.select_related('category').filter(external_id=product.get('CategoryId'), category__store=store).last(), Brand.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('BrandId')}"], stores=store).last()] if cat]]),
                                 link_id=product.get('LinkId'),
                                 reference_id=product.get('RefId'),
                                 is_visible=product.get('IsVisible'),
@@ -433,9 +382,10 @@ def create_products_store(store, limit=False):
                                 raw_json={**product},
                             ),
                             products
-                        )
+                            )
                     )
                     Product.objects.bulk_create(bulk_products)
+
                 products_created |= set(map(lambda product: update_or_create_product(store=store, product=product), products))
             products.clear()
             if skus:
@@ -443,29 +393,34 @@ def create_products_store(store, limit=False):
                     bulk_skus = list(
                         map(lambda sku:
                             Skus(
-                                product = Product.objects.filter(store=store, external_id=sku.get('ProductId')).last(),
+                                product=Product.objects.filter(store=store, external_id=sku.get('ProductId')).last(),
                                 external_id=sku.get('Id'),
-                                name = sku.get('NameComplete'),
-                                is_active = sku.get('IsActive'),
-                                ref_id = sku.get('RefId'),
-                                packaged_height = sku.get('Height'),
-                                packaged_length = sku.get('Length'),
-                                packaged_width = sku.get('Width'),
-                                packaged_weight = sku.get('WeightKg'),
-                                is_kit = sku.get('IsKit'),
-                                comercial_condition_id = sku.get('CommercialConditionId'),
-                                manufacter_code = sku.get('ManufacturerCode'),
-                                reference_stock_id = sku.get('ReferenceStockKeepingUnitId'),
-                                is_inventoried = sku.get('IsInventoried'),
-                                is_transported = sku.get('IsTransported'),
-                                total_quantity = sku.get('total_quantity'),
-                                raw_json = {**sku}
+                                name=sku.get('NameComplete'),
+                                is_active=sku.get('IsActive'),
+                                ref_id=sku.get('RefId'),
+                                packaged_height=sku.get('Height'),
+                                packaged_length=sku.get('Length'),
+                                packaged_width=sku.get('Width'),
+                                packaged_weight=sku.get('WeightKg'),
+                                is_kit=sku.get('IsKit'),
+                                comercial_condition_id=sku.get('CommercialConditionId'),
+                                manufacter_code=sku.get('ManufacturerCode'),
+                                reference_stock_id=sku.get('ReferenceStockKeepingUnitId'),
+                                is_inventoried=sku.get('IsInventoried'),
+                                is_transported=sku.get('IsTransported'),
+                                total_quantity=sku.get('total_quantity'),
+                                raw_json={**sku}
                             ),
                             skus
                         )
                     )
                     Skus.objects.bulk_create(bulk_skus)
-                set(map(lambda sku: update_or_create_sku(store=store, sku=sku), skus))
+                    loop = asyncio.new_event_loop()
+                    loop.run_until_complete(create_extra_data_skus(loop=loop, store=store, skus=skus))
+                    loop.close()
+                    del loop
+                else:
+                    set(map(lambda sku: update_or_create_sku(store=store, sku=sku), skus))
             if limit:
                 break
         sc.clear()
