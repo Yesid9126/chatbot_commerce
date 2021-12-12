@@ -159,17 +159,20 @@ def update_or_create_sku(store, sku, product_instance=None, product_id=None):
 
             # Get Sellers of sku
             sellers_array = sku.get('SkuSellers')
-            for seller_dict in sellers_array:
-                seller_instance = Seller.objects.filter(store=store, seller_id=seller_dict.get('SellerId')).first()
-                if seller_instance:
-                    SkuSeller.objects.get_or_create(
-                        sku=sku_instance, seller=seller_instance,
-                        defaults={
-                            'is_active': seller_dict.get('IsActive'),
-                            'raw_json': {**seller_dict}
-                        }
-
-                    )
+            bulk_skus_sellers = list(
+                map(
+                    lambda seller:
+                        SkuSeller(
+                            sku=sku_instance,
+                            seller=Seller.objects.filter(store=store, seller_id=seller.get('SellerId')).last(),
+                            is_active=seller.get('IsActive'),
+                            raw_json={**seller}
+                        ),
+                        sellers_array
+                )
+            )
+            SkuSeller.objects.bulk_create(bulk_skus_sellers)
+            bulk_skus_sellers.clear()
             sellers_array.clear()
             price = sku.get('price')
             if isinstance(price, str):
@@ -177,7 +180,6 @@ def update_or_create_sku(store, sku, product_instance=None, product_id=None):
 
             images_array = sku.get('Images')
             sku_specifications_array = sku.get('SkuSpecifications')
-            sku.clear()
 
             # Create image for sku
             try:
@@ -186,10 +188,8 @@ def update_or_create_sku(store, sku, product_instance=None, product_id=None):
                         image_instance, _ = Image.objects.get_or_create(
                             store=store,
                             image_id=image_dict.get('FileId'),
-                            defaults={
-                                'name': image_dict.get('ImageName'),
-                                'image_url': image_dict.get('ImageUrl')
-                            }
+                            image_url=image_dict.get('ImageUrl'),
+                            name=image_dict.get('ImageName'),
                         )
                         image_instance.skus.add(sku_instance)
                         image_instance.products.add(product_instance)
@@ -201,47 +201,36 @@ def update_or_create_sku(store, sku, product_instance=None, product_id=None):
             try:
                 if price:
                     base_price = price.get('basePrice')
-                    price_instance, _ = Price.objects.get_or_create(
-                        sku=sku_instance,
-                        defaults={
-                            "list_price": price.get('listPrice'),
-                            "cost_price": price.get('costPrice'),
-                            "markup": price.get('markup'),
-                            "base_price": base_price,
-                            "raw_json": {**price}
-                        }
-                    )
+                    price_instance = Price.objects.filter(sku=sku_instance).last()
                     if base_price:
                         s.append(str(int(base_price)))
                     fixed_prices = price.get('fixedPrices')
                     if fixed_prices and price_instance:
-                        for fixedprice_dic in fixed_prices:
-                            fixedprice_instance, _ = FixedPrice.objects.get_or_create(
-                                price=price_instance,
-                                trade_policy_id=fixedprice_dic["tradePolicyId"],
-                                defaults={
-                                    "value": fixedprice_dic["value"],
-                                    "list_price": fixedprice_dic["listPrice"],
-                                    "min_quantity": fixedprice_dic["minQuantity"],
-                                    "raw_json": {**fixedprice_dic}
-                                }
+                        fixed_prices = list(
+                            map(lambda fixed_price:
+                                FixedPrice(
+                                    price=price_instance,
+                                    trade_policy_id=fixed_price.get('tradePolicyId'),
+                                    value=fixed_price.get('value'),
+                                    list_price=fixed_price.get('listPrice'),
+                                    min_quantity=fixed_price.get('minQuantity'),
+                                    date_range=DateRange.objects.create(
+                                        date_time_from=fixed_price.get('dateRange').get('from'),
+                                        date_time_to=fixed_price.get('dateRange').get('to'),
+                                        raw_json={**fixed_price.get('dateRange')}
+                                    ) if fixed_price.get('dateRange') else None,
+                                    raw_json={**fixed_price}
+                                ),
+                                fixed_prices
                             )
-                            daterange_dic = fixedprice_dic.get('dateRange')
-                            if daterange_dic and fixedprice_instance:
-                                print(daterange_dic)
-                                daterange_instance, _ = DateRange.objects.update_or_create(
-                                    fixed_price=fixedprice_instance,
-                                    defaults={
-                                        'date_time_from': daterange_dic.get('from'),
-                                        'date_time_to': daterange_dic.get('to'),
-                                        "raw_json": {**daterange_dic}
-                                    }
-                                )
-                                fixedprice_instance.save()
-                        price_instance.save()
+                        )
+                        FixedPrice.objects.bulk_create(fixed_prices)
 
+                        price_instance.save()
                     price.clear()
                     fixed_prices.clear()
+
+
             except Exception as message:
                 print(f'message: {message} precios')
 
@@ -279,7 +268,7 @@ def update_or_create_sku(store, sku, product_instance=None, product_id=None):
                 del s
             except Exception as message:
                 print(f'message: {message} specificaciones')
-
+            sku.clear()
         except Exception as e:
             error = {
                 'message': e,
@@ -341,7 +330,7 @@ def create_products_store(store, limit=False):
         skus_ids.reverse()
         assert len(skus_ids) > 0, 'No skus found'
 
-        sub_skus_ids = [skus_ids[i:i+1000] for i in range(0, len(skus_ids), 1000)]
+        sub_skus_ids = [skus_ids[i:i+10000] for i in range(0, len(skus_ids), 10000)]
         skus_ids.clear()
         products_created = set()
         gc.collect()
@@ -403,36 +392,53 @@ def create_products_store(store, limit=False):
             if skus:
                 if store.store_type.name == 'VTEX':
                     bulk_skus = list(
-                        map(lambda sku:
-                            Skus(
-                                product=Product.objects.filter(store=store, external_id=sku.get('ProductId')).last(),
-                                external_id=sku.get('Id'),
-                                name=sku.get('NameComplete'),
-                                is_active=sku.get('IsActive'),
-                                ref_id=sku.get('RefId'),
-                                packaged_height=sku.get('Height'),
-                                packaged_length=sku.get('Length'),
-                                packaged_width=sku.get('Width'),
-                                packaged_weight=sku.get('WeightKg'),
-                                is_kit=sku.get('IsKit'),
-                                comercial_condition_id=sku.get('CommercialConditionId'),
-                                manufacter_code=sku.get('ManufacturerCode'),
-                                reference_stock_id=sku.get('ReferenceStockKeepingUnitId'),
-                                is_inventoried=sku.get('IsInventoried'),
-                                is_transported=sku.get('IsTransported'),
-                                total_quantity=sku.get('total_quantity'),
-                                raw_json={**sku}
-                            ),
-                            skus
-                            )
+                        map(
+                            lambda sku:
+                                Skus(
+                                    product=Product.objects.filter(store=store, external_id=sku.get('ProductId')).last(),
+                                    external_id=sku.get('Id'),
+                                    name=sku.get('NameComplete'),
+                                    is_active=sku.get('IsActive'),
+                                    ref_id=sku.get('RefId'),
+                                    packaged_height=sku.get('Height'),
+                                    packaged_length=sku.get('Length'),
+                                    packaged_width=sku.get('Width'),
+                                    packaged_weight=sku.get('WeightKg'),
+                                    is_kit=sku.get('IsKit'),
+                                    comercial_condition_id=sku.get('CommercialConditionId'),
+                                    manufacter_code=sku.get('ManufacturerCode'),
+                                    reference_stock_id=sku.get('ReferenceStockKeepingUnitId'),
+                                    is_inventoried=sku.get('IsInventoried'),
+                                    is_transported=sku.get('IsTransported'),
+                                    total_quantity=sku.get('total_quantity'),
+                                    raw_json={**sku}
+                                ),
+                                skus
+                        )
                     )
                     Skus.objects.bulk_create(bulk_skus)
-                    loop = asyncio.new_event_loop()
-                    loop.run_until_complete(create_extra_data_skus(loop=loop, store=store, skus=skus))
-                    loop.close()
-                    del loop
-                else:
-                    set(map(lambda sku: update_or_create_sku(store=store, sku=sku), skus))
+
+                    bulk_price = list(
+                        map(
+                            lambda sku:
+                                Price(
+                                    sku=Skus.objects.filter(external_id=sku.get('Id'), product__store=store).last(),
+                                    list_price=sku.get('price').get('listPrice'),
+                                    cost_price=sku.get('price').get('costPrice'),
+                                    markup=sku.get('price').get('markup'),
+                                    base_price=sku.get('price').get('basePrice'),
+                                    raw_json={**sku.get('price')}
+                                ),
+                                filter(
+                                    lambda x:
+                                        x.get('price') != False,
+                                        skus
+                                )
+                        )
+                    )
+                    Price.objects.bulk_create(bulk_price)
+
+                set(map(lambda sku: update_or_create_sku(store=store, sku=sku), skus))
             if limit:
                 break
         sc.clear()

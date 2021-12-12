@@ -24,7 +24,7 @@ class Skus(BaseAbstract):
     )
     total_quantity = models.PositiveBigIntegerField(
         'Quantity sku',
-        null=True, blank=True, default=0
+        default=0, blank=True
     )
     # search_attributes = models.TextField(_("Attributes search"), blank=True, null=True)
     search = models.TextField(
@@ -102,10 +102,13 @@ class Skus(BaseAbstract):
         else:
             seller = None
 
-        price = self.price.first()
-        if price:
-            price = price.serializer_data
-            self.sku_price = price['base_price']
+        try:
+            price = self.price
+            if price:
+                price = price.serializer_data
+                self.sku_price = price['base_price']
+        except (Exception):
+            price = 0.0
         # else:
         #     price = None
 
@@ -125,7 +128,8 @@ class Skus(BaseAbstract):
         verbose_name = "Sku"
         verbose_name_plural = "Sku's"
         default_related_name = 'skus'
-        indexes = [models.Index(fields=['is_active', 'external_id', 'total_quantity', 'sku_price', 'search_vector'])]
+        # indexes = [models.Index(fields=['is_active', 'external_id', 'total_quantity', 'sku_price', 'search_vector'])]
+        indexes = [models.Index(fields=['is_active', 'external_id'])]
 
 
 class Image(ChatbootModel):
@@ -169,7 +173,7 @@ class Image(ChatbootModel):
 
         verbose_name = 'Image'
         verbose_name_plural = "Image's"
-        unique_together = ('image_id', 'store',)
+        unique_together = ('image_id', 'store', 'name', 'image_url')
         default_related_name = 'images'
 
 
@@ -192,26 +196,27 @@ class Price(BaseRawAbstract):
     # Filter data
     base_price = models.FloatField(
         _('Base price'),
-        null=True, blank=True
+        default=0.0, blank=True
     )
 
     # Relationship filter
-    sku = models.ForeignKey(
-        'stores.Skus', on_delete=models.CASCADE
-    )
+    sku = models.OneToOneField("stores.Skus", verbose_name=_("Sku"), on_delete=models.CASCADE)
 
     class Meta:
         """Meta class"""
 
         verbose_name = 'Price'
         verbose_name_plural = "Price's"
-        ordering = ['sku', 'cost_price']
         default_related_name = 'price'
 
     def save(self, *args, **kwargs):
+        try:
+            fixed_prices = list(self.fixed_prices.values_list('serializer_data', flat=True))
+        except (Exception):
+            fixed_prices = []
         self.serializer_data = {
             'base_price': self.base_price,
-            'fixed_prices': list(self.fixed_prices.values_list('serializer_data', flat=True))
+            'fixed_prices': fixed_prices
         }
         return super().save(*args, **kwargs)
 
@@ -246,10 +251,16 @@ class FixedPrice(BaseRawAbstract):
         'stores.Price', on_delete=models.CASCADE
     )
 
+    date_range = models.OneToOneField("stores.DateRange", verbose_name=_("Date range"), on_delete=models.SET_NULL, null=True, blank=True)
+
     def save(self, *args, **kwargs):
+        try:
+            date_ranges = {'date_time_from': self.date_range.date_time_from, 'date_time_to': self.date_range.date_time_to} if self.date_range else None
+        except (Exception):
+            date_ranges = {}
         self.serializer_data = {
             'value': self.value,
-            'date_ranges': list(self.date_ranges.values('date_time_from', 'date_time_to'))
+            'date_ranges': date_ranges
         }
         return super().save(*args, **kwargs)
 
@@ -258,7 +269,6 @@ class FixedPrice(BaseRawAbstract):
 
         verbose_name = "Fixed price"
         verbose_name_plural = "Fixed price's"
-        ordering = ['price', 'trade_policy_id']
         default_related_name = 'fixed_prices'
 
 
@@ -275,18 +285,11 @@ class DateRange(BaseRawAbstract):
         auto_now=False, auto_now_add=False
     )
 
-    # Relationship filter
-    fixed_price = models.ForeignKey(
-        'stores.FixedPrice', on_delete=models.CASCADE
-    )
-
     class Meta:
         """Meta class"""
 
         verbose_name = "Date range"
         verbose_name_plural = "Date range's"
-        ordering = ['fixed_price', 'date_time_from']
-        default_related_name = 'date_ranges'
 
 
 class AttributeType(ChatbootModel):

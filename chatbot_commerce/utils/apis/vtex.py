@@ -79,7 +79,7 @@ class VtexStores:
     def get_sku_context(self, sku_id, sc):
         # Quantity in warehouses
         total_quantity = 0
-        price_dic = dict()
+        price_dic = False
         if sku_id:
             sku_inventory = self.skus_inventory(sku_id=sku_id)
             sku_price = self.vtexprice.price_sku(sku_id=sku_id)

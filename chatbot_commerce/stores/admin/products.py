@@ -103,8 +103,7 @@ class SkusAdmin(admin.ModelAdmin):
 @admin.register(DateRange)
 class DateRangeAdmin(admin.ModelAdmin):
     """Sku's model admin."""
-    readonly_fields = ('fixed_price',)
-    list_display = ['fixed_price', 'date_time_from', 'date_time_to']
+    list_display = ('date_time_from', 'date_time_to',)
 
 
 class InlineDateRangeAdmin(admin.TabularInline):
@@ -118,7 +117,7 @@ class FixedPriceAdmin(admin.ModelAdmin):
     """Price model admin."""
     readonly_fields = ('price',)
     list_display = ['price', 'trade_policy_id', 'value']
-    inlines = [InlineDateRangeAdmin]
+    # inlines = [InlineDateRangeAdmin]
 
 
 class InlineFixedPriceAdmin(admin.TabularInline):
