@@ -1,7 +1,7 @@
 from rest_framework.decorators import api_view
 
 from django.db import connection, reset_queries
-from chatbot_commerce.stores.models import Product, Skus, Store
+from chatbot_commerce.stores.models import Product, Sku, Store
 from rest_framework.response import Response
 from django.db.models import Prefetch
 import time
@@ -38,7 +38,7 @@ def query_debugger(func):
 @query_debugger
 def product_list(request):
     store = Store.objects.get(name='pilatos21')
-    skus = Skus.objects.filter(product__store=store)
+    skus = Sku.objects.filter(product__store=store)
     queryset = Product.objects\
         .select_related('department', 'category', 'sub_category', 'brand')\
         .prefetch_related(Prefetch('skus', queryset=skus))\

@@ -13,9 +13,9 @@ from chatbot_commerce.utils.tasks import create_products_store, get_departments,
 import gc
 
 # Models
-from chatbot_commerce.stores.models import Store, TypeStore
+from chatbot_commerce.stores.models import Store, TypeStore, UpdateModels, Sku, Price
 # from django.db import connections, transaction
-# from django_celery_beat.models import PeriodicTask, CrontabSchedule
+from django_celery_beat.models import PeriodicTask, CrontabSchedule
 
 app = Celery()
 app.autodiscover_tasks()
@@ -24,6 +24,7 @@ def setup_periodic_tasks(sender, **kwargs):
     STORE_TYPE = ('VTEX', 'SHOPIFY',)
     for store_type in STORE_TYPE:
         TypeStore.objects.get_or_create(name=store_type)
+
     # Calls clear_cache at 23:55.
     # every_23_55, _ = CrontabSchedule.objects.get_or_create(day_of_week='*', hour=23, minute=55, timezone="America/Bogota")
     # task_instance, _ = PeriodicTask.objects.get_or_create(name='limpiador', task='clear_cache', defaults=dict(crontab=every_23_55))
@@ -39,6 +40,22 @@ def setup_periodic_tasks(sender, **kwargs):
 #     transaction.commit_unless_managed(using='cache_database')
 #     gc.collect()
 #     return True
+
+@app.task(name='continue_update_models')
+def continue_update_models(*args, **kwargs):
+
+    while 1:
+        if UpdateModels.objects.exists():
+            array_skus_all_data = UpdateModels.objects.filter(model_name='Sku').values_list('all_data', flat=True)
+            array_prices_all_data = UpdateModels.objects.filter(model_name='Price').values_list('all_data', flat=True)
+            if array_skus_all_data:
+                for sku_all_data in array_skus_all_data:
+
+                    if sku.function_name == 'set_attributes':
+                        Sku.objects.filter(id=sku.primary_key).set_attributes
+            elif array_prices_all_data:
+                pass
+
 
 
 @app.task(name='store_begining')

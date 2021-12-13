@@ -12,7 +12,7 @@ from chatbot_commerce.stores.models import (
     Image,
     Price,
     DateRange,
-    Skus,
+    Sku,
     FixedPrice,
     Attribute,
     AttributeType
@@ -49,8 +49,8 @@ class BrandAdmin(admin.ModelAdmin):
     readonly_fields = ('stores', 'external_id',)
 
 
-class InlineSkus(admin.TabularInline):
-    model = Skus
+class InlineSku(admin.TabularInline):
+    model = Sku
     extra = 0
     fields = ('external_id', 'name', 'total_quantity',)
     readonly_fields = fields
@@ -67,7 +67,7 @@ class ProductAdmin(admin.ModelAdmin):
     list_filter = ('store__store_type', 'is_active', 'store',)
     exclude_fields = ('search_vector', 'search', 'link_id', 'reference_id', 'show_without_stock',)
     readonly_fields = ('external_id', 'name', 'is_active', 'store', 'brand', 'department', 'category', 'sub_category', 'raw_json', 'serializer_data', 'search_vector',)
-    inlines = [InlineSkus]
+    inlines = [InlineSku]
 
 
 @admin.register(Image)
@@ -90,8 +90,8 @@ class InlinePriceAdmin(admin.TabularInline):
     readonly_fields = ('price',)
 
 
-@admin.register(Skus)
-class SkusAdmin(admin.ModelAdmin):
+@admin.register(Sku)
+class SkuAdmin(admin.ModelAdmin):
     """Sku's model admin."""
 
     readonly_fields = ('raw_json', 'product', 'search_vector',)

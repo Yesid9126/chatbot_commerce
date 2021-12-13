@@ -1,17 +1,21 @@
-"""Skus model."""
+"""Sku model."""
 
 from slugify import slugify
 
 # Django
 from django.db import models
 from django.contrib.postgres.search import SearchVectorField
+from django.dispatch import receiver
+from django.db.models.signals import post_save
 
 # utilities
 from chatbot_commerce.utils.models import ChatbootModel, BaseAbstract, BaseRawAbstract
 from django.utils.translation import gettext as _
 
+# Models
+from chatbot_commerce.stores.models.stores import UpdateModels
 
-class Skus(BaseAbstract):
+class Sku(BaseAbstract):
     """Store departmentss"""
 
     # Filter data
@@ -88,41 +92,72 @@ class Skus(BaseAbstract):
         default=False, null=True, blank=True
     )
 
-    sku_price = models.FloatField(verbose_name='Price', null=True, blank=True)
+    # Serializers
+    sellers_id = models.ArrayField(base_field=models.CharField(max_length=100), default=list, editable=False)
+    images_url = models.ArrayField(base_field=models.CharField(max_length=100), default=list, editable=False)
+    sku_price = models.FloatField(verbose_name='Price', null=True, blank=True, editable=False)
+    attributes_data = models.ArrayField(base_field=models.JSONField(null=True, blank=True), default=list, editable=False)
+
+    def __init__(self: "Sku", *args, **kwargs) -> None:
+        """Initialize instance."""
+
+        self.old_sellers = self.sellers
+        self.old_images = self.images
+        self.old_price = self.price
+        self.old_attributes = self.attributes
+
+        super().__init__(*args, **kwargs)
 
     def __str__(self):
-        """Return sku id."""
+        """Return sku name, from sku."""
+
         return f'{self.name}'
 
+    def save(self, *args, **kwargs) -> None:
+        """Save instance."""
+
+        if self.old_sellers != self.sellers:
+            return self.set_sellers()
+        if self.old_images != self.images:
+            return self.set_images()
+        if self.old_price != self.price:
+            return self.set_price()
+        if self.old_attributes != self.attributes:
+            return self.set_attributes()
+
+        super().save(*args, **kwargs)
+
     @property
-    def get_serializer_data(self):
-        array_sku_seller = list(self.sku_seller.values_list('seller__seller_id', flat=True))
-        if array_sku_seller:
-            seller = array_sku_seller[0]
-        else:
-            seller = None
+    def set_sellers(self):
+        """Set sellers."""
 
-        try:
-            price = self.price
-            if price:
-                price = price.serializer_data
-                self.sku_price = price['base_price']
-        except (Exception):
-            price = 0.0
-        # else:
-        #     price = None
+        self.sellers_id = list(self.sku_seller.values_list('seller__seller_id', flat=True))
 
-        self.serializer_data = {
-            'sku_id': self.external_id,
-            'seller_id': seller,
-            'sku_name': self.name,
-            'total_quantity': self.total_quantity,
-            'images': list(Image.objects.filter(skus=self.pk).values_list('image_url', flat=True)),
-            'price': price,
-            'attributes': list(Attribute.objects.filter(skus=self.pk).values('value', attribute_name=models.F('attribute_type__name'))),
-            'is_active': self.is_active
-        }
-        return self.save()
+        super().save()
+
+    @property
+    def set_images(self):
+        """Set images."""
+
+        self.images_url = list(self.sku_images.values_list('image_url', flat=True))
+
+        super().save()
+
+    @property
+    def set_price(self):
+        """Set price."""
+
+        self.sku_price = self.price.base_price if self.price else 0.0
+
+        super().save()
+
+    @property
+    def set_attributes(self):
+        """Set attributes."""
+
+        self.attributes_data = list(Attribute.objects.filter(skus=self.pk).values('value', attribute_name=models.F('attribute_type__name')))
+
+        super().save()
 
     class Meta:
         verbose_name = "Sku"
@@ -158,7 +193,7 @@ class Image(ChatbootModel):
         "stores.Product", verbose_name=_('Products'), related_name='product_images'
     )
     skus = models.ManyToManyField(
-        "stores.Skus", verbose_name=_('Skus')
+        "stores.Sku", verbose_name=_('Skus')
     )
 
     # Url data
@@ -168,6 +203,25 @@ class Image(ChatbootModel):
         null=True, blank=True
     )
 
+    def __init__(self: "Image", *args, **kwargs) -> None:
+        """Initialize instance."""
+
+        self.old_image_url = self.image_url
+
+        super().__init__(*args, **kwargs)
+
+    def __str__(self):
+        """Return image url, from image."""
+
+        return f'{self.image_url}'
+
+    def save(self, *args, **kwargs) -> None:
+        """Save instance."""
+
+        self.update_father_serializer_data = self.old_image_url != self.image_url
+
+        super().save(*args, **kwargs)
+
     class Meta:
         """Meta class"""
 
@@ -175,6 +229,13 @@ class Image(ChatbootModel):
         verbose_name_plural = "Image's"
         unique_together = ('image_id', 'store', 'name', 'image_url')
         default_related_name = 'images'
+
+@receiver(post_save, sender=Image)
+def update_image_serializer_data(sender, instance, *args, **kwargs):
+    """Update image serializer data."""
+
+    if instance.update_father_serializer_data:
+        set(map(lambda sku: UpdateModels.objects.get_or_create(model_name='Sku', function_name='set_images', primary_key=sku), instance.skus))
 
 
 class Price(BaseRawAbstract):
@@ -200,7 +261,43 @@ class Price(BaseRawAbstract):
     )
 
     # Relationship filter
-    sku = models.OneToOneField("stores.Skus", verbose_name=_("Sku"), on_delete=models.CASCADE)
+    sku = models.OneToOneField("stores.Sku", verbose_name=_("Sku"), on_delete=models.CASCADE)
+
+    # Serializers
+    fixed_prices_data = models.ArrayField(base_field=models.JSONField(blank=True, null=True), default=list, editable=False)
+
+    def __init__(self: "Price", *args, **kwargs) -> None:
+        """Initialize instance."""
+
+        self.old_base_price = self.base_price
+
+        self.old_fixed_prices = self.fixed_prices
+
+        super().__init__(*args, **kwargs)
+
+    def __str__(self):
+        """Return base price, from price."""
+
+        return f'sku:{self.base_price}'
+
+    def save(self, *args, **kwargs) -> None:
+        """Save price."""
+
+        if self.old_fixed_prices != self.fixed_prices:
+            return self.set_fixed_prices()
+
+        self.update_father_serializer_data = self.old_base_price != self.base_price
+
+        super().save(*args, **kwargs)
+
+    @property
+    def set_fixed_prices(self):
+        """Set fixed prices."""
+
+        self.fixed_prices_data = list(self.fixed_prices.values('value', date_range=models.F('date_range_data')))
+        self.update_father_serializer_data = True
+
+        super().save()
 
     class Meta:
         """Meta class"""
@@ -209,21 +306,12 @@ class Price(BaseRawAbstract):
         verbose_name_plural = "Price's"
         default_related_name = 'price'
 
-    def save(self, *args, **kwargs):
-        try:
-            fixed_prices = list(self.fixed_prices.values_list('serializer_data', flat=True))
-        except (Exception):
-            fixed_prices = []
-        self.serializer_data = {
-            'base_price': self.base_price,
-            'fixed_prices': fixed_prices
-        }
-        return super().save(*args, **kwargs)
+@receiver(post_save, sender=Price)
+def update_price_serializer_data(sender, instance, *args, **kwargs):
+    """Update price serializer data."""
 
-    def __str__(self):
-        """Return sku price."""
-        return f'sku:{self.base_price}'
-
+    if instance.update_father_serializer_data and instance.sku:
+        instance.sku.set_price
 
 class FixedPrice(BaseRawAbstract):
     """Fixed price model"""
@@ -251,18 +339,43 @@ class FixedPrice(BaseRawAbstract):
         'stores.Price', on_delete=models.CASCADE
     )
 
-    date_range = models.OneToOneField("stores.DateRange", verbose_name=_("Date range"), on_delete=models.SET_NULL, null=True, blank=True)
+    date_range = models.OneToOneField("stores.DateRange", verbose_name=_("Date range"), on_delete=models.SET_NULL, null=True, blank=True, related_name='fixed_price')
+
+    # Serializers
+    date_rage_data = models.JSONField(null=True, blank=True, editable=False)
+
+    def __init__(self: "FixedPrice", *args, **kwargs) -> None:
+        """Initialize instance."""
+
+        self.old_value = self.value
+
+        self.old_date_range = self.date_range
+
+        super().__init__(*args, **kwargs)
+
+    def __str__(self):
+        """Return value, from fixed price."""
+
+        return f'{self.value}'
 
     def save(self, *args, **kwargs):
-        try:
-            date_ranges = {'date_time_from': self.date_range.date_time_from, 'date_time_to': self.date_range.date_time_to} if self.date_range else None
-        except (Exception):
-            date_ranges = {}
-        self.serializer_data = {
-            'value': self.value,
-            'date_ranges': date_ranges
-        }
-        return super().save(*args, **kwargs)
+        """Save instance."""
+
+        if self.old_date_range != self.date_range:
+            return self.set_date_range()
+
+        self.update_father_serializer_data = self.old_value != self.value
+
+        super().save(*args, **kwargs)
+
+    @property
+    def set_date_range(self):
+        """Set date range."""
+
+        self.date_rage_data = self.date_range.serializer_data if self.date_range else dict()
+        self.update_father_serializer_data = True
+
+        super().save()
 
     class Meta:
         """Meta class"""
@@ -270,6 +383,13 @@ class FixedPrice(BaseRawAbstract):
         verbose_name = "Fixed price"
         verbose_name_plural = "Fixed price's"
         default_related_name = 'fixed_prices'
+
+@receiver(post_save, sender=FixedPrice)
+def update_fixed_price_serializer_data(sender, instance, *args, **kwargs):
+    """Update fixed price serializer data."""
+
+    if instance.update_father_serializer_data and instance.price:
+        UpdateModels.objects.get_or_create(model_name='Price', function_name='set_fixed_prices', primary_key=instance.price)
 
 
 class DateRange(BaseRawAbstract):
@@ -285,14 +405,50 @@ class DateRange(BaseRawAbstract):
         auto_now=False, auto_now_add=False
     )
 
+    def __init__(self: "DateRange", *args, **kwargs) -> None:
+        """Initialize instance."""
+
+        self.old_date_time_from = self.date_time_from
+        self.old_date_time_to = self.date_time_to
+
+        super().__init__(*args, **kwargs)
+
+    def __str__(self):
+        """Return date range, from date range."""
+
+        return f'{self.date_time_from} - {self.date_time_to}'
+
+    def save(self, *args, **kwargs):
+        """Save instance."""
+
+        self.update_father_serializer_data = self.old_date_time_from != self.date_time_from or \
+            self.old_date_time_to != self.date_time_to
+        super().save(*args, **kwargs)
+
+    @property
+    def serializer_data(self, update_father_serializer_data: bool = True) -> None:
+        """Get serializer data."""
+
+        return {
+            'date_time_from': self.date_time_from,
+            'date_time_to': self.date_time_to
+        }
+
     class Meta:
         """Meta class"""
 
         verbose_name = "Date range"
         verbose_name_plural = "Date range's"
 
+@receiver(post_save, sender=DateRange)
+def update_date_range_serializer_data(sender, instance, *args, **kwargs):
+    """Update date range serializer data."""
+
+    if instance.update_father_serializer_data and instance.fixed_price:
+        instance.fixed_price.set_date_range
 
 class AttributeType(ChatbootModel):
+    """Attribute type model"""
 
     # Filter data
     name = models.CharField(
@@ -300,7 +456,8 @@ class AttributeType(ChatbootModel):
     )
     slug_name = models.SlugField(
         max_length=255,
-        null=True, blank=True
+        null=True, blank=True,
+        editable=False
     )
 
     # Relationship filter
@@ -309,13 +466,29 @@ class AttributeType(ChatbootModel):
         default=None, null=True
     )
 
+    def __init__(self: "AttributeType", *args, **kwargs) -> None:
+        """Initialize instance."""
+
+        self.old_name = self.name
+
+        self.old_attributes = self.attributes
+
+        super().__init__(*args, **kwargs)
+
     def __str__(self):
+        """Return name, from attribute type."""
+
         return self.name
 
     def save(self, *args, **kwargs):
-        self.slug_name = slugify(self.name, separator="_")
-        self.name = self.name.strip().capitalize()
-        return super().save(*args, **kwargs)
+        """Save instance."""
+
+        self.update_sons_serializer_data = self.old_name != self.name or self.old_attributes != self.attributes
+        if self.old_name != self.name or self.slug_name is None:
+            self.name = self.name.strip().capitalize()
+            self.slug_name = slugify(self.name, separator="_")
+
+        super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = 'Attribute type'
@@ -323,7 +496,23 @@ class AttributeType(ChatbootModel):
         unique_together = ('name', 'store',)
         default_related_name = 'attributes_type'
 
+@receiver(post_save, sender=AttributeType)
+def update_attribute_type_serializer_data(sender, instance, *args, **kwargs):
+    """Update attribute type serializer data."""
 
+    if instance.update_sons_serializer_data:
+        set(
+            map(
+                lambda attribute:
+                set(
+                    map(
+                        lambda sku: UpdateModels.objects.get_or_create(model_name='Sku', function_name='set_attributes', primary_key=sku),
+                        attribute.skus
+                    )
+                ),
+                instance.attributes
+            )
+        )
 class Attribute(BaseRawAbstract):
     """Attributes model"""
 
@@ -334,14 +523,34 @@ class Attribute(BaseRawAbstract):
 
     # Relationship filter
     skus = models.ManyToManyField(
-        'stores.Skus', verbose_name=_("Skus")
+        'stores.Sku', verbose_name=_("Skus")
     )
     attribute_type = models.ForeignKey(
         'stores.AttributeType', on_delete=models.CASCADE
     )
 
+    def __init__(self: "Attribute", *args, **kwargs) -> None:
+
+        self.old_value = self.value
+
+        self.old_attribute_type = self.attribute_type
+        self.old_skus = self.skus
+
+        super().__init__(*args, **kwargs)
+
     def __str__(self):
+        """Return type: value, from attribute."""
+
         return f'{self.attribute_type}: {self.value}'
+
+    def save(self, *args, **kwargs):
+        """Save instance."""
+
+        self.update_father_serializer_data = self.old_value != self.value or \
+            self.old_attribute_type != self.attribute_type or \
+            self.old_skus != self.skus
+
+        super().save(*args, **kwargs)
 
     class Meta:
         """Meta class"""
@@ -350,3 +559,10 @@ class Attribute(BaseRawAbstract):
         verbose_name_plural = "Attributes"
         unique_together = ('attribute_type', 'value',)
         default_related_name = 'attributes'
+
+@receiver(post_save, sender=Attribute)
+def update_attribute_serializer_data(sender, instance, *args, **kwargs):
+    """Update attribute serializer data."""
+
+    if instance.update_father_serializer_data and instance.attribute_type and instance.skus:
+        set(map(lambda sku: UpdateModels.objects.get_or_create(model_name='Sku', function_name='set_attributes', primary_key=sku), instance.skus))

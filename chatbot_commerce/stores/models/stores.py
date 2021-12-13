@@ -480,7 +480,7 @@ class SkuSeller(BaseRawAbstract):
 
     # Relationship filter
     sku = models.ForeignKey(
-        "stores.Skus", verbose_name=_("Sku"), on_delete=models.CASCADE
+        "stores.Sku", verbose_name=_("Sku"), on_delete=models.CASCADE
     )
     seller = models.ForeignKey(
         "stores.Seller", verbose_name=_("Seller"), on_delete=models.CASCADE
@@ -490,6 +490,29 @@ class SkuSeller(BaseRawAbstract):
         verbose_name = 'Sku Seller'
         verbose_name_plural = 'Skus Sellers'
         default_related_name = 'sku_seller'
+
+class UpdateModels(models.Model):
+    """Update models."""
+
+    # Filter data
+    model_name = models.CharField(max_length=40)
+    function_name = models.CharField(max_length=50)
+    primary_key = models.PositiveIntegerField()
+    all_data = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f'{self.all_data}'
+
+    def save(self, *args, **kwargs):
+
+        self.all_data = '{} {} {}'.format(self.model_name, self.function_name, self.primary_key)
+
+        super().save(*args, **kwargs)
+
+    class Meta:
+        verbose_name = 'Update Model'
+        verbose_name_plural = 'Update Models'
+        default_related_name = 'update_models'
 
 
 # class SearchAnalizer(ChatbootModel):

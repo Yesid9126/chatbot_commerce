@@ -4,7 +4,7 @@
 from rest_framework import serializers
 
 # Models
-from chatbot_commerce.stores.models import Order, OrderItem, Skus, Store
+from chatbot_commerce.stores.models import Order, OrderItem, Sku, Store
 
 
 class CreateOrderSerializer(serializers.Serializer):
@@ -24,7 +24,7 @@ class CreateOrderSerializer(serializers.Serializer):
         order = Order.objects.create(customer=customer, hook_data=data, store=store)
         for item in sku_ids:
             sku_id = item.get('sku_id')
-            sku = Skus.objects.filter(external_id=sku_id).get()
+            sku = Sku.objects.filter(external_id=sku_id).get()
             price = sku.price.get()
             price = price.base_price
             quantity = item.get('quantity')

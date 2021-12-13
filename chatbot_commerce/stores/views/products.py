@@ -25,7 +25,7 @@ from chatbot_commerce.stores.filters import ProductFilterSet, products_skus
 from chatbot_commerce.stores.models import (
     Store, Brand, Department, Category, Subcategory,
     Product,
-    Skus, AttributeType, Image,
+    Sku, AttributeType, Image,
     # SearchAnalizer,
 )
 
@@ -164,7 +164,7 @@ class ProductViewset(mixins.RetrieveModelMixin,
                     .prefetch_related(
                         Prefetch(
                             'skus',
-                            queryset=Skus.objects
+                            queryset=Sku.objects
                             .only('serializer_data', 'product')
                             .filter(**self.skus_filter_data),
                             to_attr='q_skus'

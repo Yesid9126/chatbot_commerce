@@ -2,7 +2,7 @@
 
 # Models
 from chatbot_commerce.stores.models import (
-    Skus, Product, Price, FixedPrice, DateRange,
+    Sku, Product, Price, FixedPrice, DateRange,
     Brand, Category, Department,
     Subcategory, Image, Attribute, AttributeType,
     SaleChannel, Seller, SkuSeller
@@ -80,7 +80,7 @@ def update_or_create_sku(store, sku, product_instance=None, product_id=None):
     if store.store_type.name == 'SHOPIFY':
         sku_name = sku.get('title')
         sku_name = ' '.join((sku_name, sku.get('sku'),))
-        sku_instance, _ = Skus.objects.update_or_create(
+        sku_instance, _ = Sku.objects.update_or_create(
             external_id=sku.get('id'),
             product=product_instance,
             defaults={
@@ -148,7 +148,7 @@ def update_or_create_sku(store, sku, product_instance=None, product_id=None):
             # Get instance
             assert product_instance, 'Product not found'
             sku_name = sku.get('NameComplete')
-            sku_instance = Skus.objects.filter(external_id=sku.get('Id'), product=product_instance).last()
+            sku_instance = Sku.objects.filter(external_id=sku.get('Id'), product=product_instance).last()
             assert sku_instance, 'Sku not found'
 
             # Get Sales channels of sku
@@ -394,7 +394,7 @@ def create_products_store(store, limit=False):
                     bulk_skus = list(
                         map(
                             lambda sku:
-                                Skus(
+                                Sku(
                                     product=Product.objects.filter(store=store, external_id=sku.get('ProductId')).last(),
                                     external_id=sku.get('Id'),
                                     name=sku.get('NameComplete'),
@@ -416,13 +416,13 @@ def create_products_store(store, limit=False):
                                 skus
                         )
                     )
-                    Skus.objects.bulk_create(bulk_skus)
+                    Sku.objects.bulk_create(bulk_skus)
 
                     bulk_price = list(
                         map(
                             lambda sku:
                                 Price(
-                                    sku=Skus.objects.filter(external_id=sku.get('Id'), product__store=store).last(),
+                                    sku=Sku.objects.filter(external_id=sku.get('Id'), product__store=store).last(),
                                     list_price=sku.get('price').get('listPrice'),
                                     cost_price=sku.get('price').get('costPrice'),
                                     markup=sku.get('price').get('markup'),
@@ -455,6 +455,6 @@ def create_products_store(store, limit=False):
 
 def needed():
     Product.objects.update(search_vector=SearchVector('search'))
-    Skus.objects.filter(product=None).delete()
-    Skus.objects.update(search_vector=SearchVector('search'))
-    set(map(lambda sku: sku.get_serializer_data, Skus.objects.all()))
+    Sku.objects.filter(product=None).delete()
+    Sku.objects.update(search_vector=SearchVector('search'))
+    set(map(lambda sku: sku.get_serializer_data, Sku.objects.all()))

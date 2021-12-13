@@ -3,7 +3,7 @@ from django_filters.rest_framework import FilterSet
 from django_filters import filters
 
 # Models
-from chatbot_commerce.stores.models import Product, Skus, Image
+from chatbot_commerce.stores.models import Product, Sku, Image
 from django.db.models import Q, Prefetch
 
 # Utils
@@ -112,17 +112,17 @@ def products_skus(self, store_pk):
     else:
         product_is_active = product_d.get('is_active')
         if product_is_active:
-            skus_pk = set(Skus.objects
+            skus_pk = set(Sku.objects
                           .filter(*sku_q, **sku_d, product__is_active=True)
                           .values_list('pk', flat=True))
-            products_pk = list(set(Skus.objects
+            products_pk = list(set(Sku.objects
                                    .filter(*sku_q, **sku_d, product__is_active=True)
                                    .values_list('product', flat=True)))
         else:
-            skus_pk = set(Skus.objects
+            skus_pk = set(Sku.objects
                           .filter(*sku_q, **sku_d)
                           .values_list('pk', flat=True))
-            products_pk = list(set(Skus.objects
+            products_pk = list(set(Sku.objects
                                    .filter(*sku_q, **sku_d)
                                    .values_list('product', flat=True)))
         # products_external_id = sorted(products_external_id)
@@ -142,7 +142,7 @@ def products_skus(self, store_pk):
         .prefetch_related(
             Prefetch(
                 'skus',
-                queryset=Skus.objects.only('serializer_data', 'product').filter(pk__in=skus_pk, product__pk__in=products_pk),
+                queryset=Sku.objects.only('serializer_data', 'product').filter(pk__in=skus_pk, product__pk__in=products_pk),
                 to_attr='q_skus'
             ),
             Prefetch(
