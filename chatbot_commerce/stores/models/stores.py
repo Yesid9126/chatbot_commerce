@@ -9,20 +9,19 @@ from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 from django.template.loader import get_template
 from django.core.mail import EmailMultiAlternatives
+from django.dispatch import receiver
+from django.db.models.signals import post_save, post_delete
 
 # Models
 from rest_framework_api_key.models import AbstractAPIKey, BaseAPIKeyManager
 from rest_framework_api_key.crypto import KeyGenerator, concatenate, split
-# from django.contrib.postgres.fields import ArrayField
 
 # Celery
 from django_celery_beat.models import PeriodicTask, CrontabSchedule
 
 # utilities
-from chatbot_commerce.utils.models import ChatbootModel, BaseAbstract, BaseRawAbstract, BaseSlugnameAbstract
+from chatbot_commerce.utils.models import ChatbootModel, BaseAbstract, BaseRawAbstract, BaseSlugnameAbstract, super_save
 from django.utils.translation import gettext as _
-from django.dispatch import receiver
-from django.db.models.signals import post_save, post_delete
 from django.conf import settings
 import requests
 import typing
@@ -486,10 +485,37 @@ class SkuSeller(BaseRawAbstract):
         "stores.Seller", verbose_name=_("Seller"), on_delete=models.CASCADE
     )
 
+    def __init__(self: "SkuSeller", *args, **kwargs) -> None:
+
+        self.old_sku = self.sku
+        self.old_seller = self.seller
+
+        super().__init__(*args, **kwargs)
+
+    def __str__(self):
+        return f'{self.sku} | {self.seller}'
+
+    def save(self, *args, **kwargs) -> None:
+        self.update_father_serializer_data = self.sku != self.old_sku or self.seller != self.old_seller
+        super().save(*args, **kwargs)
+
     class Meta:
         verbose_name = 'Sku Seller'
         verbose_name_plural = 'Skus Sellers'
         default_related_name = 'sku_seller'
+
+@receiver(post_save, sender=SkuSeller)
+def update_sku_seller_serializer_data(sender, instance, *args, **kwargs):
+    if (instance.update_father_serializer_data or instance.first_time) and instance.sku and instance.seller:
+        UpdateModels.objects.get_or_create(model_name='Sku', function_name='set_sellers', primary_key=instance.sku)
+        instance.sku.set_sellers
+        super_save(instance)
+
+@receiver(post_delete, sender=SkuSeller)
+def delete_sku_seller_serializer_data(sender, instance, *args, **kwargs):
+    if instance.sku:
+        UpdateModels.objects.get_or_create(model_name='Sku', function_name='set_sellers', primary_key=instance.sku)
+        instance.sku.set_sellers
 
 class UpdateModels(models.Model):
     """Update models."""

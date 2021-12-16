@@ -3,7 +3,7 @@
 # Django
 from django.contrib import admin
 # Models
-from chatbot_commerce.stores.models import (
+from chatbot_commerce.products.models import (
     Department,
     Category,
     Subcategory,
@@ -12,7 +12,7 @@ from chatbot_commerce.stores.models import (
     Image,
     Price,
     DateRange,
-    Sku,
+    Skus,
     FixedPrice,
     Attribute,
     AttributeType
@@ -23,34 +23,32 @@ from chatbot_commerce.stores.models import (
 class SubcategoryAdmin(admin.ModelAdmin):
     """Subcategory model admin."""
 
-    list_display = ('name',)
-    search_fields = ('name',)
-    readonly_fields = ('name', 'category', 'external_id',)
+    list_display = ['name', 'slug_name', 'category']
+    search_fields = ['name', 'slug_name']
 
 
 @admin.register(Category)
 class CategoriesAdmin(admin.ModelAdmin):
-    list_display = ('name',)
-    search_fields = ('name',)
-    readonly_fields = ('name', 'store', 'department', 'external_id',)
+    list_display = ('name', 'slug_name', 'department',)
+    search_fields = ['name', 'slug_name']
+    list_filter = ['department']
+    readonly_fields = list_display
 
 
 @admin.register(Department)
 class DepartmentsAdmin(admin.ModelAdmin):
     list_display = ['name', 'slug_name']
     search_fields = ['name', 'slug_name']
-    readonly_fields = ('stores', 'external_id',)
 
 
 @admin.register(Brand)
 class BrandAdmin(admin.ModelAdmin):
     list_display = ['name', 'slug_name']
     search_fields = ['name', 'slug_name']
-    readonly_fields = ('stores', 'external_id',)
 
 
-class InlineSku(admin.TabularInline):
-    model = Sku
+class InlineSkus(admin.TabularInline):
+    model = Skus
     extra = 0
     fields = ('external_id', 'name', 'total_quantity',)
     readonly_fields = fields
@@ -60,20 +58,17 @@ class InlineSku(admin.TabularInline):
 class ProductAdmin(admin.ModelAdmin):
     """Product model admin."""
 
-    list_select_related = ('store', 'department', 'category', 'sub_category', 'brand',)
-    list_display = ('external_id', 'name', 'is_active', 'store', 'brand', 'department', 'category', 'sub_category',)
-    list_display_links = ('external_id', 'name',)
-    search_fields = ('name', 'external_id', 'department', 'brand', 'category', 'sub_category',)
-    list_filter = ('store__store_type', 'is_active', 'store',)
-    exclude_fields = ('search_vector', 'search', 'link_id', 'reference_id', 'show_without_stock',)
-    readonly_fields = ('external_id', 'name', 'is_active', 'store', 'brand', 'department', 'category', 'sub_category', 'raw_json', 'search_vector',)
-    inlines = [InlineSku]
+    list_display = ('external_id', 'name', 'store', 'sub_category', 'department', 'category', 'brand',)
+    search_fields = ['name', 'external_id']
+    list_filter = ['is_active']
+    readonly_fields = list_display
+    inlines = [InlineSkus]
 
 
 @admin.register(Image)
 class ImagesAdmin(admin.ModelAdmin):
-    list_display = ('image_url',)
-    readonly_fields = ('image_url', 'skus', 'products', 'store',)
+    list_display = ('sku', 'image_url',)
+    readonly_fields = list_display
 
 
 class InlineImageAdmin(admin.TabularInline):
@@ -90,11 +85,11 @@ class InlinePriceAdmin(admin.TabularInline):
     readonly_fields = ('price',)
 
 
-@admin.register(Sku)
-class SkuAdmin(admin.ModelAdmin):
+@admin.register(Skus)
+class SkusAdmin(admin.ModelAdmin):
     """Sku's model admin."""
 
-    readonly_fields = ('raw_json', 'product', 'search_vector',)
+    readonly_fields = ('raw_json', 'product',)
     list_display = ['external_id', 'name', 'total_quantity']
     search_fields = ['external_id', 'name']
     list_filter = ['is_active', 'is_inventoried', 'reference_stock_id']
@@ -103,7 +98,8 @@ class SkuAdmin(admin.ModelAdmin):
 @admin.register(DateRange)
 class DateRangeAdmin(admin.ModelAdmin):
     """Sku's model admin."""
-    list_display = ('date_time_from', 'date_time_to',)
+    readonly_fields = ('fixed_price',)
+    list_display = ['fixed_price', 'date_time_from', 'date_time_to']
 
 
 class InlineDateRangeAdmin(admin.TabularInline):
@@ -117,7 +113,7 @@ class FixedPriceAdmin(admin.ModelAdmin):
     """Price model admin."""
     readonly_fields = ('price',)
     list_display = ['price', 'trade_policy_id', 'value']
-    # inlines = [InlineDateRangeAdmin]
+    inlines = [InlineDateRangeAdmin]
 
 
 class InlineFixedPriceAdmin(admin.TabularInline):
@@ -142,13 +138,13 @@ class PriceAdmin(admin.ModelAdmin):
 class AttributeAdmin(admin.ModelAdmin):
     """Price model admin."""
 
-    readonly_fields = ('skus', 'attribute_type',)
-    list_display = ['sku_id', 'attribute_type', 'value']
+    readonly_fields = ('sku', 'attribute_type',)
+    list_display = ['sku_id', 'sku', 'attribute_type', 'value']
     search_fields = ['value']
 
     def sku_id(self, obj):
         """Sku id."""
-        return obj.skus.values_list('external_id', flat=True)
+        return obj.sku.external_id
 
 
 # admin.site.register(Attribute)

@@ -1,47 +1,10 @@
 """Django models utilities."""
-
 from slugify import slugify
+
 # Django
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
 from django.utils.translation import gettext as _
-
-from collections import defaultdict
-from django.apps import apps
-
-
-class BulkCreator:
-    """
-    Class to create bulk objects
-    """
-
-    def __init__(self, chunk_size=100):
-        self.bulk_objects = defaultdict(list)
-        self.chunk_size = chunk_size
-
-    def add_object(self, model, obj):
-        """
-        Add object to bulk objects
-        :param model: Model
-        :param obj: Object
-        :return:
-        """
-        self.bulk_objects[model].append(obj)
-
-    def create_bulk(self):
-        """
-        Create bulk objects
-        :return:
-        """
-        for model, objects in self.bulk_objects.items():
-            model_class = apps.get_model('chatbot_commerce', model)
-            model_class.objects.bulk_create(objects)
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.create_bulk()
 
 
 class ChatbootModel(models.Model):
@@ -55,14 +18,20 @@ class ChatbootModel(models.Model):
     """
 
     created = models.DateTimeField(
-        'created at',
+        _('created at'),
         auto_now_add=True,
         help_text='Date time on which the object was created.'
     )
     modified = models.DateTimeField(
-        'modified at',
+        _('modified at'),
         auto_now=True,
         help_text='Date time on which the object was last modified.'
+    )
+    first_time = models.BooleanField(
+        _("First time"),
+        default=True,
+        help_text='Was saved in database before.',
+        editable=False
     )
 
     class Meta:
@@ -150,3 +119,9 @@ class AbstractCategory(BaseAbstract):
     class Meta:
         """Meta option."""
         abstract = True
+
+
+def super_save(instance):
+    if instance.first_time:
+        instance.first_time = False
+        instance.super().save()
