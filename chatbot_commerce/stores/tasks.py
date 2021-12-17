@@ -3,6 +3,7 @@
 
 # Celery
 from celery import Celery
+# from celery.schedules import crontab
 
 # Cache
 # from django.core.cache import cache
@@ -10,25 +11,29 @@ from celery import Celery
 
 # Utils
 from chatbot_commerce.utils.tasks import create_products_store, get_departments, get_brands, get_sc_sellers
+# from pathlib import Path
 import gc
 import time
+import os
 
 # Models
 from chatbot_commerce.stores.models import Store, TypeStore, UpdateModels, Product, Sku, Price
-# from django.db import connections, transaction
-from django_celery_beat.models import PeriodicTask, CrontabSchedule
+from django_celery_beat.models import PeriodicTask
+
+# interval_instance, _ = IntervalSchedule.objects.get_or_create(every=5, period=IntervalSchedule.SECONDS)
+# task_instance, _ = PeriodicTask.objects.get_or_create(name='Update models serializer', task='continue_update_models')
+
+STORE_TYPE = ('VTEX', 'SHOPIFY',)
+for store_type in STORE_TYPE:
+    TypeStore.objects.get_or_create(name=store_type)
 
 app = Celery()
+
 app.autodiscover_tasks()
-@app.on_after_configure.connect
-def setup_periodic_tasks(sender, **kwargs):
-    STORE_TYPE = ('VTEX', 'SHOPIFY',)
-    for store_type in STORE_TYPE:
-        TypeStore.objects.get_or_create(name=store_type)
-    continue_update_models.s().apply_async(countdown=10)
-    # Calls clear_cache at 23:55.
-    # every_23_55, _ = CrontabSchedule.objects.get_or_create(day_of_week='*', hour=23, minute=55, timezone="America/Bogota")
-    # task_instance, _ = PeriodicTask.objects.get_or_create(name='limpiador', task='clear_cache', defaults=dict(crontab=every_23_55))
+
+# Calls clear_cache at 23:55.
+# every_23_55, _ = CrontabSchedule.objects.get_or_create(day_of_week='*', hour=23, minute=55, timezone="America/Bogota")
+# task_instance, _ = PeriodicTask.objects.get_or_create(name='limpiador', task='clear_cache', defaults=dict(crontab=every_23_55))
 
 
 # @app.task(name='clear_cache')
@@ -44,9 +49,9 @@ def setup_periodic_tasks(sender, **kwargs):
 
 @app.task(name='continue_update_models')
 def continue_update_models(*args, **kwargs):
-
     while 1:
-        if UpdateModels.objects.exists():
+        if UpdateModels.objects.exclude(model_name='continue_update_models').exists():
+            print('exists')
             array_skus_all_data = UpdateModels.objects.filter(model_name='Sku').values_list('all_data', flat=True)
             array_products_all_data = UpdateModels.objects.filter(model_name='Product').values_list('all_data', flat=True)
             array_prices_all_data = UpdateModels.objects.filter(model_name='Price').values_list('all_data', flat=True)
@@ -71,8 +76,9 @@ def continue_update_models(*args, **kwargs):
                     if fn == 'set_fixed_prices':
                         UpdateModels.objects.filter(model_name='Price', function_name='set_fixed_prices', primary_key=pk).delete()
                         Price.objects.filter(pk=pk).last().set_fixed_prices
-        time.sleep(2)
+        time.sleep(5)
 
+continue_update_models.s().apply_async()
 
 @app.task(name='store_begining')
 def store_begining(store, *args, **kwargs):

@@ -105,7 +105,7 @@ class Product(AbstractCategory):
     def __init__(self: "Product", *args, **kwargs) -> None:
         """Initialize instance."""
 
-        self.old_images = self.images
+        self.old_product_images = self.product_images
 
         super().__init__(*args, **kwargs)
 
@@ -116,7 +116,7 @@ class Product(AbstractCategory):
     def save(self, *args, **kwargs) -> None:
         """Save instance."""
 
-        if self.old_images != self.images:
+        if self.old_product_images != self.product_images:
             return self.set_images()
 
         super().save(*args, **kwargs)
