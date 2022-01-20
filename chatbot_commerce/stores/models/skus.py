@@ -196,7 +196,11 @@ class Image(ChatbootModel):
 
         verbose_name = 'Image'
         verbose_name_plural = "Image's"
-        unique_together = ('image_id', 'store', 'name', 'image_url')
+
+        constraints = [
+            models.UniqueConstraint(fields=['image_id', 'store', 'name', 'image_url'], name='unique_image'),
+        ]
+
         default_related_name = 'images'
 
 
@@ -370,7 +374,11 @@ class AttributeType(ChatbootModel):
     class Meta:
         verbose_name = 'Attribute type'
         verbose_name_plural = "Attribute type's"
-        unique_together = ('name', 'store',)
+
+        constraints = [
+            models.UniqueConstraint(fields=['name', 'store'], name='unique_attribute_type'),
+        ]
+
         default_related_name = 'attributes_type'
 
 
@@ -400,5 +408,7 @@ class Attribute(BaseRawAbstract):
 
         verbose_name = "Attribute"
         verbose_name_plural = "Attributes"
-        unique_together = ('attribute_type', 'value',)
+        constraints = [
+            models.UniqueConstraint(fields=['attribute_type', 'value'], name='unique_attribute'),
+        ]
         default_related_name = 'attributes'
