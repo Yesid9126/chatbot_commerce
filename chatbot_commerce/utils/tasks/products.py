@@ -294,11 +294,11 @@ async def get_skus_and_products_dicts(sc, loop, vtex, skus=[], products_created=
     return skus_dicts, products_dicts
 
 
-async def create_extra_data_skus(loop, store, skus=[]):
-    # Get dicts skus
-    asynciofunctions_skus = [loop.run_in_executor(None, update_or_create_sku, store, sku) for sku in skus]
-    [await asynciofunction_sku for asynciofunction_sku in asynciofunctions_skus]
-    asynciofunctions_skus.clear()
+# async def create_extra_data_skus(loop, store, skus=[]):
+#     # Get dicts skus
+#     asynciofunctions_skus = [loop.run_in_executor(None, update_or_create_sku, store, sku) for sku in skus]
+#     [await asynciofunction_sku for asynciofunction_sku in asynciofunctions_skus]
+#     asynciofunctions_skus.clear()
 
 
 def create_products_store(store, limit=False):
@@ -327,7 +327,7 @@ def create_products_store(store, limit=False):
         skus_ids.reverse()
         assert len(skus_ids) > 0, 'No skus found'
 
-        sub_skus_ids = [skus_ids[i:i+1000] for i in range(0, len(skus_ids), 10000)]
+        sub_skus_ids = [skus_ids[i:i+10000] for i in range(0, len(skus_ids), 10000)]
         skus_ids.clear()
         products_created = set()
         gc.collect()
@@ -355,7 +355,7 @@ def create_products_store(store, limit=False):
                                 brand=Brand.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('BrandId')}"], stores=store).last(),
                                 search=' '.join(
                                     [
-                                        product.get('Name'),
+                                        product.get('Name') or '',
                                         *[cat.name for cat in
                                             [
                                                 Department.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('DepartmentId')}"], stores=store).last(),

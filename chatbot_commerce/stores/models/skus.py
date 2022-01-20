@@ -22,7 +22,7 @@ class Sku(BaseAbstract):
     is_inventoried = models.BooleanField(
         default=False, null=True, blank=True
     )
-    total_quantity = models.PositiveBigIntegerField(
+    total_quantity = models.BigIntegerField(
         'Quantity sku',
         default=0, blank=True
     )

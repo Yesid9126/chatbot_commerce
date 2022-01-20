@@ -158,7 +158,9 @@ def principal_periodic_task(*args, **kwargs):
         gc.collect()
 
     except Exception as message:
-        print(f'error: {message}')
+        store.creating_updating_elements_status = False
+        store.save()
+        raise message
 
     store.creating_updating_elements_status = False
     store.save()
