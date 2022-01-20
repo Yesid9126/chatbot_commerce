@@ -195,7 +195,6 @@ def update_or_create_sku(store, sku, product_instance=None, product_id=None):
                 print(f'message: {message} imagenes')
 
             # Create price for sku
-            r = False
             try:
                 if price:
                     base_price = price.get('basePrice')
@@ -204,7 +203,7 @@ def update_or_create_sku(store, sku, product_instance=None, product_id=None):
                         s.append(str(int(base_price)))
                     fixed_prices = price.get('fixedPrices')
                     if fixed_prices and price_instance:
-                        fixed_prices += [
+                        fixed_prices = [
                             FixedPrice(
                                 price=price_instance,
                                 trade_policy_id=fixed_price.get('tradePolicyId'),
@@ -220,7 +219,7 @@ def update_or_create_sku(store, sku, product_instance=None, product_id=None):
                             )
                             for fixed_price in fixed_prices
                         ]
-                        r = True
+                        FixedPrice.objects.bulk_create(fixed_prices)
                     price.clear()
 
             except Exception as message:
@@ -268,9 +267,6 @@ def update_or_create_sku(store, sku, product_instance=None, product_id=None):
                 'sku_id': sku.get('Id'),
             }
             print(error)
-
-        if r:
-            return fixed_prices
     return None
 
 
@@ -423,10 +419,6 @@ def create_products_store(store, limit=False):
                         )
                     ]
                     Price.objects.bulk_create(bulk_price)
-
-                array_fixed_bulk = [update_or_create_sku(store=store, sku=sku) for sku in skus]
-                fixed_prices = [fixed_price for fixed_prices in array_fixed_bulk if fixed_prices for fixed_price in fixed_prices]
-                FixedPrice.objects.bulk_create(fixed_prices)
             if limit:
                 break
         sc.clear()
