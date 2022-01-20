@@ -59,7 +59,7 @@ def update_or_create_product(store, product):
                         }
                     )
                     image.products.add(product_instance)
-                set(map(lambda sku: update_or_create_sku(product_instance=product_instance, product_id=product_id, store=store, sku=sku), product.get('variants')))
+                [update_or_create_sku(product_instance=product_instance, product_id=product_id, store=store, sku=sku) for sku in product.get('variants')]
             except Exception as e:
                 error = {
                     'message': e,
@@ -159,24 +159,21 @@ def update_or_create_sku(store, sku, product_instance=None, product_id=None):
 
             # Get Sellers of sku
             sellers_array = sku.get('SkuSellers')
-            bulk_skus_sellers = list(
-                map(
-                    lambda seller:
-                        SkuSeller(
-                            sku=sku_instance,
-                            seller=Seller.objects.filter(store=store, seller_id=seller.get('SellerId')).last(),
-                            is_active=seller.get('IsActive'),
-                            raw_json={**seller}
-                        ),
-                        sellers_array
+            bulk_skus_sellers = [
+                SkuSeller(
+                    sku=sku_instance,
+                    seller=Seller.objects.filter(store=store, seller_id=seller.get('SellerId')).last(),
+                    is_active=seller.get('IsActive'),
+                    raw_json={**seller}
                 )
-            )
+                for seller in sellers_array
+            ]
             SkuSeller.objects.bulk_create(bulk_skus_sellers)
             bulk_skus_sellers.clear()
             sellers_array.clear()
             price = sku.get('price')
             if isinstance(price, str):
-                price = float(price)
+                price = {'basePrice': float(price)}
 
             images_array = sku.get('Images')
             sku_specifications_array = sku.get('SkuSpecifications')
@@ -198,6 +195,7 @@ def update_or_create_sku(store, sku, product_instance=None, product_id=None):
                 print(f'message: {message} imagenes')
 
             # Create price for sku
+            r = False
             try:
                 if price:
                     base_price = price.get('basePrice')
@@ -206,27 +204,24 @@ def update_or_create_sku(store, sku, product_instance=None, product_id=None):
                         s.append(str(int(base_price)))
                     fixed_prices = price.get('fixedPrices')
                     if fixed_prices and price_instance:
-                        fixed_prices = list(
-                            map(lambda fixed_price:
-                                FixedPrice(
-                                    price=price_instance,
-                                    trade_policy_id=fixed_price.get('tradePolicyId'),
-                                    value=fixed_price.get('value'),
-                                    list_price=fixed_price.get('listPrice'),
-                                    min_quantity=fixed_price.get('minQuantity'),
-                                    date_range=DateRange.objects.create(
-                                        date_time_from=fixed_price.get('dateRange').get('from'),
-                                        date_time_to=fixed_price.get('dateRange').get('to'),
-                                        raw_json={**fixed_price.get('dateRange')}
-                                    ) if fixed_price.get('dateRange') else None,
-                                    raw_json={**fixed_price}
-                                ),
-                                fixed_prices
-                                )
-                        )
-                        FixedPrice.objects.bulk_create(fixed_prices)
+                        fixed_prices += [
+                            FixedPrice(
+                                price=price_instance,
+                                trade_policy_id=fixed_price.get('tradePolicyId'),
+                                value=fixed_price.get('value'),
+                                list_price=fixed_price.get('listPrice'),
+                                min_quantity=fixed_price.get('minQuantity'),
+                                date_range=DateRange.objects.create(
+                                    date_time_from=fixed_price.get('dateRange').get('from'),
+                                    date_time_to=fixed_price.get('dateRange').get('to'),
+                                    raw_json={**fixed_price.get('dateRange')}
+                                ) if fixed_price.get('dateRange') else None,
+                                raw_json={**fixed_price}
+                            )
+                            for fixed_price in fixed_prices
+                        ]
+                        r = True
                     price.clear()
-                    fixed_prices.clear()
 
             except Exception as message:
                 print(f'message: {message} precios')
@@ -274,6 +269,8 @@ def update_or_create_sku(store, sku, product_instance=None, product_id=None):
             }
             print(error)
 
+        if r:
+            return fixed_prices
     return None
 
 
@@ -342,100 +339,94 @@ def create_products_store(store, limit=False):
             print(f'round: skus = {len(skus)}, products = {len(products)}')
             if products:
                 if store.store_type.name == 'VTEX':
-                    bulk_products = list(
-                        map(lambda product:
-                            Product(
-                                store=store,
-                                external_id=product.get('Id'),
-                                name=product.get('Name'),
-                                department=Department.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('DepartmentId')}"], stores=store).last(),
-                                sub_category=Subcategory.objects.select_related('category').filter(external_id=product.get('CategoryId'), category__store=store).last(),
-                                category=Subcategory.objects.select_related('category').filter(external_id=product.get('CategoryId'), category__store=store).last().category if Subcategory.objects.filter(
-                                    external_id=product.get('CategoryId'), category__store=store).exists() else Category.objects.filter(external_id=product.get('CategoryId'), store=store).last(),
-                                brand=Brand.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('BrandId')}"], stores=store).last(),
-                                search=' '.join(
-                                    [
-                                        product.get('Name') or '',
-                                        *[cat.name for cat in
-                                            [
-                                                Department.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('DepartmentId')}"], stores=store).last(),
-                                                Subcategory.objects.select_related('category').filter(external_id=product.get('CategoryId'), category__store=store).last().category if Subcategory.objects.filter(
-                                                    external_id=product.get('CategoryId'), category__store=store).exists() else Category.objects.filter(external_id=product.get('CategoryId'), store=store).last(),
-                                                Subcategory.objects.select_related('category').filter(external_id=product.get('CategoryId'), category__store=store).last(
-                                                ), Brand.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('BrandId')}"], stores=store).last()
-                                            ] if cat
-                                          ]
-                                    ]
-                                ),
-                                link_id=product.get('LinkId'),
-                                reference_id=product.get('RefId'),
-                                is_visible=product.get('IsVisible'),
-                                description=product.get('Description'),
-                                description_short=product.get('DescriptionShort'),
-                                keywords=product.get('KeyWords'),
-                                title=product.get('Title'),
-                                is_active=product.get('IsActive'),
-                                meta_tag_description=product.get('MetaTagDescription'),
-                                show_without_stock=product.get('ShowWithoutStock'),
-                                raw_json={**product},
+                    bulk_products = [
+                        Product(
+                            store=store,
+                            external_id=product.get('Id'),
+                            name=product.get('Name'),
+                            department=Department.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('DepartmentId')}"], stores=store).last(),
+                            sub_category=Subcategory.objects.select_related('category').filter(external_id=product.get('CategoryId'), category__store=store).last(),
+                            category=Subcategory.objects.select_related('category').filter(external_id=product.get('CategoryId'), category__store=store).last().category if Subcategory.objects.filter(
+                                external_id=product.get('CategoryId'), category__store=store).exists() else Category.objects.filter(external_id=product.get('CategoryId'), store=store).last(),
+                            brand=Brand.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('BrandId')}"], stores=store).last(),
+                            search=' '.join(
+                                [
+                                    product.get('Name') or '',
+                                    *[cat.name for cat in
+                                        [
+                                            Department.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('DepartmentId')}"], stores=store).last(),
+                                            Subcategory.objects.select_related('category').filter(external_id=product.get('CategoryId'), category__store=store).last().category if Subcategory.objects.filter(
+                                                external_id=product.get('CategoryId'), category__store=store).exists() else Category.objects.filter(external_id=product.get('CategoryId'), store=store).last(),
+                                            Subcategory.objects.select_related('category').filter(external_id=product.get('CategoryId'), category__store=store).last(
+                                            ), Brand.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('BrandId')}"], stores=store).last()
+                                        ] if cat
+                                      ]
+                                ]
                             ),
-                            products
-                            )
-                    )
+                            link_id=product.get('LinkId'),
+                            reference_id=product.get('RefId'),
+                            is_visible=product.get('IsVisible'),
+                            description=product.get('Description'),
+                            description_short=product.get('DescriptionShort'),
+                            keywords=product.get('KeyWords'),
+                            title=product.get('Title'),
+                            is_active=product.get('IsActive'),
+                            meta_tag_description=product.get('MetaTagDescription'),
+                            show_without_stock=product.get('ShowWithoutStock'),
+                            raw_json={**product},
+                        )
+                        for product in products
+                    ]
                     Product.objects.bulk_create(bulk_products)
 
-                products_created |= set(map(lambda product: update_or_create_product(store=store, product=product), products))
+                products_created |= set(update_or_create_product(store=store, product=product) for product in products)
             products.clear()
             if skus:
                 if store.store_type.name == 'VTEX':
-                    bulk_skus = list(
-                        map(
-                            lambda sku:
-                                Sku(
-                                    product=Product.objects.filter(store=store, external_id=sku.get('ProductId')).last(),
-                                    external_id=sku.get('Id'),
-                                    name=sku.get('NameComplete'),
-                                    is_active=sku.get('IsActive'),
-                                    ref_id=sku.get('RefId'),
-                                    packaged_height=sku.get('Height'),
-                                    packaged_length=sku.get('Length'),
-                                    packaged_width=sku.get('Width'),
-                                    packaged_weight=sku.get('WeightKg'),
-                                    is_kit=sku.get('IsKit'),
-                                    comercial_condition_id=sku.get('CommercialConditionId'),
-                                    manufacter_code=sku.get('ManufacturerCode'),
-                                    reference_stock_id=sku.get('ReferenceStockKeepingUnitId'),
-                                    is_inventoried=sku.get('IsInventoried'),
-                                    is_transported=sku.get('IsTransported'),
-                                    total_quantity=sku.get('total_quantity'),
-                                    raw_json={**sku}
-                                ),
-                                skus
+                    bulk_skus = [
+                        Sku(
+                            product=Product.objects.filter(store=store, external_id=sku.get('ProductId')).last(),
+                            external_id=sku.get('Id'),
+                            name=sku.get('NameComplete'),
+                            is_active=sku.get('IsActive'),
+                            ref_id=sku.get('RefId'),
+                            packaged_height=sku.get('Height'),
+                            packaged_length=sku.get('Length'),
+                            packaged_width=sku.get('Width'),
+                            packaged_weight=sku.get('WeightKg'),
+                            is_kit=sku.get('IsKit'),
+                            comercial_condition_id=sku.get('CommercialConditionId'),
+                            manufacter_code=sku.get('ManufacturerCode'),
+                            reference_stock_id=sku.get('ReferenceStockKeepingUnitId'),
+                            is_inventoried=sku.get('IsInventoried'),
+                            is_transported=sku.get('IsTransported'),
+                            total_quantity=sku.get('total_quantity'),
+                            raw_json={**sku}
                         )
-                    )
+                        for sku in skus
+                    ]
                     Sku.objects.bulk_create(bulk_skus)
 
-                    bulk_price = list(
-                        map(
-                            lambda sku:
-                                Price(
-                                    sku=Sku.objects.filter(external_id=sku.get('Id'), product__store=store).last(),
-                                    list_price=sku.get('price').get('listPrice'),
-                                    cost_price=sku.get('price').get('costPrice'),
-                                    markup=sku.get('price').get('markup'),
-                                    base_price=sku.get('price').get('basePrice'),
-                                    raw_json={**sku.get('price')}
-                                ),
-                                filter(
-                                    lambda x:
-                                        x.get('price') is not False,
-                                        skus
-                                )
+                    bulk_price = [
+                        Price(
+                            sku=Sku.objects.filter(external_id=sku.get('Id'), product__store=store).last(),
+                            list_price=sku.get('price').get('listPrice'),
+                            cost_price=sku.get('price').get('costPrice'),
+                            markup=sku.get('price').get('markup'),
+                            base_price=sku.get('price').get('basePrice'),
+                            raw_json={**sku.get('price')}
                         )
-                    )
+                        for sku in filter(
+                            lambda x:
+                                x.get('price') not in [False, None],
+                                skus
+                        )
+                    ]
                     Price.objects.bulk_create(bulk_price)
 
-                set(map(lambda sku: update_or_create_sku(store=store, sku=sku), skus))
+                array_fixed_bulk = [update_or_create_sku(store=store, sku=sku) for sku in skus]
+                fixed_prices = [fixed_price for fixed_prices in array_fixed_bulk for fixed_price in fixed_prices]
+                FixedPrice.objects.bulk_create(fixed_prices)
             if limit:
                 break
         sc.clear()
@@ -443,7 +434,7 @@ def create_products_store(store, limit=False):
     elif store.store_type.name == 'SHOPIFY':
         shopify = ShopifyStores(store=store)
         product_array = shopify.product_listings(query_params='limit=250')
-        set(map(lambda product: update_or_create_product(store=store, product=product), product_array))
+        [update_or_create_product(store=store, product=product) for product in product_array]
     # Delete skus that don't have a product
     needed()
     gc.collect()
