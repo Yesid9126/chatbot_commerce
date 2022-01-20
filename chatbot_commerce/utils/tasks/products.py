@@ -425,7 +425,7 @@ def create_products_store(store, limit=False):
                     Price.objects.bulk_create(bulk_price)
 
                 array_fixed_bulk = [update_or_create_sku(store=store, sku=sku) for sku in skus]
-                fixed_prices = [fixed_price for fixed_prices in array_fixed_bulk for fixed_price in fixed_prices]
+                fixed_prices = [fixed_price for fixed_prices in array_fixed_bulk if fixed_prices for fixed_price in fixed_prices]
                 FixedPrice.objects.bulk_create(fixed_prices)
             if limit:
                 break
