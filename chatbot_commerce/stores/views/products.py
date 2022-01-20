@@ -60,15 +60,18 @@ class ProductViewset(mixins.RetrieveModelMixin,
         search = self.request.GET.get('search') or ''
         budget = self.request.GET.get('budget') or ''
         stock_quantity = self.request.GET.get('stock_quantity') or ''
+        user = self.request.GET.get('user') or ''
         cache_key = ''.join([slug_name, search, budget, stock_quantity])
+        user_cache_key = '/-@-?/'.join([cache_key, user])
         self.cache_key = cache_key.replace(' ', '').lower() if cache_key else None
+        self.user_cache_key = user_cache_key.replace(' ', '').lower() if user_cache_key else None
         self.skus_filter_data = {
-            # 'search_attributes' if key == 'attributes' else\
-            'search_vector' if key == 'search' else\
-            'total_quantity__gte' if key == 'stock_quantity' else\
-            'sku_price__lte' if key == 'budget' else\
+            'search_vector' if key == 'search' else
+            'total_quantity__gte' if key == 'stock_quantity' else
+            'sku_price__lte' if key == 'budget' else
             key: value for key, value in self.request.GET.items() if key in ('stock_quantity', 'search', 'budget', 'offset', 'limit', 'page')
         }
+        self.user = user
 
         if 'limit' in self.skus_filter_data:
             limit = int(self.skus_filter_data.pop('limit'))
@@ -165,7 +168,17 @@ class ProductViewset(mixins.RetrieveModelMixin,
                         Prefetch(
                             'skus',
                             queryset=Sku.objects
-                            .only('serializer_data', 'product')
+                            .only(
+                                'product',
+                                'external_id',
+                                'sellers_id',
+                                'name',
+                                'total_quantity',
+                                'images_url',
+                                'sku_price',
+                                'attributes_data',
+                                'is_active'
+                            )
                             .filter(**self.skus_filter_data),
                             to_attr='q_skus'
                         ),

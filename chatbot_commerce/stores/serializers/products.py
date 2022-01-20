@@ -36,7 +36,19 @@ class ProductModelSerializer(serializers.ModelSerializer):
         return [image.image_url for image in obj.q_images]
 
     def get_skus(self, obj):
-        return [sku.serializer_data for sku in obj.q_skus]
+        return [
+            {
+                'sku_id': sku.external_id,
+                'seller_id': sku.sellers_id[0] if sku.sellers_id else None,
+                'sku_name': sku.name,
+                'total_quantity': sku.total_quantity,
+                'images': sku.images_url,
+                'price': sku.price_data,
+                'attributes': sku.attributes_data,
+                'is_active': sku.is_active
+            }
+            for sku in obj.q_skus
+        ]
 
     def get_tree_categories(self, obj):
         if obj.sub_category:
@@ -86,8 +98,9 @@ class AttributeTypeModelSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
     def __init__(self, instance=None, data=None, **kwargs):
-        self.attributes = kwargs['context']
+
         super().__init__(instance=instance, **kwargs)
+        self.attributes = kwargs['context']
 
     def get_attributes(self, obj):
         return self.attributes.filter(attribute_type=obj).values_list('value', flat=True).distinct()

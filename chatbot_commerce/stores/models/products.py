@@ -102,32 +102,9 @@ class Product(AbstractCategory):
         null=True, blank=True
     )
 
-    def __init__(self: "Product", *args, **kwargs) -> None:
-        """Initialize instance."""
-
-        self.old_product_images = self.product_images
-
-        super().__init__(*args, **kwargs)
-
     def __str__(self):
         """Return product name|id."""
         return f'{self.name}'
-
-    def save(self, *args, **kwargs) -> None:
-        """Save instance."""
-
-        if self.old_product_images != self.product_images:
-            return self.set_images()
-
-        super().save(*args, **kwargs)
-
-    @property
-    def set_images(self):
-        """Set images."""
-
-        self.images_url = list(self.sku_images.values_list('image_url', flat=True))
-
-        super().save()
 
     class Meta:
         verbose_name = "Product"

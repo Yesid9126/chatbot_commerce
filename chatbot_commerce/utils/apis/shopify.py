@@ -61,7 +61,7 @@ class ShopifyStores:
         return response_json
 
     def collections(self, query_params, **kwargs):
-        uri = f'collection_listings.json'
+        uri = 'collection_listings.json'
         if query_params:
             uri = '?'.join((uri, query_params,))
         method = 'get'
@@ -71,7 +71,7 @@ class ShopifyStores:
         )
 
     def products(self, query_params, **kwargs):
-        uri = f'products.json'
+        uri = 'products.json'
         if query_params:
             uri = '?'.join((uri, query_params,))
         method = 'get'
@@ -81,7 +81,7 @@ class ShopifyStores:
         )
 
     def product_listings(self, query_params, **kwargs):
-        uri = f'product_listings.json'
+        uri = 'product_listings.json'
         if query_params:
             uri = '?'.join((uri, query_params,))
         method = 'get'

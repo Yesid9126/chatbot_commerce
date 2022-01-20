@@ -20,6 +20,7 @@ class ProductFilterSet(FilterSet):
     offset = filters.CharFilter(field_name='name')
     limit = filters.CharFilter(field_name='name')
     page = filters.CharFilter(field_name='name')
+    user = filters.CharFilter(field_name='name')
 
     class Meta:
         model = Product
@@ -28,6 +29,7 @@ class ProductFilterSet(FilterSet):
             'limit',
             'search',
             'page',
+            'user',
             #  'attributes',
             'stock_quantity',
         ]
@@ -102,13 +104,11 @@ def products_skus(self, store_pk):
         sku_q = list()
         sku_d = self.skus_filter_data | {'product__store': store_pk}
 
-    data = cache.get(key=self.cache_key)
-    if data:
-        count = data.get('count')
-        skus_pk = data.get('skus_pk')
-        products_pk = data.get('products_pk')
-        shuffle(products_pk)
-
+    data_cache = cache.get(key=self.cache_key)
+    if data_cache:
+        count = data_cache.get('count')
+        skus_pk = data_cache.get('skus_pk')
+        products_pk = data_cache.get('products_pk')
     else:
         product_is_active = product_d.get('is_active')
         if product_is_active:
@@ -130,19 +130,39 @@ def products_skus(self, store_pk):
         # shuffle(products_pk)
         # products_external_id.reverse()
         if count:
+            shuffle(products_pk)
             data = {
                 'products_pk': products_pk,
                 'skus_pk': skus_pk,
                 'count': count
             }
             cache.set(key=self.cache_key, value=data, timeout=60 * 60)
-    products_pk = products_pk[self.offset:self.limit]
+
+    if self.user:
+        user_products_pk = cache.get(key=self.user_cache_key)
+        if not user_products_pk:
+            shuffle(products_pk)
+            cache.set(key=self.user_cache_key, value=products_pk, timeout=60 * 15)
+        else:
+            products_pk = user_products_pk
+    page_products_pk = products_pk[self.offset:self.limit]
+
     queryset = Product.objects.only('external_id', 'name', 'keywords', 'department', 'category', 'sub_category', 'brand')\
         .select_related('department', 'category', 'sub_category', 'brand')\
         .prefetch_related(
             Prefetch(
                 'skus',
-                queryset=Sku.objects.only('serializer_data', 'product').filter(pk__in=skus_pk, product__pk__in=products_pk),
+                queryset=Sku.objects.only(
+                    'product',
+                    'external_id',
+                    'sellers_id',
+                    'name',
+                    'total_quantity',
+                    'images_url',
+                    'price_data',
+                    'attributes_data',
+                    'is_active'
+                ).filter(pk__in=skus_pk, product__pk__in=page_products_pk),
                 to_attr='q_skus'
             ),
             Prefetch(
@@ -151,5 +171,5 @@ def products_skus(self, store_pk):
                 to_attr='q_images'
             )
     )\
-        .filter(pk__in=products_pk)
+        .filter(pk__in=page_products_pk)
     return queryset, count

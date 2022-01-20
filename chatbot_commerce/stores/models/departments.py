@@ -15,7 +15,9 @@ class Department(BaseSlugnameAbstract, BaseExternalIdAbstract):
     )
 
     def __str__(self) -> str:
-        return self.name
+        if self.name:
+            return self.name
+        return super().__str__()
 
     class Meta:
         verbose_name = "Department"

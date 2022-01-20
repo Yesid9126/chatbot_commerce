@@ -95,6 +95,7 @@ class SkuAdmin(admin.ModelAdmin):
     """Sku's model admin."""
 
     readonly_fields = ('raw_json', 'product', 'search_vector',)
+    autocomplete_fields = ('sales_channels',)
     list_display = ['external_id', 'name', 'total_quantity']
     search_fields = ['external_id', 'name']
     list_filter = ['is_active', 'is_inventoried', 'reference_stock_id']
@@ -143,12 +144,12 @@ class AttributeAdmin(admin.ModelAdmin):
     """Price model admin."""
 
     readonly_fields = ('skus', 'attribute_type',)
-    list_display = ['sku_id', 'attribute_type', 'value']
+    list_display = ['value', 'attribute_type', 'sku_id']
     search_fields = ['value']
 
     def sku_id(self, obj):
         """Sku id."""
-        return obj.skus.values_list('external_id', flat=True)
+        return list(obj.skus.values_list('external_id', flat=True))
 
 
 # admin.site.register(Attribute)

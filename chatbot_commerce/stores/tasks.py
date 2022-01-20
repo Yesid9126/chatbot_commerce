@@ -2,85 +2,108 @@
 
 
 # Celery
+from config import celery_app
 from celery import Celery
 # from celery.schedules import crontab
 
-# Cache
-# from django.core.cache import cache
+# Django
+from django.db.models import Q
 
+# Django Utils
+from chatbot_commerce.utils.tasks import create_products_store, get_departments, get_brands, get_sc_sellers
+from django.utils import timezone
 
 # Utils
-from chatbot_commerce.utils.tasks import create_products_store, get_departments, get_brands, get_sc_sellers
 # from pathlib import Path
 import gc
+import sys
 import time
-import os
 
 # Models
-from chatbot_commerce.stores.models import Store, TypeStore, UpdateModels, Product, Sku, Price
-from django_celery_beat.models import PeriodicTask
+from chatbot_commerce.stores.models import Store, TypeStore, Price, FixedPrice, DateRange, AttributeType, Attribute, Sku, Image
 
 # interval_instance, _ = IntervalSchedule.objects.get_or_create(every=5, period=IntervalSchedule.SECONDS)
 # task_instance, _ = PeriodicTask.objects.get_or_create(name='Update models serializer', task='continue_update_models')
+
+# Calls clear_cache at 23:55.
+# every_23_55, _ = CrontabSchedule.objects.get_or_create(day_of_week='*', hour=23, minute=55, timezone="America/Bogota")
+# task_instance, _ = PeriodicTask.objects.get_or_create(name='limpiador', task='clear_cache', defaults=dict(crontab=every_23_55))
 
 STORE_TYPE = ('VTEX', 'SHOPIFY',)
 for store_type in STORE_TYPE:
     TypeStore.objects.get_or_create(name=store_type)
 
 app = Celery()
-
-app.autodiscover_tasks()
-
-# Calls clear_cache at 23:55.
-# every_23_55, _ = CrontabSchedule.objects.get_or_create(day_of_week='*', hour=23, minute=55, timezone="America/Bogota")
-# task_instance, _ = PeriodicTask.objects.get_or_create(name='limpiador', task='clear_cache', defaults=dict(crontab=every_23_55))
+# update_serializer_data
+# set_fixed_prices
 
 
-# @app.task(name='clear_cache')
-# def clear_cache(*args, **kwargs):
-#     # This works as advertised on the memcached cache:
-#     cache.clear()
-#     # This manually purges the SQLite cache:
-#     cursor = connections['cache_database'].cursor()
-#     cursor.execute('DELETE FROM cache_table')
-#     transaction.commit_unless_managed(using='cache_database')
-#     gc.collect()
-#     return True
-
-@app.task(name='continue_update_models')
-def continue_update_models(*args, **kwargs):
+@celery_app.task()
+def update_serializer_data():
+    """Manage price of warehouse products"""
+    interval = 3600
+    total_proccess_time = timezone.timedelta(seconds=interval)
     while 1:
-        if UpdateModels.objects.exclude(model_name='continue_update_models').exists():
-            print('exists')
-            array_skus_all_data = UpdateModels.objects.filter(model_name='Sku').values_list('all_data', flat=True)
-            array_products_all_data = UpdateModels.objects.filter(model_name='Product').values_list('all_data', flat=True)
-            array_prices_all_data = UpdateModels.objects.filter(model_name='Price').values_list('all_data', flat=True)
-            if array_skus_all_data:
-                for _, fn, pk in array_skus_all_data:
-                    if fn == 'set_attributes':
-                        UpdateModels.objects.filter(model_name='Sku', function_name='set_attributes', primary_key=pk).delete()
-                        Sku.objects.filter(pk=pk).last().set_attributes
-                    elif fn == 'set_images':
-                        UpdateModels.objects.filter(model_name='Sku', function_name='set_images', primary_key=pk).delete()
-                        Sku.objects.filter(pk=pk).last().set_images
-                    elif fn == 'set_sellers':
-                        UpdateModels.objects.filter(model_name='Sku', function_name='set_sellers', primary_key=pk).delete()
-                        Sku.objects.filter(pk=pk).last().set_sellers
-            if array_products_all_data:
-                for _, fn, pk in array_products_all_data:
-                    if fn == 'set_images':
-                        UpdateModels.objects.filter(model_name='Product', function_name='set_images', primary_key=pk).delete()
-                        Product.objects.filter(pk=pk).last().set_images
-            if array_prices_all_data:
-                for _, fn, pk in array_prices_all_data:
-                    if fn == 'set_fixed_prices':
-                        UpdateModels.objects.filter(model_name='Price', function_name='set_fixed_prices', primary_key=pk).delete()
-                        Price.objects.filter(pk=pk).last().set_fixed_prices
-        time.sleep(5)
+        start = timezone.now()
+        from_date_time = start - total_proccess_time
 
-continue_update_models.s().apply_async()
+        skus_ids_list, attributes_ids_list, ids_list = set(), set(), set()
+        update_date_ranges = DateRange.objects.filter(modified__gte=from_date_time, fixed_price__price__sku__is_active=True).exists()
+        if update_date_ranges:
+            ids_list = set(DateRange.objects.filter(modified__gte=from_date_time, fixed_price__price__sku__is_active=True).values_list('fixed_price__id', flat=True))
+            queryset = list(FixedPrice.objects.filter(pk__in=ids_list))
+            [fixed.set_date_range for fixed in queryset]
 
-@app.task(name='store_begining')
+        update_fixed_prices = FixedPrice.objects.filter(modified__gte=from_date_time, price__sku__is_active=True).exists()
+        if update_fixed_prices:
+            ids_list = set(FixedPrice.objects.filter(modified__gte=from_date_time, price__sku__is_active=True).values_list('price__pk', flat=True))
+            queryset = list(Price.objects.filter(pk__in=ids_list))
+            [price.set_fixed_prices for price in queryset]
+
+        update_prices = Price.objects.filter(modified__gte=from_date_time, sku__is_active=True).exists()
+        if update_prices:
+            skus_ids_list = set(Price.objects.filter(modified__gte=from_date_time, sku__is_active=True).values_list('sku__pk', flat=True))
+
+        update_attribute_type = AttributeType.objects.filter(modified__gte=from_date_time).exists()
+        if update_attribute_type:
+            attribute_type_ids_list = set(AttributeType.objects.filter(modified__gte=from_date_time).values_list('pk', flat=True))
+            attributes_ids_list = set(Attribute.objects.filter(attribute_type__in=attribute_type_ids_list).values_list('pk', flat=True))
+            skus_ids_list = set(Sku.objects.filter(~Q(pk__in=skus_ids_list), is_active=True, attributes__in=attributes_ids_list).values_list('pk', flat=True)) | skus_ids_list
+
+        update_attributes = Attribute.objects.filter(modified__gte=from_date_time).exists()
+        if update_attributes:
+            attributes_ids_list = set(Attribute.objects.filter(modified__gte=from_date_time).values_list('pk', flat=True)) - attributes_ids_list
+            skus_ids_list = set(Sku.objects.filter(~Q(pk__in=skus_ids_list), is_active=True, attributes__in=attributes_ids_list).values_list('pk', flat=True)) | skus_ids_list
+
+        update_images = Image.objects.filter(modified__gte=from_date_time).exists()
+        if update_images:
+            image_ids_list = set(Image.objects.filter(modified__gte=from_date_time).values_list('pk', flat=True))
+            skus_ids_list = set(Sku.objects.filter(~Q(pk__in=skus_ids_list), is_active=True, images__in=image_ids_list).values_list('pk', flat=True)) | skus_ids_list
+
+        if skus_ids_list:
+            queryset = Sku.objects.filter(pk__in=skus_ids_list)
+            [sku.update_serializer_data for sku in queryset]
+            skus_ids_list.clear()
+        if ids_list:
+            ids_list.clear()
+        if attributes_ids_list:
+            attributes_ids_list.clear()
+        gc.collect()
+        time.sleep(interval)
+        end = timezone.now()
+        total_proccess_time = end - start
+
+
+try:
+    container_name = sys.argv[-3]
+except Exception:
+    container_name = ''
+if container_name == 'worker':
+    update_serializer_data.s().apply_async(countdown=1)
+print("container_name:", container_name)
+
+
+@celery_app.task(name='store_begining')
 def store_begining(store, *args, **kwargs):
     """Create Products, Skus, Categories and Brands."""
 
@@ -107,7 +130,7 @@ def store_begining(store, *args, **kwargs):
     return True
 
 
-@app.task(name='principal_periodic_task')
+@celery_app.task(name='principal_periodic_task')
 def principal_periodic_task(*args, **kwargs):
     """Update Products, Skus, Categories and Brands."""
 

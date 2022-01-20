@@ -63,6 +63,8 @@ class SaleChannelAdmin(admin.ModelAdmin):
 
 admin.site.unregister(APIKey)
 admin.site.register(TypeStore)
+
+
 @admin.register(StoreAPIKey)
 class StoreAPIKeyAdmin(APIKeyModelAdmin):
     """Store api key model admin."""

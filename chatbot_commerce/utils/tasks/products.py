@@ -134,7 +134,7 @@ def update_or_create_sku(store, sku, product_instance=None, product_id=None):
         if sku_name:
             extra_data_search.append(sku_name)
         sku_instance.search = ' '.join((product_instance.search, *extra_data_search,))
-        sku_instance.save()
+        sku_instance.save(update_fields=['search'])
         extra_data_search.clear()
         del s
 
@@ -222,14 +222,11 @@ def update_or_create_sku(store, sku, product_instance=None, product_id=None):
                                     raw_json={**fixed_price}
                                 ),
                                 fixed_prices
-                            )
+                                )
                         )
                         FixedPrice.objects.bulk_create(fixed_prices)
-
-                        price_instance.save()
                     price.clear()
                     fixed_prices.clear()
-
 
             except Exception as message:
                 print(f'message: {message} precios')
@@ -241,7 +238,7 @@ def update_or_create_sku(store, sku, product_instance=None, product_id=None):
                         name = dic.get('FieldName')
                         attribute_type_instance, _ = AttributeType.objects.get_or_create(
                             store=store,
-                            name=name.strip().capitalize()
+                            name=name
                         )
                         values = dic.get('FieldValues')
                         if values:
@@ -263,7 +260,7 @@ def update_or_create_sku(store, sku, product_instance=None, product_id=None):
                 if sku_name:
                     extra_data_search.append(sku_name)
                 sku_instance.search = ' '.join((product_instance.search, *extra_data_search,))
-                sku_instance.save()
+                sku_instance.save(update_fields=['search'])
                 extra_data_search.clear()
                 del s
             except Exception as message:
@@ -330,7 +327,7 @@ def create_products_store(store, limit=False):
         skus_ids.reverse()
         assert len(skus_ids) > 0, 'No skus found'
 
-        sub_skus_ids = [skus_ids[i:i+10000] for i in range(0, len(skus_ids), 10000)]
+        sub_skus_ids = [skus_ids[i:i+1000] for i in range(0, len(skus_ids), 10000)]
         skus_ids.clear()
         products_created = set()
         gc.collect()
@@ -431,7 +428,7 @@ def create_products_store(store, limit=False):
                                 ),
                                 filter(
                                     lambda x:
-                                        x.get('price') != False,
+                                        x.get('price') is not False,
                                         skus
                                 )
                         )
