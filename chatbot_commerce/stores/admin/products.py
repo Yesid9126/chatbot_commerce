@@ -73,7 +73,7 @@ class ProductAdmin(admin.ModelAdmin):
 @admin.register(Image)
 class ImagesAdmin(admin.ModelAdmin):
     list_display = ('image_url',)
-    readonly_fields = ('image_url', 'skus', 'products', 'store',)
+    readonly_fields = ('image_url', 'sku', 'product',)
 
 
 class InlineImageAdmin(admin.TabularInline):

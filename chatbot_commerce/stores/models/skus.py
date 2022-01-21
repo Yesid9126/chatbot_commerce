@@ -162,15 +162,13 @@ class Image(ChatbootModel):
     width = models.BigIntegerField(null=True, blank=True)
     height = models.BigIntegerField(null=True, blank=True)
 
-    # Relationship filter
-    store = models.ForeignKey(
-        "stores.Store", verbose_name=_("Store"), on_delete=models.CASCADE
+    product = models.ForeignKey(
+        "stores.Product", verbose_name=_('Products'), related_name='product_images',
+        on_delete=models.CASCADE, default=None, null=True, blank=True
     )
-    products = models.ManyToManyField(
-        "stores.Product", verbose_name=_('Products'), related_name='product_images'
-    )
-    skus = models.ManyToManyField(
-        "stores.Sku", verbose_name=_('Skus')
+    sku = models.ForeignKey(
+        "stores.Sku", verbose_name=_('Skus'),
+        on_delete=models.CASCADE, default=None, null=True, blank=True
     )
 
     # Url data
@@ -179,12 +177,6 @@ class Image(ChatbootModel):
         max_length=2000,
         null=True, blank=True
     )
-
-    def __init__(self: "Image", *args, **kwargs) -> None:
-        """Initialize instance."""
-
-        super().__init__(*args, **kwargs)
-        self.old_image_url = self.image_url
 
     def __str__(self):
         """Return image url, from image."""
@@ -198,7 +190,7 @@ class Image(ChatbootModel):
         verbose_name_plural = "Image's"
 
         constraints = [
-            models.UniqueConstraint(fields=['image_id', 'store', 'name', 'image_url'], name='unique_image'),
+            models.UniqueConstraint(fields=['image_id', 'name', 'image_url', 'sku', 'product'], name='unique_image'),
         ]
 
         default_related_name = 'images'

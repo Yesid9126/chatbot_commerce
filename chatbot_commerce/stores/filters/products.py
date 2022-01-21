@@ -167,7 +167,7 @@ def products_skus(self, store_pk):
             ),
             Prefetch(
                 'product_images',
-                queryset=Image.objects.only('image_url').filter(store_id=store_pk),
+                queryset=Image.objects.only('image_url').filter(product__store=store_pk),
                 to_attr='q_images'
             )
     )\

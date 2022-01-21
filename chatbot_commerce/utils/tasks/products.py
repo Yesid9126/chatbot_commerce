@@ -93,21 +93,12 @@ def update_or_create_sku(store, sku, product_instance=None, product_id=None):
             }
         )
         image = Image.objects.filter(image_id=sku.get('image_id'), store=store).last()
-        if image:
-            image.skus.add(sku_instance)
         price = sku.get('price')
-        if isinstance(price, str):
-            price = float(price)
-
-        if price:
-            price_instance, _ = Price.objects.update_or_create(
-                sku=sku_instance,
-                defaults={
-                    "base_price": price,
-                    "raw_json": {'price': price, 'formatted_price': sku.get('formatted_price'), 'compare_at_price': sku.get('compare_at_price')}
-                }
-            )
-            s.append(str(int(price)))
+        try:
+            if price:
+                s.append(str(int(price)))
+        except Exception:
+            pass
         sku_specifications_array = sku.get('option_values')
         if sku_specifications_array:
             for dic in sku_specifications_array:
@@ -157,73 +148,13 @@ def update_or_create_sku(store, sku, product_instance=None, product_id=None):
             sc_ids.clear()
             sku_instance.sales_channels.add(*sc)
 
-            # Get Sellers of sku
-            sellers_array = sku.get('SkuSellers')
-            bulk_skus_sellers = [
-                SkuSeller(
-                    sku=sku_instance,
-                    seller=Seller.objects.filter(store=store, seller_id=seller.get('SellerId')).last(),
-                    is_active=seller.get('IsActive'),
-                    raw_json={**seller}
-                )
-                for seller in sellers_array
-            ]
-            SkuSeller.objects.bulk_create(bulk_skus_sellers)
-            bulk_skus_sellers.clear()
-            sellers_array.clear()
             price = sku.get('price')
-            if isinstance(price, str):
-                price = {'basePrice': float(price)}
-
-            images_array = sku.get('Images')
-            sku_specifications_array = sku.get('SkuSpecifications')
-
-            # Create image for sku
-            try:
-                if images_array:
-                    for image_dict in images_array:
-                        image_instance, _ = Image.objects.get_or_create(
-                            store=store,
-                            image_id=image_dict.get('FileId'),
-                            image_url=image_dict.get('ImageUrl'),
-                            name=image_dict.get('ImageName'),
-                        )
-                        image_instance.skus.add(sku_instance)
-                        image_instance.products.add(product_instance)
-                    images_array.clear()
-            except Exception as message:
-                print(f'message: {message} imagenes')
-
-            # Create price for sku
             try:
                 if price:
-                    base_price = price.get('basePrice')
-                    price_instance = Price.objects.filter(sku=sku_instance).last()
-                    if base_price:
-                        s.append(str(int(base_price)))
-                    fixed_prices = price.get('fixedPrices')
-                    if fixed_prices and price_instance:
-                        fixed_prices = [
-                            FixedPrice(
-                                price=price_instance,
-                                trade_policy_id=fixed_price.get('tradePolicyId'),
-                                value=fixed_price.get('value'),
-                                list_price=fixed_price.get('listPrice'),
-                                min_quantity=fixed_price.get('minQuantity'),
-                                date_range=DateRange.objects.create(
-                                    date_time_from=fixed_price.get('dateRange').get('from'),
-                                    date_time_to=fixed_price.get('dateRange').get('to'),
-                                    raw_json={**fixed_price.get('dateRange')}
-                                ) if fixed_price.get('dateRange') else None,
-                                raw_json={**fixed_price}
-                            )
-                            for fixed_price in fixed_prices
-                        ]
-                        FixedPrice.objects.bulk_create(fixed_prices)
-                    price.clear()
-
-            except Exception as message:
-                print(f'message: {message} precios')
+                    price = str(int(price))
+            except Exception:
+                pass
+            sku_specifications_array = sku.get('SkuSpecifications')
 
             # Create attributes for sku
             try:
@@ -320,12 +251,10 @@ def create_products_store(store, limit=False):
         skus_ids.reverse()
         assert len(skus_ids) > 0, 'No skus found'
 
-        sub_skus_ids = [skus_ids[i:i+10000] for i in range(0, len(skus_ids), 10000)]
+        sub_skus_ids = [skus_ids[i:i+1000] for i in range(0, len(skus_ids), 1000)]
         skus_ids.clear()
         products_created = set()
         gc.collect()
-        if store.store_type.name == 'VTEX':
-            Product.objects.filter(store=store).delete()
         for ids in sub_skus_ids:
             loop = asyncio.new_event_loop()
             skus, products = loop.run_until_complete(get_skus_and_products_dicts(loop=loop, vtex=vtex, sc=sc, skus=ids, products_created=products_created))
@@ -335,6 +264,46 @@ def create_products_store(store, limit=False):
             print(f'round: skus = {len(skus)}, products = {len(products)}')
             if products:
                 if store.store_type.name == 'VTEX':
+                    products_ids = [product.get('Id') for product in products]
+                    products_external_ids = set(Product.objects.filter(store=store, external_id__in=products_ids).values_list('external_id', flat=True))
+                    [
+                        Product.objects
+                        .filter(store=store, external_id=product.get('Id'))
+                        .update(
+                            name=product.get('Name'),
+                            department=Department.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('DepartmentId')}"], stores=store).last(),
+                            sub_category=Subcategory.objects.select_related('category').filter(external_id=product.get('CategoryId'), category__store=store).last(),
+                            category=Subcategory.objects.select_related('category').filter(external_id=product.get('CategoryId'), category__store=store).last().category if Subcategory.objects.filter(
+                                external_id=product.get('CategoryId'), category__store=store).exists() else Category.objects.filter(external_id=product.get('CategoryId'), store=store).last(),
+                            brand=Brand.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('BrandId')}"], stores=store).last(),
+                            search=' '.join(
+                                [
+                                    product.get('Name') or '',
+                                    *[cat.name for cat in
+                                        [
+                                            Department.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('DepartmentId')}"], stores=store).last(),
+                                            Subcategory.objects.select_related('category').filter(external_id=product.get('CategoryId'), category__store=store).last().category if Subcategory.objects.filter(
+                                                external_id=product.get('CategoryId'), category__store=store).exists() else Category.objects.filter(external_id=product.get('CategoryId'), store=store).last(),
+                                            Subcategory.objects.select_related('category').filter(external_id=product.get('CategoryId'), category__store=store).last(
+                                            ), Brand.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('BrandId')}"], stores=store).last()
+                                        ] if cat
+                                      ]
+                                ]
+                            ),
+                            link_id=product.get('LinkId'),
+                            reference_id=product.get('RefId'),
+                            is_visible=product.get('IsVisible'),
+                            description=product.get('Description'),
+                            description_short=product.get('DescriptionShort'),
+                            keywords=product.get('KeyWords'),
+                            title=product.get('Title'),
+                            is_active=product.get('IsActive'),
+                            meta_tag_description=product.get('MetaTagDescription'),
+                            show_without_stock=product.get('ShowWithoutStock'),
+                            raw_json={**product},
+                        )
+                        for product in products if product.get('Id') in products_external_ids
+                    ]
                     bulk_products = [
                         Product(
                             store=store,
@@ -371,7 +340,7 @@ def create_products_store(store, limit=False):
                             show_without_stock=product.get('ShowWithoutStock'),
                             raw_json={**product},
                         )
-                        for product in products
+                        for product in products if product.get('Id') not in products_external_ids
                     ]
                     Product.objects.bulk_create(bulk_products)
 
@@ -379,6 +348,30 @@ def create_products_store(store, limit=False):
             products.clear()
             if skus:
                 if store.store_type.name == 'VTEX':
+                    skus_external_ids = set(Sku.objects.filter(product__store=store, external_id__in=ids).values_list('external_id', flat=True))
+                    [
+                        Sku.objects
+                        .filter(product__store=store, external_id=sku.get('Id'))
+                        .update(
+                            product=Product.objects.filter(store=store, external_id=sku.get('ProductId')).last(),
+                            name=sku.get('NameComplete'),
+                            is_active=sku.get('IsActive'),
+                            ref_id=sku.get('RefId'),
+                            packaged_height=sku.get('Height'),
+                            packaged_length=sku.get('Length'),
+                            packaged_width=sku.get('Width'),
+                            packaged_weight=sku.get('WeightKg'),
+                            is_kit=sku.get('IsKit'),
+                            comercial_condition_id=sku.get('CommercialConditionId'),
+                            manufacter_code=sku.get('ManufacturerCode'),
+                            reference_stock_id=sku.get('ReferenceStockKeepingUnitId'),
+                            is_inventoried=sku.get('IsInventoried'),
+                            is_transported=sku.get('IsTransported'),
+                            total_quantity=sku.get('total_quantity'),
+                            raw_json={**sku}
+                        )
+                        for sku in skus if sku.get('Id') in skus_external_ids
+                    ]
                     bulk_skus = [
                         Sku(
                             product=Product.objects.filter(store=store, external_id=sku.get('ProductId')).last(),
@@ -399,10 +392,10 @@ def create_products_store(store, limit=False):
                             total_quantity=sku.get('total_quantity'),
                             raw_json={**sku}
                         )
-                        for sku in skus
+                        for sku in skus if sku.get('Id') not in skus_external_ids
                     ]
                     Sku.objects.bulk_create(bulk_skus)
-
+                    Price.objects.filter(sku__product__store=store).delete()
                     bulk_price = [
                         Price(
                             sku=Sku.objects.filter(external_id=sku.get('Id'), product__store=store).last(),
@@ -419,6 +412,55 @@ def create_products_store(store, limit=False):
                         )
                     ]
                     Price.objects.bulk_create(bulk_price)
+
+                    prices = set(Price.objects.only('raw_json').filter(sku__product__store=store))
+                    bulk_fixed_price = [
+                        FixedPrice(
+                            price=price_instance,
+                            trade_policy_id=fixed_price.get('tradePolicyId'),
+                            value=fixed_price.get('value'),
+                            list_price=fixed_price.get('listPrice'),
+                            min_quantity=fixed_price.get('minQuantity'),
+                            date_range=DateRange.objects.create(
+                                date_time_from=fixed_price.get('dateRange').get('from'),
+                                date_time_to=fixed_price.get('dateRange').get('to'),
+                                raw_json={**fixed_price.get('dateRange')}
+                            ) if fixed_price.get('dateRange') else None,
+                            raw_json={**price_instance.raw_json}
+                        )
+                        for price_instance in prices for fixed_price in price_instance.raw_json.get('fixedPrices')
+                    ]
+                    FixedPrice.objects.bulk_create(bulk_fixed_price)
+
+                    Sku.objects.filter(product=None).delete()
+                    skus = set(Sku.objects.select_related('product').only('product', 'raw_json').filter(product__store=store, external_id__in=ids))
+
+                    Image.objects.filter(product__store=store).delete()
+                    bulk_image = [
+                        Image(
+                            sku=sku,
+                            product=sku.product,
+                            image_id=image_dict.get('FileId'),
+                            image_url=image_dict.get('ImageUrl'),
+                            name=image_dict.get('ImageName'),
+                        )
+                        for sku in skus for image_dict in sku.raw_json.get('Images') if sku.raw_json.get('Images')
+                    ]
+                    Image.objects.bulk_create(bulk_image)
+
+                    SkuSeller.objects.filter(seller__store=store).delete()
+                    bulk_sku_seller = [
+                        SkuSeller(
+                            sku=sku,
+                            seller=Seller.objects.filter(store=store, seller_id=seller.get('SellerId')).last(),
+                            is_active=seller.get('IsActive'),
+                            raw_json={**seller}
+                        )
+                        for sku in skus for seller in sku.raw_json.get('SkuSellers') if sku.raw_json.get('SkuSellers')
+                    ]
+                    SkuSeller.objects.bulk_create(bulk_sku_seller)
+
+                    [update_or_create_sku(store=store, sku=sku.raw_json) for sku in skus]
             if limit:
                 break
         sc.clear()
@@ -435,6 +477,5 @@ def create_products_store(store, limit=False):
 
 def needed():
     Product.objects.update(search_vector=SearchVector('search'))
-    Sku.objects.filter(product=None).delete()
     Sku.objects.update(search_vector=SearchVector('search'))
     # set(map(lambda sku: sku.get_serializer_data, Sku.objects.all()))
