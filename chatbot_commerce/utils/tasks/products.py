@@ -302,7 +302,7 @@ def create_products_store(store, limit=False):
                         name=sku.get('NameComplete'),
                         search=' '.join(
                             [
-                                sku.get('NameComplete'),
+                                sku.get('NameComplete') if sku.get('NameComplete') else '',
                                 Product.objects.only('search').filter(store=store, external_id=sku.get('ProductId')).last().search if Product.objects.filter(store=store, external_id=sku.get('ProductId')).exists() else '',
                                 str(sku.get('price').get('basePrice')) if sku.get('price') and sku.get('price').get('basePrice') else ''
                             ]
@@ -368,7 +368,7 @@ def create_products_store(store, limit=False):
                         base_price=sku.get('price').get('basePrice'),
                         raw_json={**sku.get('price')}
                     )
-                    for sku in skus if sku.get('price') not in [False, None]
+                    for sku in skus if sku.get('price') not in [False, None] and Sku.objects.filter(external_id=sku.get('Id'), product__store=store).exists()
                 ]
                 Price.objects.bulk_create(bulk_price)
                 bulk_price.clear()
