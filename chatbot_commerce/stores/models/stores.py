@@ -153,6 +153,8 @@ class StoreAPIKeyManager(BaseAPIKeyManager):
 class StoreAPIKey(AbstractAPIKey):
     """Store api keys model."""
 
+    id = models.CharField(max_length=200, unique=True, primary_key=True, editable=False)
+
     store = models.ForeignKey(
         "stores.Store", verbose_name=_("Store"), on_delete=models.CASCADE,
         null=True, blank=True, editable=False
@@ -171,6 +173,8 @@ class StoreAPIKey(AbstractAPIKey):
         _("Verify"),
         default=False, editable=False
     )
+
+    hashed_key = models.CharField(max_length=200, editable=False)
 
     objects = StoreAPIKeyManager()
 
