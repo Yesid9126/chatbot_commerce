@@ -75,12 +75,12 @@ class Sku(BaseAbstract):
         max_length=50,
         null=True, blank=True
     )
-    packaged_width = models.CharField(
+    packaged_widtht = models.CharField(
         max_length=50,
         null=True, blank=True
     )
-    packaged_weight = models.CharField(
-        'Packaged weight Kg',
+    packaged_weight_unit = models.CharField(
+        'Packaged weight unit',
         max_length=50,
         null=True, blank=True
     )
@@ -168,7 +168,7 @@ class Image(ChatbootModel):
     )
     sku = models.ForeignKey(
         "stores.Sku", verbose_name=_('Skus'),
-        on_delete=models.CASCADE, default=None, null=True, blank=True
+        on_delete=models.SET_NULL, default=None, null=True, blank=True
     )
 
     # Url data

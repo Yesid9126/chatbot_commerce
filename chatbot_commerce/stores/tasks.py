@@ -41,57 +41,84 @@ app = Celery()
 @celery_app.task()
 def update_serializer_data():
     """Manage price of warehouse products"""
-    interval = 3600
-    total_proccess_time = timezone.timedelta(seconds=interval)
+
+    interval = 60 * 60 * 4  # 4 hours
+    from_date_time_date_ranges =\
+        from_date_time_fixed_prices =\
+        from_date_time_prices =\
+        from_date_time_attribute_type =\
+        from_date_time_attributes =\
+        from_date_time_images = timezone.now() - timezone.timedelta(seconds=interval)
     while 1:
-        start = timezone.now()
-        from_date_time = start - total_proccess_time
-
-        skus_ids_list, attributes_ids_list, ids_list = set(), set(), set()
-        update_date_ranges = DateRange.objects.filter(modified__gte=from_date_time, fixed_price__price__sku__is_active=True).exists()
+        ids_list = queryset = skus_ids_list = attributes_ids_list = set()
+        update_date_ranges = DateRange.objects.filter(modified__gte=from_date_time_date_ranges, fixed_price__price__sku__is_active=True).exists()
         if update_date_ranges:
-            ids_list = set(DateRange.objects.filter(modified__gte=from_date_time, fixed_price__price__sku__is_active=True).values_list('fixed_price__id', flat=True))
-            queryset = list(FixedPrice.objects.filter(pk__in=ids_list))
+            ids_list = set(DateRange.objects.filter(modified__gte=from_date_time_date_ranges, fixed_price__price__sku__is_active=True).values_list('fixed_price__id', flat=True))
+            from_date_time_date_ranges = timezone.now()
+            queryset = set(FixedPrice.objects.filter(pk__in=ids_list))
             [fixed.set_date_range for fixed in queryset]
+        else:
+            from_date_time_date_ranges = timezone.now()
 
-        update_fixed_prices = FixedPrice.objects.filter(modified__gte=from_date_time, price__sku__is_active=True).exists()
+        update_fixed_prices = FixedPrice.objects.filter(modified__gte=from_date_time_fixed_prices, price__sku__is_active=True).exists()
         if update_fixed_prices:
-            ids_list = set(FixedPrice.objects.filter(modified__gte=from_date_time, price__sku__is_active=True).values_list('price__pk', flat=True))
-            queryset = list(Price.objects.filter(pk__in=ids_list))
+            ids_list = set(FixedPrice.objects.filter(modified__gte=from_date_time_fixed_prices, price__sku__is_active=True).values_list('price__pk', flat=True))
+            from_date_time_fixed_prices = timezone.now()
+            queryset = set(Price.objects.filter(pk__in=ids_list))
             [price.set_fixed_prices for price in queryset]
+        else:
+            from_date_time_fixed_prices = timezone.now()
 
-        update_prices = Price.objects.filter(modified__gte=from_date_time, sku__is_active=True).exists()
+        update_prices = Price.objects.filter(modified__gte=from_date_time_prices, sku__is_active=True).exists()
         if update_prices:
-            skus_ids_list = set(Price.objects.filter(modified__gte=from_date_time, sku__is_active=True).values_list('sku__pk', flat=True))
+            skus_ids_list = set(Price.objects.filter(modified__gte=from_date_time_prices, sku__is_active=True).values_list('sku__pk', flat=True))
+            from_date_time_prices = timezone.now()
+        else:
+            from_date_time_prices = timezone.now()
 
-        update_attribute_type = AttributeType.objects.filter(modified__gte=from_date_time).exists()
+        update_attribute_type = AttributeType.objects.filter(modified__gte=from_date_time_attribute_type).exists()
         if update_attribute_type:
-            attribute_type_ids_list = set(AttributeType.objects.filter(modified__gte=from_date_time).values_list('pk', flat=True))
+            attribute_type_ids_list = set(AttributeType.objects.filter(modified__gte=from_date_time_attribute_type).values_list('pk', flat=True))
+            from_date_time_attribute_type = timezone.now()
             attributes_ids_list = set(Attribute.objects.filter(attribute_type__in=attribute_type_ids_list).values_list('pk', flat=True))
             skus_ids_list = set(Sku.objects.filter(~Q(pk__in=skus_ids_list), is_active=True, attributes__in=attributes_ids_list).values_list('pk', flat=True)) | skus_ids_list
+        else:
+            from_date_time_attribute_type = timezone.now()
 
-        update_attributes = Attribute.objects.filter(modified__gte=from_date_time).exists()
+        update_attributes = Attribute.objects.filter(modified__gte=from_date_time_attributes).exists()
         if update_attributes:
-            attributes_ids_list = set(Attribute.objects.filter(modified__gte=from_date_time).values_list('pk', flat=True)) - attributes_ids_list
+            attributes_ids_list = set(Attribute.objects.filter(modified__gte=from_date_time_attributes).values_list('pk', flat=True)) - attributes_ids_list
+            from_date_time_attributes = timezone.now()
             skus_ids_list = set(Sku.objects.filter(~Q(pk__in=skus_ids_list), is_active=True, attributes__in=attributes_ids_list).values_list('pk', flat=True)) | skus_ids_list
+        else:
+            from_date_time_attributes = timezone.now()
 
-        update_images = Image.objects.filter(modified__gte=from_date_time).exists()
+        update_images = Image.objects.filter(modified__gte=from_date_time_images).exists()
         if update_images:
-            image_ids_list = set(Image.objects.filter(modified__gte=from_date_time).values_list('pk', flat=True))
+            image_ids_list = set(Image.objects.filter(modified__gte=from_date_time_images).values_list('pk', flat=True))
+            from_date_time_images = timezone.now()
             skus_ids_list = set(Sku.objects.filter(~Q(pk__in=skus_ids_list), is_active=True, images__in=image_ids_list).values_list('pk', flat=True)) | skus_ids_list
+            image_ids_list.clear()
+        else:
+            from_date_time_images = timezone.now()
 
         if skus_ids_list:
-            queryset = Sku.objects.filter(pk__in=skus_ids_list)
+            queryset = set(Sku.objects.filter(pk__in=skus_ids_list))
             [sku.update_serializer_data for sku in queryset]
-            skus_ids_list.clear()
+
+        # Cleaner
         if ids_list:
             ids_list.clear()
+        if queryset:
+            queryset.clear()
+        if skus_ids_list:
+            skus_ids_list.clear()
         if attributes_ids_list:
             attributes_ids_list.clear()
         gc.collect()
+
+        # Time to wait for next iteration
         time.sleep(interval)
-        end = timezone.now()
-        total_proccess_time = end - start
 
 
 try:
