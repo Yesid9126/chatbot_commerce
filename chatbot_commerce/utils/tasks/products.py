@@ -193,7 +193,7 @@ def create_products_store(store, limit=False):
         skus_ids.reverse()
         assert len(skus_ids) > 0, 'No skus found'
 
-        sub_skus_ids = [skus_ids[i:i+1000] for i in range(0, len(skus_ids), 1000)]
+        sub_skus_ids = [skus_ids[i:i+10000] for i in range(0, len(skus_ids), 10000)]
         skus_ids.clear()
         products_created = set()
         gc.collect()
@@ -332,7 +332,7 @@ def create_products_store(store, limit=False):
                         name=sku.get('NameComplete'),
                         search=' '.join(
                             [
-                                sku.get('NameComplete'),
+                                sku.get('NameComplete') if sku.get('NameComplete') else '',
                                 Product.objects.only('search').filter(store=store, external_id=sku.get('ProductId')).last().search if Product.objects.filter(store=store, external_id=sku.get('ProductId')).exists() else '',
                                 str(sku.get('price').get('basePrice')) if sku.get('price') and sku.get('price').get('basePrice') else ''
                             ]
