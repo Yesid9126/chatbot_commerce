@@ -42,13 +42,13 @@ app = Celery()
 def update_serializer_data():
     """Manage price of warehouse products"""
 
-    from_date_time_date_ranges =\
-        from_date_time_fixed_prices =\
-        from_date_time_prices =\
-        from_date_time_attribute_type =\
-        from_date_time_attributes =\
-        from_date_time_images = timezone.now() - timezone.timedelta(days=2)
     while 1:
+        from_date_time_date_ranges =\
+            from_date_time_fixed_prices =\
+            from_date_time_prices =\
+            from_date_time_attribute_type =\
+            from_date_time_attributes =\
+            from_date_time_images = timezone.now() - timezone.timedelta(days=2)
         ids_list = queryset = skus_ids_list = attributes_ids_list = set()
         update_date_ranges = DateRange.objects.filter(modified__gte=from_date_time_date_ranges, fixed_price__price__sku__is_active=True).exists()
         if update_date_ranges:
