@@ -141,7 +141,12 @@ class Sku(BaseAbstract):
         verbose_name_plural = "Sku's"
         default_related_name = 'skus'
         # indexes = [models.Index(fields=['is_active', 'external_id', 'total_quantity', 'sku_price', 'search_vector'])]
-        indexes = [models.Index(fields=['is_active', 'external_id'])]
+        indexes = [
+            models.Index(fields=['is_active', 'external_id']),
+        ]
+        constraints = [
+            models.UniqueConstraint(fields=['external_id', 'product'], name='unique_sku'),
+        ]
 
 
 class Image(ChatbootModel):

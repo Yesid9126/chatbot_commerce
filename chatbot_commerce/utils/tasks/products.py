@@ -8,6 +8,7 @@ from chatbot_commerce.stores.models import (
     SaleChannel, Seller, SkuSeller
 )
 from django.contrib.postgres.search import SearchVector
+from django.db.models import Q
 
 # Apis
 from chatbot_commerce.utils.apis import VtexStores, ShopifyStores
@@ -356,6 +357,8 @@ def create_products_store(store, limit=False):
                 ]
                 Sku.objects.bulk_create(bulk_skus)
                 bulk_skus.clear()
+                Product.objects.filter(store=store, name__in=[None, 'None']).delete()
+                Sku.objects.filter(Q(product=None)).delete()
                 sku_pks = Sku.objects.filter(product__store=store, external_id__in=ids).values_list('pk', flat=True)
 
                 Price.objects.filter(sku__in=sku_pks).delete()
@@ -659,6 +662,7 @@ def create_products_store(store, limit=False):
 
 def needed():
     Product.objects.update(search_vector=SearchVector('search'))
+    Product.objects.filter(name__in=[None, 'None']).delete()
     Sku.objects.filter(product=None).delete()
     Sku.objects.update(search_vector=SearchVector('search'))
     # set(map(lambda sku: sku.get_serializer_data, Sku.objects.all()))
