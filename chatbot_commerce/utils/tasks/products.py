@@ -370,7 +370,19 @@ def create_products_store(store, limit=False):
                     )
                     for sku in skus if sku.get('price') not in [False, None] and Sku.objects.filter(external_id=sku.get('Id'), product__store=store).exists()
                 ]
-                Price.objects.bulk_create(bulk_price)
+                try:
+                    Price.objects.bulk_create(bulk_price)
+                except Exception:
+                    Price.objects.filter(sku__product__store=store).delete()
+                try:
+                    Price.objects.bulk_create(bulk_price)
+                except Exception:
+                    delete_prices = set(Price.objects.filter(sku__product__store=store))
+                    [price.delete() for price in delete_prices]
+                try:
+                    Price.objects.bulk_create(bulk_price)
+                except Exception as e:
+                    raise Exception(f'This is not working {e}')
                 bulk_price.clear()
 
                 prices = set(Price.objects.only('raw_json').filter(sku__product__store=store))
