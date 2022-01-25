@@ -194,7 +194,6 @@ class ProductViewset(mixins.RetrieveModelMixin,
                 status=HTTP_200_OK
             )
         except Exception as message:
-            print(f'error. {message}')
             return Response({}, status=HTTP_404_NOT_FOUND)
 
 

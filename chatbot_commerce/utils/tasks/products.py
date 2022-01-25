@@ -356,9 +356,9 @@ def create_products_store(store, limit=False):
                 ]
                 Sku.objects.bulk_create(bulk_skus)
                 bulk_skus.clear()
-                skus_external_ids.clear()
+                sku_pks = Sku.objects.filter(product__store=store, external_id__in=ids).values_list('pk', flat=True)
 
-                Price.objects.filter(sku__product__store=store).delete()
+                Price.objects.filter(sku__in=sku_pks).delete()
                 bulk_price = [
                     Price(
                         sku=Sku.objects.filter(external_id=sku.get('Id'), product__store=store).last(),
@@ -373,11 +373,11 @@ def create_products_store(store, limit=False):
                 try:
                     Price.objects.bulk_create(bulk_price)
                 except Exception:
-                    Price.objects.filter(sku__product__store=store).delete()
+                    Price.objects.filter(sku__in=sku_pks).delete()
                 try:
                     Price.objects.bulk_create(bulk_price)
                 except Exception:
-                    delete_prices = set(Price.objects.filter(sku__product__store=store))
+                    delete_prices = set(Price.objects.filter(sku__in=sku_pks))
                     [price.delete() for price in delete_prices]
                 try:
                     Price.objects.bulk_create(bulk_price)
@@ -385,7 +385,7 @@ def create_products_store(store, limit=False):
                     raise Exception(f'This is not working {e}')
                 bulk_price.clear()
 
-                prices = set(Price.objects.only('raw_json').filter(sku__product__store=store))
+                prices = set(Price.objects.only('raw_json').filter(sku__in=sku_pks))
                 bulk_fixed_price = [
                     FixedPrice(
                         price=price_instance,
@@ -408,9 +408,9 @@ def create_products_store(store, limit=False):
                 prices.clear()
 
                 Sku.objects.filter(product=None).delete()
-                skus = set(Sku.objects.select_related('product').only('product', 'raw_json').filter(product__store=store, external_id__in=ids))
+                skus = set(Sku.objects.select_related('product').only('product', 'raw_json').filter(sku__in=sku_pks))
 
-                Image.objects.filter(product__store=store).delete()
+                Image.objects.filter(sku__in=sku_pks).delete()
                 bulk_image = [
                     Image(
                         sku=sku,
@@ -425,7 +425,7 @@ def create_products_store(store, limit=False):
                 Image.objects.bulk_create(bulk_image)
                 bulk_image.clear()
 
-                SkuSeller.objects.filter(seller__store=store).delete()
+                SkuSeller.objects.filter(sku__in=sku_pks).delete()
                 bulk_sku_seller = [
                     SkuSeller(
                         sku=sku,
