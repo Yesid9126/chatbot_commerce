@@ -659,5 +659,6 @@ def create_products_store(store, limit=False):
 
 def needed():
     Product.objects.update(search_vector=SearchVector('search'))
+    Sku.objects.filter(product=None).delete()
     Sku.objects.update(search_vector=SearchVector('search'))
     # set(map(lambda sku: sku.get_serializer_data, Sku.objects.all()))
