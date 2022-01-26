@@ -384,8 +384,18 @@ def create_products_store(store, limit=False):
                     [price.delete() for price in delete_prices]
                 try:
                     Price.objects.bulk_create(bulk_price)
+                except Exception:
+                    pass
+                try:
+                    for price in bulk_price:
+                        try:
+                            price.save()
+                        except Exception:
+                            pass
                 except Exception as e:
                     raise Exception(f'This is not working {e}')
+
+
                 bulk_price.clear()
 
                 prices = set(Price.objects.only('raw_json').filter(sku__in=sku_pks))
