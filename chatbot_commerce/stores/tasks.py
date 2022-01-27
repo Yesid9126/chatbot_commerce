@@ -42,6 +42,7 @@ app = Celery()
 def update_serializer_data():
     """Manage price of warehouse products"""
 
+    clock = 60 * 60 * 4
     while 1:
         from_date_time_date_ranges =\
             from_date_time_fixed_prices =\
@@ -58,7 +59,7 @@ def update_serializer_data():
             [fixed.set_date_range for fixed in queryset]
         else:
             from_date_time_date_ranges = timezone.now()
-
+        gc.collect()
         update_fixed_prices = FixedPrice.objects.filter(modified__gte=from_date_time_fixed_prices, price__sku__is_active=True).exists()
         if update_fixed_prices:
             ids_list = set(FixedPrice.objects.filter(modified__gte=from_date_time_fixed_prices, price__sku__is_active=True).values_list('price__pk', flat=True))
@@ -67,6 +68,7 @@ def update_serializer_data():
             [price.set_fixed_prices for price in queryset]
         else:
             from_date_time_fixed_prices = timezone.now()
+        gc.collect()
 
         update_prices = Price.objects.filter(modified__gte=from_date_time_prices, sku__is_active=True).exists()
         if update_prices:
@@ -74,6 +76,7 @@ def update_serializer_data():
             from_date_time_prices = timezone.now()
         else:
             from_date_time_prices = timezone.now()
+        gc.collect()
 
         update_attribute_type = AttributeType.objects.filter(modified__gte=from_date_time_attribute_type).exists()
         if update_attribute_type:
@@ -83,6 +86,7 @@ def update_serializer_data():
             skus_ids_list = set(Sku.objects.filter(~Q(pk__in=skus_ids_list), is_active=True, attributes__in=attributes_ids_list).values_list('pk', flat=True)) | skus_ids_list
         else:
             from_date_time_attribute_type = timezone.now()
+        gc.collect()
 
         update_attributes = Attribute.objects.filter(modified__gte=from_date_time_attributes).exists()
         if update_attributes:
@@ -91,6 +95,7 @@ def update_serializer_data():
             skus_ids_list = set(Sku.objects.filter(~Q(pk__in=skus_ids_list), is_active=True, attributes__in=attributes_ids_list).values_list('pk', flat=True)) | skus_ids_list
         else:
             from_date_time_attributes = timezone.now()
+        gc.collect()
 
         update_images = Image.objects.filter(modified__gte=from_date_time_images).exists()
         if update_images:
@@ -100,6 +105,7 @@ def update_serializer_data():
             image_ids_list.clear()
         else:
             from_date_time_images = timezone.now()
+        gc.collect()
 
         if skus_ids_list:
             queryset = set(Sku.objects.filter(pk__in=skus_ids_list))
@@ -117,7 +123,7 @@ def update_serializer_data():
         gc.collect()
 
         # Time to wait for next iteration
-        time.sleep(60 * 60 * 4)
+        time.sleep(clock)
 
 
 try:
