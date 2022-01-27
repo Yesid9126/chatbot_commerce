@@ -421,7 +421,7 @@ def create_products_store(store, limit=False):
                 prices.clear()
 
                 Sku.objects.filter(product=None).delete()
-                skus = set(Sku.objects.select_related('product').only('product', 'raw_json').filter(sku__in=sku_pks))
+                skus = set(Sku.objects.select_related('product').only('product', 'raw_json').filter(pk=sku_pks))
 
                 Image.objects.filter(sku__in=sku_pks).delete()
                 bulk_image = [
