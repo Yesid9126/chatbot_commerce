@@ -49,7 +49,7 @@ def update_serializer_data():
         from_date_time_attribute_type =\
         from_date_time_attributes =\
         from_date_time_images = timezone.now() - timezone.timedelta(days=2)
-    print('1')
+
     ids_list = queryset = skus_ids_list = attributes_ids_list = set()
     update_date_ranges = DateRange.objects.filter(modified__gte=from_date_time_date_ranges, fixed_price__price__sku__is_active=True).exists()
     if update_date_ranges:
@@ -58,7 +58,7 @@ def update_serializer_data():
         ids_list.clear()
         [fixed.set_date_range for fixed in queryset]
         queryset.clear()
-    print('2')
+
     gc.collect()
     update_fixed_prices = FixedPrice.objects.filter(modified__gte=from_date_time_fixed_prices, price__sku__is_active=True).exists()
     if update_fixed_prices:
@@ -67,12 +67,12 @@ def update_serializer_data():
         ids_list.clear()
         [price.set_fixed_prices for price in queryset]
         queryset.clear()
-    print('3')
+
     gc.collect()
     update_prices = Price.objects.filter(modified__gte=from_date_time_prices, sku__is_active=True).exists()
     if update_prices:
         skus_ids_list = set(Price.objects.filter(modified__gte=from_date_time_prices, sku__is_active=True).values_list('sku__pk', flat=True))
-    print('4')
+
     update_attribute_type = AttributeType.objects.filter(modified__gte=from_date_time_attribute_type).exists()
     if update_attribute_type:
         attribute_type_ids_list = set(AttributeType.objects.filter(modified__gte=from_date_time_attribute_type).values_list('pk', flat=True))
@@ -80,27 +80,36 @@ def update_serializer_data():
         skus_ids_list = set(Sku.objects.filter(~Q(pk__in=skus_ids_list), is_active=True, attributes__in=attributes_ids_list).values_list('pk', flat=True)) | skus_ids_list
         attributes_ids_list.clear()
     gc.collect()
-    print('5')
+
     update_attributes = Attribute.objects.filter(modified__gte=from_date_time_attributes).exists()
     if update_attributes:
         attributes_ids_list = set(Attribute.objects.filter(modified__gte=from_date_time_attributes).values_list('pk', flat=True)) - attributes_ids_list
         skus_ids_list = set(Sku.objects.filter(~Q(pk__in=skus_ids_list), is_active=True, attributes__in=attributes_ids_list).values_list('pk', flat=True)) | skus_ids_list
         attributes_ids_list.clear()
     gc.collect()
-    print('6')
+    print('1')
     update_images = Image.objects.filter(modified__gte=from_date_time_images).exists()
+    print('1.1')
     if update_images:
         image_ids_list = set(Image.objects.filter(modified__gte=from_date_time_images).values_list('pk', flat=True))
+        print('1.2')
         skus_ids_list = set(Sku.objects.filter(~Q(pk__in=skus_ids_list), is_active=True, images__in=image_ids_list).values_list('pk', flat=True)) | skus_ids_list
+        print('1.3')
+        image_ids_list.clear()
+        print('1.4')
     gc.collect()
-    print('7')
+    print('2')
     if skus_ids_list:
         queryset = set(Sku.objects.filter(pk__in=skus_ids_list))
+        print('2.1')
         skus_ids_list.clear()
+        print('2.2')
         [sku.update_serializer_data for sku in queryset]
+        print('2.3')
         queryset.clear()
-    print('8')
+        print('2.4')
     gc.collect()
+    print('3')
 
 
 try:
