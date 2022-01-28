@@ -57,7 +57,7 @@ def update_serializer_data():
         ids_list.clear()
         [fixed.set_date_range for fixed in queryset]
         queryset.clear()
-
+    gc.collect()
     update_fixed_prices = FixedPrice.objects.filter(modified__gte=from_date_time_fixed_prices, price__sku__is_active=True).exists()
     if update_fixed_prices:
         ids_list = set(FixedPrice.objects.filter(modified__gte=from_date_time_fixed_prices, price__sku__is_active=True).values_list('price__pk', flat=True))
@@ -65,7 +65,7 @@ def update_serializer_data():
         ids_list.clear()
         [price.set_fixed_prices for price in queryset]
         queryset.clear()
-
+    gc.collect()
     update_prices = Price.objects.filter(modified__gte=from_date_time_prices, sku__is_active=True).exists()
     if update_prices:
         skus_ids_list = set(Price.objects.filter(modified__gte=from_date_time_prices, sku__is_active=True).values_list('sku__pk', flat=True))
@@ -76,23 +76,24 @@ def update_serializer_data():
         attributes_ids_list = set(Attribute.objects.filter(attribute_type__in=attribute_type_ids_list).values_list('pk', flat=True))
         skus_ids_list = set(Sku.objects.filter(~Q(pk__in=skus_ids_list), is_active=True, attributes__in=attributes_ids_list).values_list('pk', flat=True)) | skus_ids_list
         attributes_ids_list.clear()
-
+    gc.collect()
     update_attributes = Attribute.objects.filter(modified__gte=from_date_time_attributes).exists()
     if update_attributes:
         attributes_ids_list = set(Attribute.objects.filter(modified__gte=from_date_time_attributes).values_list('pk', flat=True)) - attributes_ids_list
         skus_ids_list = set(Sku.objects.filter(~Q(pk__in=skus_ids_list), is_active=True, attributes__in=attributes_ids_list).values_list('pk', flat=True)) | skus_ids_list
         attributes_ids_list.clear()
-
+    gc.collect()
     update_images = Image.objects.filter(modified__gte=from_date_time_images).exists()
     if update_images:
         image_ids_list = set(Image.objects.filter(modified__gte=from_date_time_images).values_list('pk', flat=True))
         skus_ids_list = set(Sku.objects.filter(~Q(pk__in=skus_ids_list), is_active=True, images__in=image_ids_list).values_list('pk', flat=True)) | skus_ids_list
-
+    gc.collect()
     if skus_ids_list:
         queryset = set(Sku.objects.filter(pk__in=skus_ids_list))
         skus_ids_list.clear()
         [sku.update_serializer_data for sku in queryset]
         queryset.clear()
+    gc.collect()
 
 
 try:
