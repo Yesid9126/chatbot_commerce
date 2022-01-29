@@ -87,29 +87,50 @@ def update_serializer_data():
         skus_ids_list = set(Sku.objects.filter(~Q(pk__in=skus_ids_list), is_active=True, attributes__in=attributes_ids_list).values_list('pk', flat=True)) | skus_ids_list
         attributes_ids_list.clear()
     gc.collect()
-    print('1')
+
+    if skus_ids_list:
+        print('fear1')
+        queryset = Sku.objects\
+            .only(
+                'set_sellers',
+                'set_images',
+                'set_price',
+                'set_attributes',
+            )\
+            .select_related('price')\
+            .filter(pk__in=skus_ids_list)
+        print('fear1.5')
+        [sku.update_serializer_data for sku in queryset]
+        print('fear1 end')
+    gc.collect()
+
     update_images = Image.objects.filter(modified__gte=from_date_time_images).exists()
-    print('1.1')
     if update_images:
         image_ids_list = set(Image.objects.filter(modified__gte=from_date_time_images).values_list('pk', flat=True))
-        print('1.2')
-        skus_ids_list = set(Sku.objects.filter(~Q(pk__in=skus_ids_list), is_active=True, images__in=image_ids_list).values_list('pk', flat=True)) | skus_ids_list
-        print('1.3')
+        print('fear2')
+        skus_ids_list = set(Sku.objects.filter(~Q(pk__in=skus_ids_list), is_active=True, images__in=image_ids_list).values_list('pk', flat=True))
         image_ids_list.clear()
-        print('1.4')
+        print('fear2 end')
     gc.collect()
-    print('2')
+
     if skus_ids_list:
-        queryset = set(Sku.objects.filter(pk__in=skus_ids_list))
-        print('2.1')
+        print('fear3')
+        queryset = Sku.objects\
+            .only(
+                'set_sellers',
+                'set_images',
+                'set_price',
+                'set_attributes',
+            )\
+            .select_related('price')\
+            .filter(pk__in=skus_ids_list)
+        print('fear3.1')
         skus_ids_list.clear()
-        print('2.2')
+        print('fear3.2')
         [sku.update_serializer_data for sku in queryset]
-        print('2.3')
-        queryset.clear()
-        print('2.4')
+        print('fear.3')
     gc.collect()
-    print('3')
+    print('Succesfully updated serializer data')
 
 
 try:
