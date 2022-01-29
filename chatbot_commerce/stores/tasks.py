@@ -92,10 +92,10 @@ def update_serializer_data():
         print('fear1')
         queryset = Sku.objects\
             .only(
-                'set_sellers',
-                'set_images',
-                'set_price',
-                'set_attributes',
+                'sellers_id',
+                'images_url',
+                'sku_price',
+                'price_data',
             )\
             .select_related('price')\
             .filter(pk__in=skus_ids_list)
@@ -117,10 +117,10 @@ def update_serializer_data():
         print('fear3')
         queryset = Sku.objects\
             .only(
-                'set_sellers',
-                'set_images',
-                'set_price',
-                'set_attributes',
+                'sellers_id',
+                'images_url',
+                'sku_price',
+                'price_data',
             )\
             .select_related('price')\
             .filter(pk__in=skus_ids_list)
