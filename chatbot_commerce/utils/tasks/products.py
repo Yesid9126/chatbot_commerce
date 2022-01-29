@@ -207,7 +207,7 @@ def create_products_store(store, limit=False):
             print(f'round: skus = {len(skus)}, products = {len(products)}')
             if products:
                 products_ids = [product.get('Id') for product in products]
-                products_external_ids = set(Product.objects.filter(store=store, external_id__in=products_ids).values_list('external_id', flat=True))
+                products_external_ids = Product.objects.filter(store=store, external_id__in=products_ids).values_list('external_id', flat=True)
                 products_ids.clear()
                 [
                     Product.objects
@@ -288,13 +288,11 @@ def create_products_store(store, limit=False):
                 ]
                 Product.objects.bulk_create(bulk_products)
                 bulk_products.clear()
-                products_external_ids.clear()
 
                 products_created |= set(update_or_create_product(store=store, product=product) for product in products)
                 products.clear()
-            products.clear()
             if skus:
-                skus_external_ids = set(Sku.objects.filter(product__store=store, external_id__in=ids).values_list('external_id', flat=True))
+                skus_external_ids = Sku.objects.filter(product__store=store, external_id__in=ids).values_list('external_id', flat=True)
                 [
                     Sku.objects
                     .filter(product__store=store, external_id=sku.get('Id'))
@@ -380,7 +378,7 @@ def create_products_store(store, limit=False):
                 try:
                     Price.objects.bulk_create(bulk_price)
                 except Exception:
-                    delete_prices = set(Price.objects.filter(sku__in=sku_pks))
+                    delete_prices = Price.objects.filter(sku__in=sku_pks)
                     [price.delete() for price in delete_prices]
                 try:
                     Price.objects.bulk_create(bulk_price)
@@ -394,11 +392,9 @@ def create_products_store(store, limit=False):
                             pass
                 except Exception as e:
                     raise Exception(f'This is not working {e}')
-
-
                 bulk_price.clear()
 
-                prices = set(Price.objects.only('raw_json').filter(sku__in=sku_pks))
+                prices = Price.objects.only('raw_json').filter(sku__in=sku_pks)
                 bulk_fixed_price = [
                     FixedPrice(
                         price=price_instance,
@@ -418,10 +414,9 @@ def create_products_store(store, limit=False):
                 ]
                 FixedPrice.objects.bulk_create(bulk_fixed_price)
                 bulk_fixed_price.clear()
-                prices.clear()
 
                 Sku.objects.filter(product=None).delete()
-                skus = set(Sku.objects.select_related('product').only('product', 'raw_json').filter(pk__in=sku_pks))
+                skus = Sku.objects.select_related('product').only('product', 'raw_json').filter(pk__in=sku_pks)
 
                 Image.objects.filter(sku__in=sku_pks).delete()
                 bulk_image = [
@@ -459,7 +454,6 @@ def create_products_store(store, limit=False):
                     )
                     for sku in skus
                 ]
-                skus.clear()
             gc.collect()
             if limit:
                 break
@@ -472,7 +466,7 @@ def create_products_store(store, limit=False):
 
         if product_array:
             products_ids = [product.get('product_id') for product in product_array]
-            products_external_ids = set(Product.objects.filter(store=store, external_id__in=products_ids).values_list('external_id', flat=True))
+            products_external_ids = Product.objects.filter(store=store, external_id__in=products_ids).values_list('external_id', flat=True)
             products_ids.clear()
             [
                 Product.objects
@@ -540,15 +534,14 @@ def create_products_store(store, limit=False):
             Product.objects.bulk_create(bulk_products)
             bulk_products.clear()
 
-            product_array = set(Product.objects.only('raw_json', 'search').filter(store=store))
+            product_array = Product.objects.only('raw_json', 'search').filter(store=store)
             variant_ids = [
                 variant.get('id')
                 for product in product_array if product.raw_json.get('variants')
                 for variant in product.raw_json.get('variants')
             ]
-            products_external_ids.clear()
             if variant_ids:
-                skus_external_ids = set(Sku.objects.filter(product__store=store, external_id__in=variant_ids).values_list('external_id', flat=True))
+                skus_external_ids = Sku.objects.filter(product__store=store, external_id__in=variant_ids).values_list('external_id', flat=True)
                 variant_ids.clear()
                 [
                     Sku.objects
@@ -600,10 +593,9 @@ def create_products_store(store, limit=False):
                 ]
                 Sku.objects.bulk_create(bulk_skus)
                 bulk_skus.clear()
-                skus_external_ids.clear()
 
                 Price.objects.filter(sku__product__store=store).delete()
-                variants = set(Sku.objects.only('raw_json').filter(product__store=store))
+                variants = Sku.objects.only('raw_json').filter(product__store=store)
                 bulk_price = [
                     Price(
                         sku=variant,
@@ -618,7 +610,6 @@ def create_products_store(store, limit=False):
                 ]
                 Price.objects.bulk_create(bulk_price)
                 bulk_price.clear()
-                variants.clear()
 
                 Image.objects.filter(product__store=store).delete()
                 bulk_product_images = [
@@ -662,7 +653,6 @@ def create_products_store(store, limit=False):
                     for product in product_array if product.raw_json.get('variants')
                     for variant in product.raw_json.get('variants')
                 ]
-                product_array.clear()
 
     # Delete skus that don't have a product
     needed()
