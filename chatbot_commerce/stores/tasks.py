@@ -4,8 +4,7 @@
 # Celery
 from config import celery_app
 from celery import Celery
-from celery.schedules import crontab
-from django_celery_beat.models import PeriodicTask
+from django_celery_beat.models import PeriodicTask, CrontabSchedule
 # from celery.schedules import crontab
 
 # Django
@@ -121,8 +120,9 @@ try:
 except Exception:
     container_name = ''
 if container_name == 'worker':
-    # update_serializer_data.s().apply_async(countdown=1)
-    task_instance, _ = PeriodicTask.objects.get_or_create(name='Update models serializer', task='update_serializer_data', defaults={'schedule': crontab(hour='10, 20', minute='0')})
+    update_serializer_data.s().apply_async(countdown=1)
+    crontab_instance, _ = CrontabSchedule.objects.get_or_create(day_of_week='*', hour='6, 22', minute=0, timezone='America/Bogota')
+    task_instance, _ = PeriodicTask.objects.get_or_create(name='Update models serializer', task='update_serializer_data', defaults={'crontab': crontab_instance})
 print("container_name:", container_name)
 
 

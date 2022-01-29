@@ -375,7 +375,7 @@ def execute_task(sender, instance, *args, **kwargs):
 
     if instance.sync_status is True:
         try:
-            every_1, _ = CrontabSchedule.objects.get_or_create(day_of_week='*', hour=1, minute=0)
+            every_1, _ = CrontabSchedule.objects.get_or_create(day_of_week='*', hour=1, minute=0, timezone='America/Bogota')
             task_instance, _ = PeriodicTask.objects.get_or_create(name=f'{instance.name} create & update', task='principal_periodic_task', defaults=dict(crontab=every_1, kwargs='{"store": "%s"}' % (instance.pk)))
         except Exception as message:
             print(message)
