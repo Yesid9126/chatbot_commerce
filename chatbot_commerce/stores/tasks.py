@@ -56,7 +56,6 @@ def update_serializer_data():
         ids_list = DateRange.objects.filter(modified__gte=from_date_time_date_ranges, fixed_price__price__sku__is_active=True).values_list('fixed_price__id', flat=True)
         queryset = FixedPrice.objects.filter(pk__in=ids_list)
         [fixed.set_date_range for fixed in queryset]
-        queryset.clear()
 
     gc.collect()
     update_fixed_prices = FixedPrice.objects.filter(modified__gte=from_date_time_fixed_prices, price__sku__is_active=True).exists()
@@ -64,7 +63,6 @@ def update_serializer_data():
         ids_list = FixedPrice.objects.filter(modified__gte=from_date_time_fixed_prices, price__sku__is_active=True).values_list('price__pk', flat=True)
         queryset = Price.objects.filter(pk__in=ids_list)
         [price.set_fixed_prices for price in queryset]
-        queryset.clear()
 
     gc.collect()
     update_prices = Price.objects.filter(modified__gte=from_date_time_prices, sku__is_active=True).exists()
@@ -116,7 +114,6 @@ def update_serializer_data():
             )\
             .select_related('price')\
             .filter(pk__in=skus_ids_list)
-        skus_ids_list.clear()
         [sku.update_serializer_data for sku in queryset]
     gc.collect()
     print('Succesfully updated serializer data')
