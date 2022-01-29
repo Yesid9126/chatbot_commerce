@@ -18,7 +18,6 @@ from django.utils import timezone
 # from pathlib import Path
 import gc
 import sys
-import time
 
 # Models
 from chatbot_commerce.stores.models import Store, TypeStore, Price, FixedPrice, DateRange, AttributeType, Attribute, Sku, Image
@@ -99,9 +98,7 @@ def update_serializer_data():
     update_images = Image.objects.filter(modified__gte=from_date_time_images).exists()
     if update_images:
         image_ids_list = Image.objects.filter(modified__gte=from_date_time_images).values_list('pk', flat=True)
-        print('fear2')
         skus_ids_list = Sku.objects.filter(~Q(pk__in=skus_ids_list), is_active=True, images__in=image_ids_list).values_list('pk', flat=True)
-        print('fear2 end')
     gc.collect()
 
     if skus_ids_list:
@@ -116,7 +113,6 @@ def update_serializer_data():
             .filter(pk__in=skus_ids_list)
         [sku.update_serializer_data for sku in queryset]
     gc.collect()
-    print('Succesfully updated serializer data')
 
 
 try:
