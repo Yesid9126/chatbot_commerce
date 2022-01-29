@@ -89,7 +89,6 @@ def update_serializer_data():
     gc.collect()
 
     if skus_ids_list:
-        print('fear1')
         queryset = Sku.objects\
             .only(
                 'sellers_id',
@@ -99,22 +98,19 @@ def update_serializer_data():
             )\
             .select_related('price')\
             .filter(pk__in=skus_ids_list)
-        print('fear1.5')
         [sku.update_serializer_data for sku in queryset]
-        print('fear1 end')
     gc.collect()
 
     update_images = Image.objects.filter(modified__gte=from_date_time_images).exists()
     if update_images:
-        image_ids_list = set(Image.objects.filter(modified__gte=from_date_time_images).values_list('pk', flat=True))
+        image_ids_list = Image.objects.filter(modified__gte=from_date_time_images).values_list('pk', flat=True)
         print('fear2')
-        skus_ids_list = set(Sku.objects.filter(~Q(pk__in=skus_ids_list), is_active=True, images__in=image_ids_list).values_list('pk', flat=True))
+        skus_ids_list = Sku.objects.filter(~Q(pk__in=skus_ids_list), is_active=True, images__in=image_ids_list).values_list('pk', flat=True)
         image_ids_list.clear()
         print('fear2 end')
     gc.collect()
 
     if skus_ids_list:
-        print('fear3')
         queryset = Sku.objects\
             .only(
                 'sellers_id',
@@ -124,11 +120,8 @@ def update_serializer_data():
             )\
             .select_related('price')\
             .filter(pk__in=skus_ids_list)
-        print('fear3.1')
         skus_ids_list.clear()
-        print('fear3.2')
         [sku.update_serializer_data for sku in queryset]
-        print('fear.3')
     gc.collect()
     print('Succesfully updated serializer data')
 
