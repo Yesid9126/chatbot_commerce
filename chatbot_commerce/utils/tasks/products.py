@@ -311,6 +311,7 @@ def create_products_store(store, limit=False):
                     for product in products if product.get('Id') not in products_external_ids
                 ]
                 Product.objects.bulk_create(bulk_products)
+                del products_external_ids
                 del bulk_products
 
                 products_created |= set(update_or_create_product(store=store, product=product) for product in products)
