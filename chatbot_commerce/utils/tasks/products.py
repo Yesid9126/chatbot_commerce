@@ -211,7 +211,7 @@ def create_products_store(store, limit=False):
         skus_ids.reverse()
         assert len(skus_ids) > 0, 'No skus found'
 
-        sub_skus_ids = [skus_ids[i:i+10000] for i in range(0, len(skus_ids), 10000)]
+        sub_skus_ids = [skus_ids[i:i+1000] for i in range(0, len(skus_ids), 1000)]
         skus_ids.clear()
         products_created = set()
         gc.collect()
@@ -225,10 +225,10 @@ def create_products_store(store, limit=False):
                 products_ids = [product.get('Id') for product in products]
                 products_external_ids = Product.objects.filter(store=store, external_id__in=products_ids).values_list('external_id', flat=True)
                 products_ids.clear()
-                [
-                    Product.objects
-                    .filter(store=store, external_id=product.get('Id'))
-                    .update(
+                bulk_update_products = [
+                    Product(
+                        store=store,
+                        pk=Product.objects.filter(store=store, external_id=product.get('Id')).values_list('pk', flat=True)[0],
                         name=product.get('Name'),
                         department=Department.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('DepartmentId')}"], stores=store).last(),
                         sub_category=Subcategory.objects.select_related('category').filter(external_id=product.get('CategoryId'), category__store=store).last(),
@@ -259,11 +259,34 @@ def create_products_store(store, limit=False):
                         is_active=product.get('IsActive'),
                         meta_tag_description=product.get('MetaTagDescription'),
                         show_without_stock=product.get('ShowWithoutStock'),
-                        modified=timezone.now(),
                         raw_json={**product},
                     )
                     for product in products if product.get('Id') in products_external_ids
                 ]
+                Product.objects.bulk_update(
+                    bulk_update_products,
+                    [
+                        'name',
+                        'department',
+                        'sub_category',
+                        'category',
+                        'brand',
+                        'search',
+                        'link_id',
+                        'reference_id',
+                        'is_visible',
+                        'description',
+                        'description_short',
+                        'keywords',
+                        'title',
+                        'is_active',
+                        'meta_tag_description',
+                        'show_without_stock',
+                        'raw_json',
+                    ]
+                )
+                bulk_update_products.clear()
+
                 bulk_products = [
                     Product(
                         store=store,
@@ -311,13 +334,14 @@ def create_products_store(store, limit=False):
                 del products_ids
                 del products_external_ids
                 del bulk_products
+                del bulk_update_products
             if skus:
                 skus_external_ids = Sku.objects.filter(product__store=store, external_id__in=ids).values_list('external_id', flat=True)
-                [
-                    Sku.objects
-                    .filter(product__store=store, external_id=sku.get('Id'))
-                    .update(
+
+                bulk_update_skus = [
+                    Sku(
                         product=Product.objects.filter(store=store, external_id=sku.get('ProductId')).last(),
+                        pk=Sku.objects.filter(product__store=store, external_id=sku.get('Id')).values_list('pk', flat=True)[0],
                         name=sku.get('NameComplete'),
                         search=' '.join(
                             [
@@ -339,11 +363,34 @@ def create_products_store(store, limit=False):
                         is_inventoried=sku.get('IsInventoried'),
                         is_transported=sku.get('IsTransported'),
                         total_quantity=sku.get('total_quantity'),
-                        modified=timezone.now(),
                         raw_json={**sku}
                     )
                     for sku in skus if sku.get('Id') in skus_external_ids
                 ]
+                Sku.objects.bulk_update(
+                    bulk_update_skus,
+                    [
+                        'product',
+                        'name',
+                        'search',
+                        'is_active',
+                        'ref_id',
+                        'packaged_height',
+                        'packaged_length',
+                        'packaged_widtht',
+                        'packaged_weight_unit',
+                        'is_kit',
+                        'comercial_condition_id',
+                        'manufacter_code',
+                        'reference_stock_id',
+                        'is_inventoried',
+                        'is_transported',
+                        'total_quantity',
+                        'raw_json'
+                    ]
+                )
+                bulk_update_skus.clear()
+
                 bulk_skus = [
                     Sku(
                         product=Product.objects.filter(store=store, external_id=sku.get('ProductId')).last(),
@@ -375,6 +422,7 @@ def create_products_store(store, limit=False):
                 ]
                 Sku.objects.bulk_create(bulk_skus)
                 bulk_skus.clear()
+
                 Product.objects.filter(store=store, name__in=[None, 'None']).delete()
                 Sku.objects.filter(Q(product=None)).delete()
                 sku_pks = Sku.objects.filter(product__store=store, external_id__in=ids).values_list('pk', flat=True)
@@ -482,6 +530,7 @@ def create_products_store(store, limit=False):
                 del bulk_image
                 del bulk_fixed_price
                 del bulk_price
+                del bulk_update_skus
                 del bulk_skus
             gc.collect()
             if limit:

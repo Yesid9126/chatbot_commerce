@@ -1,3 +1,5 @@
+daphne
+asgiref
 pytz  # https://github.com/stub42/pytz
 python-slugify  # https://github.com/un33k/python-slugify
 Pillow  # https://github.com/python-pillow/Pillow
