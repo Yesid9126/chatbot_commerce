@@ -83,7 +83,7 @@ def update_or_create_sku_attributes(store, sku):
             del sku_instance
             del s
             del extra_data_search
-            gc.collect()
+
         except Exception as e:
             error = {
                 'message': e,
@@ -150,7 +150,6 @@ def update_or_create_sku_attributes(store, sku):
             del sc_ids
             del sc
             del extra_data_search
-            gc.collect()
 
         except Exception as e:
             error = {
@@ -214,7 +213,7 @@ def create_products_store(store, limit=False):
         sub_skus_ids = [skus_ids[i:i+10000] for i in range(0, len(skus_ids), 10000)]
         skus_ids.clear()
         products_created = set()
-        gc.collect()
+
         for ids in sub_skus_ids:
             loop = asyncio.new_event_loop()
             skus, products = loop.run_until_complete(get_skus_and_products_dicts(loop=loop, vtex=vtex, sc=sc, skus=ids, products_created=products_created))
@@ -286,7 +285,6 @@ def create_products_store(store, limit=False):
                     ]
                 )
                 bulk_update_products.clear()
-                gc.collect()
 
                 bulk_products = [
                     Product(
@@ -328,7 +326,6 @@ def create_products_store(store, limit=False):
                 ]
                 Product.objects.bulk_create(bulk_products)
                 bulk_products.clear()
-                gc.collect()
 
                 products_created |= set(update_or_create_product(store=store, product=product) for product in products)
                 products.clear()
@@ -392,7 +389,6 @@ def create_products_store(store, limit=False):
                     ]
                 )
                 bulk_update_skus.clear()
-                gc.collect()
 
                 bulk_skus = [
                     Sku(
@@ -425,8 +421,6 @@ def create_products_store(store, limit=False):
                 ]
                 Sku.objects.bulk_create(bulk_skus)
                 bulk_skus.clear()
-                gc.collect()
-
 
                 Product.objects.filter(store=store, name__in=[None, 'None']).delete()
                 Sku.objects.filter(Q(product=None)).delete()
@@ -537,7 +531,7 @@ def create_products_store(store, limit=False):
                 del bulk_price
                 del bulk_update_skus
                 del bulk_skus
-            gc.collect()
+
             if limit:
                 break
         sc.clear()
@@ -746,11 +740,10 @@ def create_products_store(store, limit=False):
             del product_array
             del products_ids
             del products_external_ids
-            gc.collect()
 
     # Delete skus that don't have a product
     needed()
-    gc.collect()
+
     return True
 
 
