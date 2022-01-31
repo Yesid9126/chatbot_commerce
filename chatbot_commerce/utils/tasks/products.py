@@ -196,7 +196,7 @@ def create_products_store(store, limit=False):
         skus_ids.reverse()
         assert len(skus_ids) > 0, 'No skus found'
 
-        sub_skus_ids = [skus_ids[i:i+2500] for i in range(0, len(skus_ids), 2500)]
+        sub_skus_ids = [skus_ids[i:i+500] for i in range(0, len(skus_ids), 500)]
         del skus_ids
         products_created = set()
 
