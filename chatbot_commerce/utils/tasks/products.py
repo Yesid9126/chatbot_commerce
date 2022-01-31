@@ -286,6 +286,7 @@ def create_products_store(store, limit=False):
                     ]
                 )
                 bulk_update_products.clear()
+                gc.collect()
 
                 bulk_products = [
                     Product(
@@ -327,6 +328,7 @@ def create_products_store(store, limit=False):
                 ]
                 Product.objects.bulk_create(bulk_products)
                 bulk_products.clear()
+                gc.collect()
 
                 products_created |= set(update_or_create_product(store=store, product=product) for product in products)
                 products.clear()
@@ -390,6 +392,7 @@ def create_products_store(store, limit=False):
                     ]
                 )
                 bulk_update_skus.clear()
+                gc.collect()
 
                 bulk_skus = [
                     Sku(
@@ -422,6 +425,8 @@ def create_products_store(store, limit=False):
                 ]
                 Sku.objects.bulk_create(bulk_skus)
                 bulk_skus.clear()
+                gc.collect()
+
 
                 Product.objects.filter(store=store, name__in=[None, 'None']).delete()
                 Sku.objects.filter(Q(product=None)).delete()
