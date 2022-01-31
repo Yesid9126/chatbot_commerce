@@ -118,8 +118,8 @@ def update_or_create_sku_attributes(store, sku):
                                 )
                                 attribute_instance.skus.add(sku_instance)
                                 s.append(value)
-                            values.clear()
-                    sku_specifications_array.clear()
+                            del values
+                    del sku_specifications_array
                 if s:
                     s = ' '.join(s)
                     s_replaced = s.replace(',', ' ').replace('.', ' ')
@@ -133,7 +133,7 @@ def update_or_create_sku_attributes(store, sku):
                 extra_data_search.clear()
             except Exception as message:
                 print(f'message: {message} specificaciones')
-            sku.clear()
+            del sku
 
         except Exception as e:
             error = {
@@ -148,14 +148,14 @@ async def get_skus_and_products_dicts(sc, loop, vtex, skus=[], products_created=
     # Get dicts skus
     asynciofunctions_skus = [loop.run_in_executor(None, vtex.get_sku_context, sku_id, sc_id) for sc_id in sc if sc_id in ['1', 1] for sku_id in skus]
     skus_dicts = [await asynciofunction_sku for asynciofunction_sku in asynciofunctions_skus]
-    asynciofunctions_skus.clear()
+    del asynciofunctions_skus
 
     # Get dicts products
     product_ids = set([sku_dict.get('ProductId') for sku_dict in skus_dicts if sku_dict.get('ProductId') and sku_dict.get('ProductId') not in products_created])
     asynciofunctions_products = [loop.run_in_executor(None, vtex.product_unit, product_id) for product_id in product_ids]
     product_ids.clear()
     products_dicts = [await asynciofunction_product for asynciofunction_product in asynciofunctions_products]
-    asynciofunctions_products.clear()
+    del asynciofunctions_products
 
     # Returning values
     return skus_dicts, products_dicts
@@ -195,18 +195,19 @@ def create_products_store(store, limit=False):
         assert len(skus_ids) > 0, 'No skus found'
 
         sub_skus_ids = [skus_ids[i:i+10000] for i in range(0, len(skus_ids), 10000)]
-        skus_ids.clear()
+        del skus_ids
         products_created = set()
 
         for ids in sub_skus_ids:
             loop = asyncio.new_event_loop()
             skus, products = loop.run_until_complete(get_skus_and_products_dicts(loop=loop, vtex=vtex, sc=sc, skus=ids, products_created=products_created))
             loop.close()
+            del loop
             print(f'round: skus = {len(skus)}, products = {len(products)}')
             if products:
                 products_ids = [product.get('Id') for product in products]
                 products_external_ids = Product.objects.filter(store=store, external_id__in=products_ids).values_list('external_id', flat=True)
-                products_ids.clear()
+                del products_ids
                 bulk_update_products = [
                     Product(
                         store=store,
@@ -267,7 +268,7 @@ def create_products_store(store, limit=False):
                         'raw_json',
                     ]
                 )
-                bulk_update_products.clear()
+                del bulk_update_products
 
                 bulk_products = [
                     Product(
@@ -308,10 +309,10 @@ def create_products_store(store, limit=False):
                     for product in products if product.get('Id') not in products_external_ids
                 ]
                 Product.objects.bulk_create(bulk_products)
-                bulk_products.clear()
+                del bulk_products
 
                 products_created |= set(update_or_create_product(store=store, product=product) for product in products)
-                products.clear()
+                del products
             if skus:
                 skus_external_ids = Sku.objects.filter(product__store=store, external_id__in=ids).values_list('external_id', flat=True)
 
@@ -366,7 +367,7 @@ def create_products_store(store, limit=False):
                         'raw_json'
                     ]
                 )
-                bulk_update_skus.clear()
+                del bulk_update_skus
 
                 bulk_skus = [
                     Sku(
@@ -398,7 +399,7 @@ def create_products_store(store, limit=False):
                     for sku in skus if sku.get('Id') not in skus_external_ids
                 ]
                 Sku.objects.bulk_create(bulk_skus)
-                bulk_skus.clear()
+                del bulk_skus
 
                 Product.objects.filter(store=store, name__in=[None, 'None']).delete()
                 Sku.objects.filter(Q(product=None)).delete()
@@ -437,7 +438,7 @@ def create_products_store(store, limit=False):
                             pass
                 except Exception as e:
                     raise Exception(f'This is not working {e}')
-                bulk_price.clear()
+                del bulk_price
 
                 prices = Price.objects.only('raw_json').filter(sku__in=sku_pks)
                 bulk_fixed_price = [
@@ -458,7 +459,7 @@ def create_products_store(store, limit=False):
                     for fixed_price in price_instance.raw_json.get('fixedPrices')
                 ]
                 FixedPrice.objects.bulk_create(bulk_fixed_price)
-                bulk_fixed_price.clear()
+                del bulk_fixed_price
 
                 Sku.objects.filter(product=None).delete()
                 skus = Sku.objects.select_related('product').only('product', 'raw_json').filter(pk__in=sku_pks)
@@ -476,7 +477,7 @@ def create_products_store(store, limit=False):
                     for image_dict in sku.raw_json.get('Images') if sku.raw_json.get('Images')
                 ]
                 Image.objects.bulk_create(bulk_image)
-                bulk_image.clear()
+                del bulk_image
 
                 SkuSeller.objects.filter(sku__in=sku_pks).delete()
                 bulk_sku_seller = [
@@ -490,7 +491,7 @@ def create_products_store(store, limit=False):
                     for seller in sku.raw_json.get('SkuSellers') if sku.raw_json.get('SkuSellers')
                 ]
                 SkuSeller.objects.bulk_create(bulk_sku_seller)
-                bulk_sku_seller.clear()
+                del bulk_sku_seller
 
                 [
                     update_or_create_sku_attributes(
@@ -502,8 +503,8 @@ def create_products_store(store, limit=False):
 
             if limit:
                 break
-        sc.clear()
-        sub_skus_ids.clear()
+        del sc
+        del sub_skus_ids
 
     elif store.store_type.name == 'SHOPIFY':
         shopify = ShopifyStores(store=store)
@@ -512,7 +513,7 @@ def create_products_store(store, limit=False):
         if product_array:
             products_ids = [product.get('product_id') for product in product_array]
             products_external_ids = Product.objects.filter(store=store, external_id__in=products_ids).values_list('external_id', flat=True)
-            products_ids.clear()
+            del products_ids
             [
                 Product.objects
                 .filter(store=store, external_id=product.get('product_id'))
@@ -577,7 +578,7 @@ def create_products_store(store, limit=False):
                 for product in product_array if product.get('product_id') not in products_external_ids
             ]
             Product.objects.bulk_create(bulk_products)
-            bulk_products.clear()
+            del bulk_products
 
             product_array = Product.objects.only('raw_json', 'search').filter(store=store)
             variant_ids = [
@@ -637,7 +638,7 @@ def create_products_store(store, limit=False):
                     for variant in product.raw_json.get('variants') if variant.get('id') not in skus_external_ids
                 ]
                 Sku.objects.bulk_create(bulk_skus)
-                bulk_skus.clear()
+                del bulk_skus
 
                 Price.objects.filter(sku__product__store=store).delete()
                 variants = Sku.objects.only('raw_json').filter(product__store=store)
@@ -654,7 +655,7 @@ def create_products_store(store, limit=False):
                     for variant in variants
                 ]
                 Price.objects.bulk_create(bulk_price)
-                bulk_price.clear()
+                del bulk_price
 
                 Image.objects.filter(product__store=store).delete()
                 bulk_product_images = [
@@ -671,7 +672,7 @@ def create_products_store(store, limit=False):
                     for image in product.raw_json.get('images') if not image.get('variant_ids')
                 ]
                 Image.objects.bulk_create(bulk_product_images)
-                bulk_product_images.clear()
+                del bulk_product_images
 
                 bulk_variant_images = [
                     Image(
@@ -688,7 +689,7 @@ def create_products_store(store, limit=False):
                     for variant_id in image.get('variant_ids')
                 ]
                 Image.objects.bulk_create(bulk_variant_images)
-                bulk_variant_images.clear()
+                del bulk_variant_images
 
                 [
                     update_or_create_sku_attributes(
