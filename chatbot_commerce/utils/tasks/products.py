@@ -73,16 +73,9 @@ def update_or_create_sku_attributes(store, sku):
                 sku_instance.search = ' '.join((sku_instance.search, *extra_data_search,))
                 sku_instance.save(update_fields=['search'])
                 extra_data_search.clear()
-                del s
             except Exception as message:
                 print(f'message: {message} specificaciones')
             sku.clear()
-            del sku
-            del sku_specifications_array
-            del sku_name
-            del sku_instance
-            del s
-            del extra_data_search
 
         except Exception as e:
             error = {
@@ -126,7 +119,6 @@ def update_or_create_sku_attributes(store, sku):
                                 attribute_instance.skus.add(sku_instance)
                                 s.append(value)
                             values.clear()
-                            del values
                     sku_specifications_array.clear()
                 if s:
                     s = ' '.join(s)
@@ -139,17 +131,9 @@ def update_or_create_sku_attributes(store, sku):
                 sku_instance.search = ' '.join((sku_instance.search, *extra_data_search,))
                 sku_instance.save(update_fields=['search'])
                 extra_data_search.clear()
-                del s
             except Exception as message:
                 print(f'message: {message} specificaciones')
             sku.clear()
-            del sku
-            del sku_name
-            del sku_specifications_array
-            del sku_instance
-            del sc_ids
-            del sc
-            del extra_data_search
 
         except Exception as e:
             error = {
@@ -218,7 +202,6 @@ def create_products_store(store, limit=False):
             loop = asyncio.new_event_loop()
             skus, products = loop.run_until_complete(get_skus_and_products_dicts(loop=loop, vtex=vtex, sc=sc, skus=ids, products_created=products_created))
             loop.close()
-            del loop
             print(f'round: skus = {len(skus)}, products = {len(products)}')
             if products:
                 products_ids = [product.get('Id') for product in products]
@@ -329,11 +312,6 @@ def create_products_store(store, limit=False):
 
                 products_created |= set(update_or_create_product(store=store, product=product) for product in products)
                 products.clear()
-                del products
-                del products_ids
-                del products_external_ids
-                del bulk_products
-                del bulk_update_products
             if skus:
                 skus_external_ids = Sku.objects.filter(product__store=store, external_id__in=ids).values_list('external_id', flat=True)
 
@@ -521,16 +499,6 @@ def create_products_store(store, limit=False):
                     )
                     for sku in skus
                 ]
-                del skus
-                del skus_external_ids
-                del sku_pks
-                del prices
-                del bulk_sku_seller
-                del bulk_image
-                del bulk_fixed_price
-                del bulk_price
-                del bulk_update_skus
-                del bulk_skus
 
             if limit:
                 break
@@ -730,16 +698,6 @@ def create_products_store(store, limit=False):
                     for product in product_array if product.raw_json.get('variants')
                     for variant in product.raw_json.get('variants')
                 ]
-                del skus_external_ids
-                del variant_ids
-                del bulk_skus
-                del bulk_price
-                del bulk_variant_images
-                del bulk_product_images
-            del bulk_products
-            del product_array
-            del products_ids
-            del products_external_ids
 
     # Delete skus that don't have a product
     needed()
