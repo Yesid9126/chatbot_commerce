@@ -500,7 +500,7 @@ def create_products_store(store, limit=False):
                     )
                     for sku in skus
                 ]
-
+            gc.collect()
             if limit:
                 break
         del sc
