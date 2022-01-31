@@ -117,8 +117,11 @@ def update_or_create_sku_attributes(store, sku):
                                     value=value,
                                 )
                                 attribute_instance.skus.add(sku_instance)
+                                del attribute_instance
                                 s.append(value)
                             del values
+                        del attribute_type_instance
+                        gc.collect()
                     del sku_specifications_array
                 if s:
                     s = ' '.join(s)
