@@ -8,4 +8,4 @@ set -o nounset
 python /app/manage.py collectstatic --noinput
 
 
-/usr/local/bin/daphne config.asgi:application --bind 0.0.0.0:5000 --root-path=/app
+/usr/local/bin/gunicorn config.asgi:application -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:5000 --chdir=/app
