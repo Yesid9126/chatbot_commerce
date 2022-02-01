@@ -56,13 +56,11 @@ def update_serializer_data():
         queryset = FixedPrice.objects.filter(pk__in=ids_list)
         [fixed.set_date_range for fixed in queryset]
 
-
     update_fixed_prices = FixedPrice.objects.filter(modified__gte=from_date_time_fixed_prices, price__sku__is_active=True).exists()
     if update_fixed_prices:
         ids_list = FixedPrice.objects.filter(modified__gte=from_date_time_fixed_prices, price__sku__is_active=True).values_list('price__pk', flat=True)
         queryset = Price.objects.filter(pk__in=ids_list)
         [price.set_fixed_prices for price in queryset]
-
 
     update_prices = Price.objects.filter(modified__gte=from_date_time_prices, sku__is_active=True).exists()
     if update_prices:
@@ -74,14 +72,12 @@ def update_serializer_data():
         attributes_ids_list = set(Attribute.objects.filter(attribute_type__in=attribute_type_ids_list).values_list('pk', flat=True))
         skus_ids_list = set(Sku.objects.filter(~Q(pk__in=skus_ids_list), is_active=True, attributes__in=attributes_ids_list).values_list('pk', flat=True)) | skus_ids_list
 
-
     update_attributes = Attribute.objects.filter(modified__gte=from_date_time_attributes).exists()
     if update_attributes:
         attributes_ids_list = set(Attribute.objects.filter(modified__gte=from_date_time_attributes).values_list('pk', flat=True)) - attributes_ids_list
         skus_ids_list = set(Sku.objects.filter(~Q(pk__in=skus_ids_list), is_active=True, attributes__in=attributes_ids_list).values_list('pk', flat=True)) | skus_ids_list
         attributes_ids_list.clear()
 
-
     if skus_ids_list:
         queryset = Sku.objects\
             .only(
@@ -93,14 +89,12 @@ def update_serializer_data():
             .select_related('price')\
             .filter(pk__in=skus_ids_list)
         [sku.update_serializer_data for sku in queryset]
-
 
     update_images = Image.objects.filter(modified__gte=from_date_time_images).exists()
     if update_images:
         image_ids_list = Image.objects.filter(modified__gte=from_date_time_images).values_list('pk', flat=True)
         skus_ids_list = Sku.objects.filter(~Q(pk__in=skus_ids_list), is_active=True, images__in=image_ids_list).values_list('pk', flat=True)
 
-
     if skus_ids_list:
         queryset = Sku.objects\
             .only(
@@ -112,7 +106,6 @@ def update_serializer_data():
             .select_related('price')\
             .filter(pk__in=skus_ids_list)
         [sku.update_serializer_data for sku in queryset]
-
 
 
 try:
@@ -146,7 +139,6 @@ def store_begining(store, *args, **kwargs):
     get_departments(store)
     create_products_store(store=store, limit=True)
 
-
     return True
 
 
@@ -172,7 +164,6 @@ def principal_periodic_task(*args, **kwargs):
         get_brands(store)
         get_departments(store)
         create_products_store(store=store)
-
 
     except Exception as message:
         store.creating_updating_elements_status = False

@@ -236,6 +236,7 @@ def create_products_store(store, limit=False):
                 bulk_products = [
                     Product(
                         store=store,
+                        external_id=product.get('Id'),
                         department=Department.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product.get('DepartmentId')}"], stores=store).last(),
                         sub_category=Subcategory.objects.select_related('category').filter(external_id=product.get('CategoryId'), category__store=store).last(),
                         category=Subcategory.objects.select_related('category').filter(external_id=product.get('CategoryId'), category__store=store).last().category if Subcategory.objects.filter(
@@ -251,7 +252,7 @@ def create_products_store(store, limit=False):
 
                 Product.objects.filter(store=store, external_id__in=product_ids).update(
                     name=F('raw_json__Name'),
-                    search=' '.join([F('raw_json__Name'), F('brand__name'), F('department__name'), F('category__name'), F('sub_category__name'), F('brand__name')]),
+                    search=f"{F('raw_json__Name')} {F('brand__name')} {F('department__name')} {F('category__name')} {F('sub_category__name')} {F('brand__name')}",
                     link_id=F('raw_json__LinkId'),
                     reference_id=F('raw_json__RefId'),
                     is_visible=F('raw_json__IsVisible'),
@@ -292,27 +293,6 @@ def create_products_store(store, limit=False):
                     Sku(
                         product=Product.objects.filter(store=store, external_id=sku.get('ProductId')).last(),
                         external_id=sku.get('Id'),
-                        name=sku.get('NameComplete'),
-                        search=' '.join(
-                            [
-                                sku.get('NameComplete') if sku.get('NameComplete') else '',
-                                Product.objects.only('search').filter(store=store, external_id=sku.get('ProductId')).last().search if Product.objects.filter(store=store, external_id=sku.get('ProductId')).exists() else '',
-                                str(sku.get('price').get('basePrice')) if sku.get('price') and sku.get('price').get('basePrice') else ''
-                            ]
-                        ),
-                        is_active=sku.get('IsActive'),
-                        ref_id=sku.get('RefId'),
-                        packaged_height=sku.get('Height'),
-                        packaged_length=sku.get('Length'),
-                        packaged_widtht=sku.get('Width'),
-                        packaged_weight_unit=sku.get('WeightKg'),
-                        is_kit=sku.get('IsKit'),
-                        comercial_condition_id=sku.get('CommercialConditionId'),
-                        manufacter_code=sku.get('ManufacturerCode'),
-                        reference_stock_id=sku.get('ReferenceStockKeepingUnitId'),
-                        is_inventoried=sku.get('IsInventoried'),
-                        is_transported=sku.get('IsTransported'),
-                        total_quantity=sku.get('total_quantity'),
                         raw_json={**sku}
                     )
                     for sku in skus if sku.get('Id') not in skus_external_ids
@@ -325,7 +305,7 @@ def create_products_store(store, limit=False):
                 sku_pks = Sku.objects.filter(product__store=store, external_id__in=ids).values_list('pk', flat=True)
                 Sku.objects.filter(pk__in=sku_pks).update(
                     name=F('raw_json__NameComplete'),
-                    search_name=' '.join([F('product__name'), F('raw_json__NameComplete'), F('product__search')]),
+                    search_name=f"{F('product__name')} {F('raw_json__NameComplete')} {F('product__search')}",
                     is_active=F('raw_json__IsActive'),
                     ref_id=F('raw_json__RefId'),
                     packaged_height=F('raw_json__Height'),
