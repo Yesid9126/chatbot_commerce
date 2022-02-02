@@ -255,12 +255,12 @@ def create_products_store(store, limit=False):
                     search=f"{F('raw_json__Name')} {F('brand__name')} {F('department__name')} {F('category__name')} {F('sub_category__name')} {F('brand__name')}",
                     link_id=F('raw_json__LinkId'),
                     reference_id=F('raw_json__RefId'),
-                    is_visible=F('raw_json__IsVisible'),
+                    is_visible=Q(raw_json__IsVisible=True),
                     description=F('raw_json__Description'),
                     description_short=F('raw_json__DescriptionShort'),
                     keywords=F('raw_json__Keywords'),
                     title=F('raw_json__Title'),
-                    is_active=F('raw_json__IsActive'),
+                    is_active=Q(raw_json__IsActive=True),
                     meta_tag_description=F('raw_json__MetaTagDescription'),
                     show_without_stock=F('raw_json__ShowWithoutStock')
                 )
@@ -306,18 +306,18 @@ def create_products_store(store, limit=False):
                 Sku.objects.filter(pk__in=sku_pks).update(
                     name=F('raw_json__NameComplete'),
                     search_name=f"{F('product__name')} {F('raw_json__NameComplete')} {F('product__search')}",
-                    is_active=F('raw_json__IsActive'),
+                    is_active=Q(raw_json__IsActive=True),
                     ref_id=F('raw_json__RefId'),
                     packaged_height=F('raw_json__Height'),
                     packaged_length=F('raw_json__Length'),
                     packaged_width=F('raw_json__Width'),
                     packaged_weight_unit=F('raw_json__WeightKg'),
-                    is_kit=F('raw_json__IsKit'),
+                    is_kit=Q(raw_json__IsKit=True),
                     comercial_condition_id=F('raw_json__CommercialConditionId'),
                     manufacter_code=F('raw_json__ManufacturerCode'),
-                    reference_stock_id=F('raw_json__ReferenceStockKeepingUnitId'),
-                    is_inventoried=F('raw_json__IsInventoried'),
-                    is_transported=F('raw_json__IsTransported'),
+                    reference_stock_id=Q(raw_json__ReferenceStockKeepingUnitId=True),
+                    is_inventoried=Q(raw_json__IsInventoried=True),
+                    is_transported=Q(raw_json__IsTransported=True),
                     total_quantity=F('raw_json__total_quantity'),
                 )
 
