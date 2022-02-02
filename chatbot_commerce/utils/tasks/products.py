@@ -310,7 +310,7 @@ def create_products_store(store, limit=False):
                     ref_id=F('raw_json__RefId'),
                     packaged_height=F('raw_json__Height'),
                     packaged_length=F('raw_json__Length'),
-                    packaged_width=F('raw_json__Width'),
+                    packaged_widtht=F('raw_json__Width'),
                     packaged_weight_unit=F('raw_json__WeightKg'),
                     is_kit=Q(raw_json__IsKit=True),
                     comercial_condition_id=F('raw_json__CommercialConditionId'),
