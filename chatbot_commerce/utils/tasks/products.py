@@ -262,7 +262,7 @@ def create_products_store(store, limit=False):
                     title=F('raw_json__Title'),
                     is_active=Q(raw_json__IsActive=True),
                     meta_tag_description=F('raw_json__MetaTagDescription'),
-                    show_without_stock=F('raw_json__ShowWithoutStock')
+                    show_without_stock=Q(raw_json__ShowWithoutStock=True)
                 )
                 del product_ids
 
