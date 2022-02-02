@@ -305,7 +305,7 @@ def create_products_store(store, limit=False):
                 sku_pks = Sku.objects.filter(product__store=store, external_id__in=ids).values_list('pk', flat=True)
                 Sku.objects.filter(pk__in=sku_pks).update(
                     name=F('raw_json__NameComplete'),
-                    search_name=f"{F('product__name')} {F('raw_json__NameComplete')} {F('product__search')}",
+                    search=f"{F('product__name')} {F('raw_json__NameComplete')} {F('product__search')}",
                     is_active=Q(raw_json__IsActive=True),
                     ref_id=F('raw_json__RefId'),
                     packaged_height=F('raw_json__Height'),
