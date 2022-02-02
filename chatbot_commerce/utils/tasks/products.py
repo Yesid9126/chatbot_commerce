@@ -8,7 +8,7 @@ from chatbot_commerce.stores.models import (
     SaleChannel, Seller, SkuSeller
 )
 from django.contrib.postgres.search import SearchVector
-from django.db.models import Q, F
+from django.db.models import Q, F, ExpressionWrapper, BigIntegerField
 
 # Apis
 from chatbot_commerce.utils.apis import VtexStores, ShopifyStores
@@ -318,7 +318,7 @@ def create_products_store(store, limit=False):
                     reference_stock_id=Q(raw_json__ReferenceStockKeepingUnitId=True),
                     is_inventoried=Q(raw_json__IsInventoried=True),
                     is_transported=Q(raw_json__IsTransported=True),
-                    total_quantity=F('raw_json__total_quantity'),
+                    total_quantity=ExpressionWrapper(F('raw_json__total_quantity'), output_field=BigIntegerField())
                 )
 
                 Price.objects.filter(sku__in=sku_pks).delete()
