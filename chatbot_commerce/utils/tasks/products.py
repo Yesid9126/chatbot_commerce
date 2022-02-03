@@ -106,20 +106,21 @@ def create_products_store(store, limit=False):
                         s = ' '.join(s)
                         s_replaced = s.replace(',', ' ').replace('.', ' ')
                         s = [' '.join((s, s_replaced,))]
+                    categories = sku_response.get('ProductCategories').values() if sku_response.get('ProductCategories') else []
                     search = ' '.join(
                         [
                             text
                             for text in [
                                 sku_response.get('BrandName'),
-                                *sku_response.get('ProductCategories').values(),
+                                *categories,
                                 sku_response.get('SkuName'),
                                 sku_response.get('ProductName'),
                                 sku_response.get('ComplementName'),
                                 sku_response.get('NameComplete'),
                                 *s,
-                                *sku_response.get('ProductCategories').values(),
+                                *categories,
                                 sku_response.get('BrandName'),
-                                *sku_response.get('ProductCategories').values(),
+                                *categories,
                             ] if text
                         ]
                     )
