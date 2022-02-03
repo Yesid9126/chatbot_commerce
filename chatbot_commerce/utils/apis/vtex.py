@@ -76,7 +76,16 @@ class VtexStores:
             method=method
         )
 
-    def get_sku_context(self, sku_id, sc):
+    def get_product_ids_with_sku_ids(self, from_position, to_position):
+        uri = f'catalog_system/pvt/products/GetProductAndSkuIds?_from={from_position}&_to={to_position}'
+        method = 'get'
+        return self._get_json_resource(
+            uri,
+            method=method
+        )
+
+
+    def get_sku_context(self, sku_id):
         # Quantity in warehouses
         total_quantity = 0
         price_dic = False
@@ -94,7 +103,7 @@ class VtexStores:
         else:
             print(f'error in sku: {sku_id} line 164 utils/products.py')
 
-        uri = f'catalog_system/pvt/sku/stockkeepingunitbyid/{sku_id}?sc={sc}'
+        uri = f'catalog_system/pvt/sku/stockkeepingunitbyid/{sku_id}'
         method = 'get'
 
         return self._get_json_resource(
