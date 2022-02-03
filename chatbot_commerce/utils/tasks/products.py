@@ -87,7 +87,7 @@ def create_products_store(store, limit=False):
                             'raw_json': {**sku_response}
                         }
                     )
-                    sku_specifications = sku_response.get('SkuSpecifications')
+                    sku_specifications = sku_response.get('SkuSpecifications') or []
                     for sku_specification in sku_specifications:
                         attribute_type_instance, _ = AttributeType.objects.get_or_create(
                             store=store,
