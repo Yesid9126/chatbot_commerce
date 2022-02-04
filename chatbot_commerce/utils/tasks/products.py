@@ -127,13 +127,16 @@ def create_products_store(store, limit=False):
                     instance_sku.search = search
                     instance_sku.save(update_fields=['search'])
                     images = sku_response.get('Images')
-                    for image in images:
-                        Image.objects.update_or_create(
-                            product=instance_product,
-                            sku=instance_sku,
-                            image_id=image.get('FileId'),
-                            defaults={'name': image.get('ImageName'), 'image_url': image.get('ImageUrl')}
-                        )
+                    if images:
+                        [
+                            Image.objects.update_or_create(
+                                product=instance_product,
+                                sku=instance_sku,
+                                image_id=image.get('FileId'),
+                                defaults={'name': image.get('ImageName'), 'image_url': image.get('ImageUrl')}
+                            )
+                            for image in images
+                        ]
                     response_price = sku_response.get('price')
                     if response_price:
                         instance_sku_price, _is_new = Price.objects.update_or_create(
@@ -147,32 +150,38 @@ def create_products_store(store, limit=False):
                             }
                         )
                         fixed_prices = response_price.get('fixedPrices')
-                        for fixed_price in fixed_prices:
-                            FixedPrice.objects.update_or_create(
-                                price=instance_sku_price,
+                        if fixed_prices:
+                            [
+                                FixedPrice.objects.update_or_create(
+                                    price=instance_sku_price,
+                                    defaults={
+                                        'trade_policy_id': fixed_price.get('tradePolicyId'),
+                                        'value': fixed_price.get('value'),
+                                        'list_price': fixed_price.get('listPrice'),
+                                        'date_range': DateRange.objects.create(
+                                            date_time_from=fixed_price.get('dateRange').get('from'),
+                                            date_time_to=fixed_price.get('dateRange').get('to'),
+                                            raw_json={**fixed_price.get('dateRange')}
+                                        ) if fixed_price.get('dateRange') else None,
+                                        'min_quantity': fixed_price.get('minQuantity'),
+                                        'raw_json': {**fixed_price}
+                                    }
+                                )
+                                for fixed_price in fixed_prices
+                            ]
+                    sku_sellers = sku_response.get('SkuSellers')
+                    if sku_sellers:
+                        [
+                            SkuSeller.objects.update_or_create(
+                                sku=instance_sku,
+                                seller=Seller.objects.filter(store=store, seller_id=sku_seller.get('SellerId')).last(),
                                 defaults={
-                                    'trade_policy_id': fixed_price.get('tradePolicyId'),
-                                    'value': fixed_price.get('value'),
-                                    'list_price': fixed_price.get('listPrice'),
-                                    'date_range': DateRange.objects.create(
-                                        date_time_from=fixed_price.get('dateRange').get('from'),
-                                        date_time_to=fixed_price.get('dateRange').get('to'),
-                                        raw_json={**fixed_price.get('dateRange')}
-                                    ) if fixed_price.get('dateRange') else None,
-                                    'min_quantity': fixed_price.get('minQuantity'),
-                                    'raw_json': {**fixed_price}
+                                    'is_active': sku_seller.get('IsActive'),
+                                    'raw_json': {**sku_seller}
                                 }
                             )
-                    sku_sellers = sku_response.get('SkuSellers')
-                    for sku_seller in sku_sellers:
-                        SkuSeller.objects.update_or_create(
-                            sku=instance_sku,
-                            seller=Seller.objects.filter(store=store, seller_id=sku_seller.get('SellerId')).last(),
-                            defaults={
-                                'is_active': sku_seller.get('IsActive'),
-                                'raw_json': {**sku_seller}
-                            }
-                        )
+                            for sku_seller in sku_sellers
+                        ]
             if limit:
                 break
 
