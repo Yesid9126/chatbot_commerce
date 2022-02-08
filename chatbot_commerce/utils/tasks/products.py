@@ -53,32 +53,32 @@ def create_products_store(store, limit=False):
                 loop = asyncio.get_event_loop()
                 future = asyncio.ensure_future(vtex.get_products(vtex_product_id_list))
                 product_responses = loop.run_until_complete(future)
-                # [
-                #     Product.objects.update_or_create(
-                #         store=store,
-                #         external_id=product_response.get('Id'),
-                #         defaults={
-                #             'name': product_response.get('Name'),
-                #             'department': Department.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product_response.get('DepartmentId')}"], stores=store).last(),
-                #             'sub_category': Subcategory.objects.select_related('category').filter(external_id=product_response.get('CategoryId'), category__store=store).last(),
-                #             'category': Subcategory.objects.select_related('category').filter(external_id=product_response.get('CategoryId'), category__store=store).last().category if Subcategory.objects.filter(
-                #                 external_id=product_response.get('CategoryId'), category__store=store).exists() else Category.objects.filter(external_id=product_response.get('CategoryId'), store=store).last(),
-                #             'brand': Brand.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product_response.get('BrandId')}"], stores=store).last(),
-                #             'link_id': product_response.get('LinkId'),
-                #             'reference_id': product_response.get('RefId'),
-                #             'is_visible': product_response.get('IsVisible'),
-                #             'description': product_response.get('Description'),
-                #             'description_short': product_response.get('DescriptionShort'),
-                #             'keywords': product_response.get('KeyWords'),
-                #             'title': product_response.get('Title'),
-                #             'is_active': product_response.get('IsActive'),
-                #             'meta_tag_description': product_response.get('MetaTagDescription'),
-                #             'show_without_stock': product_response.get('ShowWithoutStock'),
-                #             'raw_json': {**product_response}
-                #         }
-                #     )
-                #     for product_response in product_responses if product_response.get('Id')
-                # ]
+                [
+                    Product.objects.update_or_create(
+                        store=store,
+                        external_id=product_response.get('Id'),
+                        defaults={
+                            'name': product_response.get('Name'),
+                            'department': Department.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product_response.get('DepartmentId')}"], stores=store).last(),
+                            'sub_category': Subcategory.objects.select_related('category').filter(external_id=product_response.get('CategoryId'), category__store=store).last(),
+                            'category': Subcategory.objects.select_related('category').filter(external_id=product_response.get('CategoryId'), category__store=store).last().category if Subcategory.objects.filter(
+                                external_id=product_response.get('CategoryId'), category__store=store).exists() else Category.objects.filter(external_id=product_response.get('CategoryId'), store=store).last(),
+                            'brand': Brand.objects.filter(external_id__contains=[f"{store.store_type.name}{store.name}{product_response.get('BrandId')}"], stores=store).last(),
+                            'link_id': product_response.get('LinkId'),
+                            'reference_id': product_response.get('RefId'),
+                            'is_visible': product_response.get('IsVisible'),
+                            'description': product_response.get('Description'),
+                            'description_short': product_response.get('DescriptionShort'),
+                            'keywords': product_response.get('KeyWords'),
+                            'title': product_response.get('Title'),
+                            'is_active': product_response.get('IsActive'),
+                            'meta_tag_description': product_response.get('MetaTagDescription'),
+                            'show_without_stock': product_response.get('ShowWithoutStock'),
+                            'raw_json': {**product_response}
+                        }
+                    )
+                    for product_response in product_responses if product_response.get('Id')
+                ]
                 del product_responses
             del vtex_product_ids
 
