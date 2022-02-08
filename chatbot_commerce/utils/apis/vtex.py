@@ -5,7 +5,71 @@ import requests
 import urllib3
 import json
 
+import asyncio
+from aiohttp import ClientSession
 
+
+class VtexApi:
+    """Wrapper for vtex api service."""
+    def __init__(self, store):
+        self.store = store
+        self.sem = asyncio.Semaphore(1000)
+        self.headers = store.headers | {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
+
+    async def _get_resources(self, uri, session, **kwargs):
+        try:
+            async with session.get("{}/{}".format(self.base_url, uri)) as response:
+                return await response.json()
+        except Exception as e:
+            print(e)
+        return dict()
+
+    async def _bound_get_resources(self, uri, session, **kwargs):
+        async with self.sem:
+            return await self._get_resources(uri, session, **kwargs)
+
+    async def get_products(self, product_ids, **kwargs):
+        """Get products from vtex."""
+
+        self.base_url = self.store.urls['base_url']
+        uri = 'catalog_system/pvt/products/productget/{}'
+        async with ClientSession(headers=self.headers) as session:
+            tasks = [asyncio.ensure_future(self._bound_get_resources(uri.format(product_id), session, **kwargs)) for product_id in product_ids]
+            responses = asyncio.gather(*tasks)
+            return await responses
+
+    async def get_skus(self, sku_ids, **kwargs):
+        """Get products from vtex."""
+
+        self.base_url = self.store.urls['base_url']
+        uri = 'catalog_system/pvt/sku/stockkeepingunitbyid/{}'
+        async with ClientSession(headers=self.headers) as session:
+            tasks = [asyncio.ensure_future(self._bound_get_resources(uri.format(sku_id), session, **kwargs)) for sku_id in sku_ids]
+            responses = asyncio.gather(*tasks)
+            return await responses
+
+    async def get_sku_prices(self, sku_ids, **kwargs):
+        """Get products from vtex."""
+
+        self.base_url = self.store.urls['base_price_url']
+        uri = 'pricing/prices/{}'
+        async with ClientSession(headers=self.headers) as session:
+            tasks = [asyncio.ensure_future(self._bound_get_resources(uri.format(sku_id), session, **kwargs)) for sku_id in sku_ids]
+            responses = asyncio.gather(*tasks)
+            return await responses
+
+    async def get_sku_inventories(self, product_ids, **kwargs):
+        """Get products from vtex."""
+
+        self.base_url = self.store.urls['base_url']
+        uri = 'logistics/pvt/inventory/skus/{}'
+        async with ClientSession(headers=self.headers) as session:
+            tasks = [asyncio.ensure_future(self._bound_get_resources(uri.format(product_id), session, **kwargs)) for product_id in product_ids]
+            responses = asyncio.gather(*tasks)
+            return await responses
 class VtexStores:
     """Wrapper for vtex api service."""
 

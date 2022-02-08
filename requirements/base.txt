@@ -7,6 +7,7 @@ hiredis  # https://github.com/redis/hiredis-py
 celery  # pyup: < 5.0,!=4.4.7  # https://github.com/celery/celery
 django-celery-beat  # https://github.com/celery/django-celery-beat
 flower  # https://github.com/mher/flower
+aiohttp  #
 
 # Django
 # ------------------------------------------------------------------------------
