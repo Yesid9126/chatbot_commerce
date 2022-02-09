@@ -75,7 +75,7 @@ class Sku(BaseAbstract):
         max_length=50,
         null=True, blank=True
     )
-    packaged_widtht = models.CharField(
+    packaged_width = models.CharField(
         max_length=50,
         null=True, blank=True
     )

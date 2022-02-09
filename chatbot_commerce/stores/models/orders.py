@@ -65,8 +65,9 @@ class OrderItem(ChatbootModel):
 
     sku_unit = models.ForeignKey(
         to='stores.Sku',
-        on_delete=models.CASCADE,
-        related_name='sku'
+        on_delete=models.SET_NULL,
+        related_name='sku',
+        null=True
     )
 
     order = models.ForeignKey(

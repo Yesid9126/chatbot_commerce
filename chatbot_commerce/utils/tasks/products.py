@@ -104,7 +104,7 @@ def create_products_store(store, limit=False):
                             'ref_id': sku_response.get('RefId'),
                             'packaged_height': sku_response.get('Height'),
                             'packaged_length': sku_response.get('Length'),
-                            'packaged_widtht': sku_response.get('Width'),
+                            'packaged_width': sku_response.get('Width'),
                             'packaged_weight_unit': sku_response.get('WeightKg'),
                             'is_kit': sku_response.get('IsKit'),
                             'comercial_condition_id': sku_response.get('CommercialConditionId'),
