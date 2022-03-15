@@ -73,6 +73,7 @@ THIRD_PARTY_APPS = [
     'numpy',
     'drf_yasg',
     "rest_framework_api_key",
+    'channels',
 ]
 
 LOCAL_APPS = [
